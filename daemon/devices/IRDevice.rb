@@ -1,0 +1,3 @@
+class IRDevice < Device
+	
+end

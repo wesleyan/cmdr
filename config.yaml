@@ -1,0 +1,11 @@
+---
+room_name: Exley 121
+devices: 
+    - name: projector
+      class: NECProjector
+      port: /dev/ttyUSB1
+      type: Projector
+    - name: extron
+      class: ExtronVideoSwitcher
+      port: /dev/ttyUSB0
+      type: VideoSwitcher

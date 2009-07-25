@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WesControl>
+	<page>
+		<name>Volume</name>
+		<buttonItemURL>modules/volume/VolumeButton.qml</buttonItemURL>
+		<pageItemURL>modules/volume/VolumePage.qml</pageItemURL>
+	</page>
+	<page>
+		<name>Projector</name>
+		<buttonItemURL>modules/projector/ProjectorButton.qml</buttonItemURL>
+		<pageItemURL>modules/projector/ProjectorPage.qml</pageItemURL>
+	</page>
+	<page>
+		<name>Source</name>
+		<buttonItemURL>modules/sources/SourcesButton.qml</buttonItemURL>
+		<pageItemURL>modules/sources/SourcesPage.qml</pageItemURL>
+		<configuration>
+			<sources>
+				<source>
+					<name>Mac</name>
+					<image source="mac.png" width="115" height="54" />
+					<input projector="RGB1" switcher="1" />
+				</source>
+				<source>
+					<name>PC</name>
+					<image source="computer.svg" width="95" height="95" />
+					<input projector="RGB1" switcher="2" />
+				</source>
+				<source>
+					<name>Laptop</name>
+					<image source="laptop.svg" width="80" height="73" />
+					<input projector="RGB1" switcher="3" />
+				</source>
+				<source>
+					<name>DVD</name>
+					<image source="DVD.png" width="70" height="70" />
+					<input projector="VIDEO" switcher="4" />
+				</source>
+			</sources>
+		</configuration>
+	</page>
+
+</WesControl>
