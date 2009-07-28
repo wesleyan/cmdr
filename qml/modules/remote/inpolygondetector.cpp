@@ -4,50 +4,34 @@
 #include <QBitmap>
 #include <QPoint>
 #include <QDebug>
+#include <QGraphicsSceneMouseEvent>
 
-QML_DEFINE_TYPE(InPolygonDetector, InPolygonDetector);
+QML_DEFINE_TYPE(InPolygonDetector, MaskedMouseRegion);
 
 InPolygonDetector::InPolygonDetector()
 {
 }
 
-int InPolygonDetector::testX() const
-{
-    return (&m_testPoint)->x();
-}
-int InPolygonDetector::testY() const
-{
-    return (&m_testPoint)->y();
-}
-void InPolygonDetector::setTestX(int x)
-{
-    (&m_testPoint)->setX(x);
-}
-void InPolygonDetector::setTestY(int y)
-{
-    (&m_testPoint)->setY(y);
-    update();
-}
 
-QString InPolygonDetector::imagePath() const
+QString InPolygonDetector::maskPath() const
 {
-    return m_imagePath;
+    return m_maskPath;
 }
-void InPolygonDetector::setImagePath(QString imagePath)
+void InPolygonDetector::setMaskPath(QString maskPath)
 {
-    QPixmap bm(imagePath);
+    QPixmap bm(maskPath);
     region = new QRegion(bm.mask());
     qDebug() << "Image: " << bm.size();
+    m_maskPath = maskPath;
 }
-
-void InPolygonDetector::update()
+void InPolygonDetector::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    bool in = region->contains(m_testPoint);
-    if(m_inPolygon != in)emit inPolygonChanged(in);
-    m_inPolygon = in;
-}
-
-bool InPolygonDetector::inPolygon() const
-{
-    return m_inPolygon;
+    if(region->contains(event->pos().toPoint()))
+    {
+        QFxMouseRegion::mousePressEvent(event);
+    }
+    else
+    {
+        event->ignore();
+    }
 }

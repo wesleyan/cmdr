@@ -3,12 +3,17 @@ MouseRegion {
     signal pressedInside
     signal clickedInside
 
-    InPolygonDetector { id: ipd }
+    InPolygonDetector {
+        id: ipd
+    }
+
+    //enabled: ipd.inPolygon
 
     onPressed: {
-        ipd.testX = mouse.x
-        ipd.testY = mouse.y
-        if(ipd.inPolygon)pressedInside();
+        print(mouseX)
+        //ipd.testX = mouse.x
+        //ipd.testY = mouse.y
+        //if(ipd.inPolyon)pressedInside();
     }
     onClicked: {
         ipd.testX = mouse.x

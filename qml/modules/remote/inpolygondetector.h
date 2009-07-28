@@ -3,37 +3,29 @@
 #include "qml.h"
 #include <QPoint>
 #include <QRegion>
+#include <QFxMouseRegion>
 
 #ifndef INPOLYGONDETECTOR_H
 #define INPOLYGONDETECTOR_H
 
-class InPolygonDetector : public QObject
+class InPolygonDetector : public QFxMouseRegion
 {
     Q_OBJECT
 public:
     InPolygonDetector();
 
-    Q_PROPERTY(int testX READ testX WRITE setTestX);
-    Q_PROPERTY(int testY READ testY WRITE setTestY);
-    Q_PROPERTY(bool inPolygon READ inPolygon NOTIFY inPolygonChanged(bool));
-    Q_PROPERTY(QString imagePath READ imagePath WRITE setImagePath);
+    //Q_PROPERTY(int testX READ testX WRITE setTestX);
+    //Q_PROPERTY(int testY READ testY WRITE setTestY);
+    //Q_PROPERTY(bool inPolygon READ inPolygon NOTIFY inPolygonChanged(bool));
+    Q_PROPERTY(QString maskPath READ maskPath WRITE setMaskPath);
 
-    int testX() const;
-    void setTestX(int);
-    int testY() const;
-    void setTestY(int);
-    bool inPolygon() const;
-    QString imagePath() const;
-    void setImagePath(QString);
-signals:
-    void inPolygonChanged(bool);
+    QString maskPath() const;
+    void setMaskPath(QString);
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
 private:
-    bool m_inPolygon;
-    QPoint m_testPoint;
     QRegion *region;
-    QString m_imagePath;
-    void update();
-
+    QString m_maskPath;
 };
 QML_DECLARE_TYPE(InPolygonDetector);
 #endif // INPOLYGONDETECTOR_H
