@@ -1,8 +1,6 @@
 #include <qfxview.h>
 
-#include "qmlbindablevalue.h"
 #include "wescontrol.h"
-//#include "Selector.h"
 #include "sourcecontroller.h"
 
 #include <QtDeclarative/qmlcontext.h>

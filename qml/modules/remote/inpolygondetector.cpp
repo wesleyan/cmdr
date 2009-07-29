@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 
-QML_DEFINE_TYPE(InPolygonDetector, MaskedMouseRegion);
+QML_DEFINE_TYPE(WesControl, 1, 0, 0, InPolygonDetector, MaskedMouseRegion);
 
 InPolygonDetector::InPolygonDetector()
 {

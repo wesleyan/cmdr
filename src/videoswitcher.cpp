@@ -16,7 +16,7 @@ QString switcher_interface  = "edu.wesleyan.WesControl.videoSwitcher";
 
 QDBusInterface switcher_iface(switcher_service, switcher_object, switcher_interface, switcher_dbus);
 
-QML_DEFINE_TYPE(VideoSwitcher, VideoSwitcher);
+QML_DEFINE_TYPE(WesControl, 1, 0, 0, VideoSwitcher, VideoSwitcher);
 
 VideoSwitcher::VideoSwitcher()
 {

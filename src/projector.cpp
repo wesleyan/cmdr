@@ -19,7 +19,7 @@ QString interface = "edu.wesleyan.WesControl.projector";
 QDBusInterface iface(service, object, interface, dbus);
 
 
-QML_DEFINE_TYPE(Projector, Projector);
+QML_DEFINE_TYPE(WesControl, 1, 0, 0, Projector, Projector);
 
 Projector::Projector()
 {

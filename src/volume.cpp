@@ -16,7 +16,7 @@ QString volume_interface  = "edu.wesleyan.WesControl.videoSwitcher";
 
 QDBusInterface volume_iface(volume_service, volume_object, volume_interface, volume_dbus);
 
-QML_DEFINE_TYPE(Volume, Volume);
+QML_DEFINE_TYPE(WesControl, 1, 0, 0, Volume, Volume);
 
 Volume::Volume()
 {
