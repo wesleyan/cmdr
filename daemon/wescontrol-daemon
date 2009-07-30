@@ -32,7 +32,7 @@ end
 
 @devices = {}
 
-bus          = DBus.session_bus
+bus          = DBus.system_bus
 service      = bus.request_service("edu.wesleyan.WesControl")
 rcontrol     = RControl.new(config['room_name'])
 service.export(rcontrol)

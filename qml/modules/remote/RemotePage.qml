@@ -194,5 +194,9 @@ Item {
                 }
             }
         }
+        Item {
+            id: chapterButtons
+            width: 175
+        }
     }
 }

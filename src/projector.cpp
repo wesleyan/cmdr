@@ -11,7 +11,7 @@
 #include <QtDeclarative/qmlengine.h>
 #include "qml.h"
 
-QDBusConnection dbus = QDBusConnection::sessionBus();
+QDBusConnection dbus = QDBusConnection::systemBus();
 QString service   = "edu.wesleyan.WesControl";
 QString object    = "/edu/wesleyan/WesControl/projector";
 QString interface = "edu.wesleyan.WesControl.projector";

@@ -9,7 +9,7 @@
 #include <QtDeclarative/qmlengine.h>
 #include "qml.h"
 
-QDBusConnection switcher_dbus = QDBusConnection::sessionBus();
+QDBusConnection switcher_dbus = QDBusConnection::systemBus();
 QString switcher_service    = "edu.wesleyan.WesControl";
 QString switcher_object    = "/edu/wesleyan/WesControl/extron";
 QString switcher_interface  = "edu.wesleyan.WesControl.videoSwitcher";
