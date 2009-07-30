@@ -79,3 +79,6 @@ OBJECTS_DIR = $$builddir
 MOC_DIR = $$builddir
 UI_DIR = $$builddir
 RCC_DIR = $$builddir
+DEPENDPATH += src/
+INCLUDEPATH += src/
+

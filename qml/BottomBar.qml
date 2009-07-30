@@ -1,3 +1,4 @@
+import Qt 4.6
 Item {
     property var pages
     property alias currentIndex: buttonsView.currentIndex //progress :indicatorRect.x

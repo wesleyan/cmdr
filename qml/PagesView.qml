@@ -1,3 +1,4 @@
+import Qt 4.6
 Item {
     property var pages
     property double componentHeight
@@ -138,9 +139,9 @@ Item {
         model: PagesModel
         delegate: PagesDelegate
         orientation: "Horizontal"
-        //currentItemPositioning: "SnapAuto"
+        currentItemPositioning: "SnapAuto"
         snapPosition: parent.width/2 - (componentWidth+20)/2
         maximumFlickVelocity: 700
-        locked: true
+        //locked: true
     }
 }

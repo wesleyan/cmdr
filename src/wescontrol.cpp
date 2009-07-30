@@ -4,7 +4,6 @@
 #include "sourcecontroller.h"
 
 #include <QtDeclarative/qmlcontext.h>
-#include <QtDeclarative/qmlengine.h>
 #include "qml.h"
 
 #include <QSignalMapper>
@@ -20,6 +19,11 @@
 #include <QAction>
 #include <QDebug>
 #include <QKeyEvent>
+
+#include <QCoreApplication>
+#include <QmlEngine>
+#include <QmlComponent>
+#include <QDebug>
 
 
 WesControl::WesControl(QWidget *parent, Qt::WindowFlags flags)

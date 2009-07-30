@@ -1,3 +1,4 @@
+import Qt 4.6
 Item {
     height: 80
     width: 90

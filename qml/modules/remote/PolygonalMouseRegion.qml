@@ -1,3 +1,4 @@
+import Qt 4.6
 MouseRegion {
     property alias imagePath: ipd.imagePath
     signal pressedInside

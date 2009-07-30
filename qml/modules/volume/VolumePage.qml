@@ -1,3 +1,5 @@
+import Qt 4.6
+import WesControl
 Item {
     anchors.fill: parent
     anchors.horizontalCenter: parent.horizontalCenter

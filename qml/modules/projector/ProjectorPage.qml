@@ -1,3 +1,4 @@
+import Qt 4.6
 Item {
     anchors.fill: parent
     anchors.horizontalCenter: parent.horizontalCenter

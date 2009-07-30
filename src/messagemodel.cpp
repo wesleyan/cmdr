@@ -1,7 +1,6 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstack.h>
 #include <qmlcontext.h>
-#include <qmlbindablevalue.h>
 #include "messagemodel.h"
 #include <QTimer>
 #include <QSignalMapper>

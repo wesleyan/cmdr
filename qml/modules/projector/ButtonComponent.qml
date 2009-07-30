@@ -1,3 +1,4 @@
+import Qt 4.6
 Item {
     id: ButtonComponent
     property alias imageSource: image.source

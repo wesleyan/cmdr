@@ -1,3 +1,5 @@
+import Qt 4.6
+import WesControl
 Rect {
     resources: [
         ListModel {
@@ -43,13 +45,6 @@ Rect {
     color:"#F2F2F2"
     opacity: 0.9
     clip: true
-
-    Projector {
-        id: projector
-    }
-    VideoSwitcher {
-        id: videoswitcher
-    }
 
     Component {
         id: ListDelegate

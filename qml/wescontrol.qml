@@ -1,3 +1,4 @@
+import Qt 4.6
 Rect {
     id: Root
     color: "#000"

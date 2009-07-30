@@ -5,14 +5,14 @@
 #include <QRegion>
 #include <QFxMouseRegion>
 
-#ifndef INPOLYGONDETECTOR_H
-#define INPOLYGONDETECTOR_H
+#ifndef MaskedMouseRegion_H
+#define MaskedMouseRegion_H
 
-class InPolygonDetector : public QFxMouseRegion
+class MaskedMouseRegion : public QFxMouseRegion
 {
     Q_OBJECT
 public:
-    InPolygonDetector();
+    MaskedMouseRegion();
 
     //Q_PROPERTY(int testX READ testX WRITE setTestX);
     //Q_PROPERTY(int testY READ testY WRITE setTestY);
@@ -27,5 +27,5 @@ private:
     QRegion *region;
     QString m_maskPath;
 };
-QML_DECLARE_TYPE(InPolygonDetector);
-#endif // INPOLYGONDETECTOR_H
+QML_DECLARE_TYPE(MaskedMouseRegion);
+#endif // MaskedMouseRegion_H
