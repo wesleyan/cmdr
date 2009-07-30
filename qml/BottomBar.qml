@@ -22,6 +22,7 @@ Item {
         id: ButtonComponent
         property int index
         Item {
+            id: button
             width: 90
             height: 80
             anchors.verticalCenter: parent.verticalCenter
@@ -36,6 +37,7 @@ Item {
 
             }
             Text {
+                id: nameText
                 color: "white"
                 text: name
                 font.family: "Myriad Pro"
@@ -49,6 +51,31 @@ Item {
                     buttonsView.currentIndex = index
                 }
             }
+            states: [
+                State {
+                    name: "not_selected"
+                    when: index != buttonsView.currentIndex
+                    SetProperties {
+                        target: nameText
+                        color: "gray"
+                    }
+                    SetProperties {
+                        target: button
+                        opacity: 0.5
+                    }
+                }
+            ]
+            transitions: [
+                Transition {
+                    ColorAnimation {
+                        target: nameText
+                    }
+                    NumberAnimation {
+                        target: button
+                        properties: "opacity"
+                    }
+                }
+            ]
         }
     }
     Rect {

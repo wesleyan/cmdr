@@ -1,4 +1,5 @@
 import Qt 4.6
+import WesControl 1.0
 MouseRegion {
     property alias imagePath: ipd.imagePath
     signal pressedInside

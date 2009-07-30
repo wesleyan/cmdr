@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WesControl>
 	<page>
-		<name>Remote</name>
-		<buttonItemURL>modules/remote/RemoteButton.qml</buttonItemURL>
-		<pageItemURL>modules/remote/RemotePage.qml</pageItemURL>
-	</page>
-	<page>
 		<name>Projector</name>
 		<buttonItemURL>modules/projector/ProjectorButton.qml</buttonItemURL>
 		<pageItemURL>modules/projector/ProjectorPage.qml</pageItemURL>
@@ -38,6 +33,11 @@
 				</source>
 			</sources>
 		</configuration>
+	</page>
+	<page>
+		<name>Remote</name>
+		<buttonItemURL>modules/remote/RemoteButton.qml</buttonItemURL>
+		<pageItemURL>modules/remote/RemotePage.qml</pageItemURL>
 	</page>
 	<page>
 		<name>Volume</name>

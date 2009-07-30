@@ -1,9 +1,14 @@
 import Qt 4.6
+import WesControl 1.0
+
 Item {
     Image {
         source: "images/Background.png"
         y: -20
         x: 100
+        /*transform: [
+            Rotation3D { id: rotation; origin.x: 0; axis.x: 30; axis.y: 0; angle: 30 }
+        ]*/
         Item {
             id: topContainer
             y: 40
