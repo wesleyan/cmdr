@@ -20,6 +20,7 @@ Item {
                 source: "images/DVD_Button.png"
                 x: 0
                 anchors.verticalCenter: parent.verticalCenter
+                opacity: 0
             }
             Image {
                 id: vcrButton
@@ -27,6 +28,7 @@ Item {
                 anchors.left: dvdButton.right
                 anchors.leftMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
+                opacity: 0
             }
             Image {
                 id: ejectButton
@@ -42,7 +44,7 @@ Item {
             height: 151
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: topContainer.bottom
-            anchors.topMargin: 30
+            anchors.topMargin: 20
             Image {
                 property string selected
                 id: navigationButtons
@@ -111,11 +113,12 @@ Item {
             source: "images/Play_button.png"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: navigationContainer.bottom
-            anchors.topMargin: 30
+            anchors.topMargin: 20
             MouseRegion {
                 anchors.fill: parent
                 onPressed: {
                     parent.opacity = 0.6
+                    iremitter.send_command("play");
                 }
                 onReleased: {
                     parent.opacity = 1
@@ -154,7 +157,8 @@ Item {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/Pause_button.png"
                     onPressed: {
-                        parent.opacity = 0.6
+                        parent.opacity = 0.6;
+                        iremitter.send_command("pause");
                     }
                     onReleased: {
                         parent.opacity = 1
@@ -191,6 +195,78 @@ Item {
                 }
                 onReleased: {
                     parent.opacity = 1
+                }
+            }
+        }
+        Item {
+            id: prevNextButtons
+            width: 175
+            height: 48
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: stopButton.bottom
+            anchors.topMargin: 2
+            Image {
+                id: prevButton
+                source: "images/Prev_button.png"
+                anchors.left: parent.left
+                MouseRegion {
+                    anchors.fill: parent
+                    onPressed: {
+                        parent.opacity = 0.6
+                    }
+                    onReleased: {
+                        parent.opacity = 1
+                    }
+                }
+            }
+            Image {
+                id: nextButton
+                source: "images/Next_button.png"
+                anchors.right: parent.right
+                MouseRegion {
+                    anchors.fill: parent
+                    onPressed: {
+                        parent.opacity = 0.6
+                    }
+                    onReleased: {
+                        parent.opacity = 1
+                    }
+                }
+            }
+        }
+        Item {
+            id: menuTitleButtons
+            width: 175
+            height: 48
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: prevNextButtons.bottom
+            anchors.topMargin: 2
+            Image {
+                id: menuButton
+                source: "images/Menu_button.png"
+                anchors.left: parent.left
+                MouseRegion {
+                    anchors.fill: parent
+                    onPressed: {
+                        parent.opacity = 0.6
+                    }
+                    onReleased: {
+                        parent.opacity = 1
+                    }
+                }
+            }
+            Image {
+                id: titleButton
+                source: "images/Title_button.png"
+                anchors.right: parent.right
+                MouseRegion {
+                    anchors.fill: parent
+                    onPressed: {
+                        parent.opacity = 0.6
+                    }
+                    onReleased: {
+                        parent.opacity = 1
+                    }
                 }
             }
         }

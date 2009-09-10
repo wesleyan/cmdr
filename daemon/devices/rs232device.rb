@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'devices/device'
+require '/usr/local/wescontrol/daemon/devices/device'
 require 'serialport'
 require 'bitpack'
 

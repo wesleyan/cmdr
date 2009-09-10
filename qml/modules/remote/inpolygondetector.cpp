@@ -21,7 +21,6 @@ void MaskedMouseRegion::setMaskPath(QString maskPath)
 {
     QPixmap bm(maskPath);
     region = new QRegion(bm.mask());
-    qDebug() << "Image: " << bm.size();
     m_maskPath = maskPath;
 }
 void MaskedMouseRegion::mousePressEvent(QGraphicsSceneMouseEvent *event)

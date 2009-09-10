@@ -1,33 +1,27 @@
-require '/usr/local/wescontrol/daemon/devices/rs232device'
+require '/usr/local/wescontrol/daemon/devices/device'
 
-class Projector < RS232Device
+class PowerPoint < Device
 
-	def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
-		super(port, baud_rate, data_bits, stop_bits, name, bus)	
-	end
-
-	def kind
-		return "Projector"
+	def initialize(name, bus)
+		super(name, bus)	
 	end
 	
 	@api = [
 		#format:
 		#[:message, 			[in], 			[out]] 
-		[:set_power, 			["on:b"], 		["response:s"]],
-		[:power, 				[], 			["on:b"]],
-		[:set_video_mute, 		["on:b"], 		["response:s"]],
-		[:video_mute, 			[], 			["on:b"]],
-		[:set_input, 			["input:s"],	["response:s"]],
-		[:set_brightness,		["input:u"],	["response:s"]],
-		[:input, 				[], 			["input:s"]],
-		[:cooling, 				[], 			["true:b"]],
-		[:warming, 				[], 			["true:b"]],
-		[:model, 				[], 			["model:s"]],
-		[:lamp_hours, 			[], 			["hours:u"]],
-		[:percent_lamp_used,	[], 			["percent:u"]]
+		[:open_ppt, 			["file:s"], 	["response:s"]],
+		[:launch_program, 		[], 			["response:s"]],
+		[:start_show, 			[], 			["response:s"]],
+		[:end_show,				[],				["response:s"]],
+		[:get_slides_as_png, 	[], 			[""]],
+		[:go_to_slide, 			["input:u"],	["response:s"]],
+		[:next_slide,			[],				["response:s"]],
+		[:previous_slide, 		[], 			["response:s"]],
+		[:current_slide, 		[], 			["number:u"]],
+		[:current_notes, 		[], 			["true:b"]]
 	]
 	
-	dbus_interface "edu.wesleyan.WesControl.projector" do
+	dbus_interface "edu.wesleyan.WesControl.powerpoint" do
 		@api.each{|entry|
 			entry[2] << "error:s" if entry[2].size == 0
 			sig = (entry[1].collect{|s| "in #{s}"} + entry[2].collect{|s| "out #{s}"}).join(", ")
@@ -59,11 +53,10 @@ class Projector < RS232Device
 				return responses #huh?
 			end
 		}
-		dbus_signal :power_changed, "powered:b"
-		dbus_signal :video_mute_changed, "on:b"
-		dbus_signal :input_changed, "input:s"
-		dbus_signal :cooling_changed, "on:b"
-		dbus_signal :warming_changed,"on:b"
-
+		dbus_signal :powerpoint_launched, ""
+		dbus_signal :powerpoint_closed, ""
+		dbus_signal :slideshow_started, ""
+		dbus_signal :slideshow_ended, ""
+		dbus_signal :slide_changed,"current:u"
 	end
 end

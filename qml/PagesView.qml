@@ -142,6 +142,7 @@ Item {
         currentItemPositioning: "SnapAuto"
         snapPosition: parent.width/2 - (componentWidth+20)/2
         maximumFlickVelocity: 700
+        cacheBuffer: 5000
         //locked: true
     }
 }

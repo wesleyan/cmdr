@@ -1,0 +1,3 @@
+class Computer < Device
+
+end

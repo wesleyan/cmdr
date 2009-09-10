@@ -3,9 +3,11 @@ room_name: Exley 121
 devices: 
     - name: projector
       class: NECProjector
-      port: /dev/ttyUSB1
-      type: Projector
+      port: /dev/ttyUSB0
     - name: extron
       class: ExtronVideoSwitcher
-      port: /dev/ttyUSB0
-      type: VideoSwitcher
+      port: /dev/ttyUSB1
+    - name: dvd_vcr_remote
+      class: IREmitter
+      transmitter: 1
+      remote: Sony_RMT-V501A

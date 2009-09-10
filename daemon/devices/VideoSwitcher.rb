@@ -1,4 +1,4 @@
-require 'devices/rs232device'
+require '/usr/local/wescontrol/daemon/devices/rs232device'
 
 class VideoSwitcher < RS232Device
 

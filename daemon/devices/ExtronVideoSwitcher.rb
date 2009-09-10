@@ -1,10 +1,10 @@
-require 'devices/VideoSwitcher'
+require '/usr/local/wescontrol/daemon/devices/VideoSwitcher'
 
 class ExtronVideoSwitcher < VideoSwitcher
 	attr_reader :input, :volume, :mute, :model, :firmware_version, :part_number, :clipping
 
-	def initialize(name, port, bus)
-		puts "Initializing Extron on port #{port} with name #{name}"
+	def initialize(name, bus, config)
+		puts "Initializing Extron on port #{config['port']} with name #{name}"
 		Thread.abort_on_exception = true
 
 		@commands = {
@@ -30,7 +30,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 			"E13" => "Invalid value",
 			"E14" => "Invalid for this configuration"
 		}
-		super(port, 9600, 8, 1, name, bus)
+		super(config['port'], 9600, 8, 1, name, bus)
 		
 		Thread.new{ read() }
 		Thread.new{

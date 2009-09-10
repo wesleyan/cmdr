@@ -2,43 +2,28 @@ import Qt 4.6
 import WesControl
 Rect {
     resources: [
-        ListModel {
+        XmlListModel {
             id: SourcesModel
-            ListElement {
-                name: "Mac"
-                imageSource: "mac.png"
-                imageWidth: 115
-                imageHeight: 54
-                projectorInput: "RGB1"
-                switcherInput: 1
+            source: "../../../pages.xml"
+            query: "/WesControl/page[name=\"Source\"]/configuration/sources/source"
+            XmlRole {
+                name: "name"
+                query: "name/string()"
             }
-            ListElement {
-                name: "PC"
-                imageSource: "computer.svg"
-                imageWidth: 95
-                imageHeight: 95
-                projectorInput: "RGB1"
-                switcherInput: 2
+            XmlRole {
+                name: "imageSource"
+                query: "image/@source/string()"
             }
-            ListElement {
-                name: "Laptop"
-                imageSource: "laptop.svg"
-                imageWidth: 80
-                imageHeight: 73
-                projectorInput: "RGB1"
-                switcherInput: 3
+            XmlRole {
+                name: "imageWidth"
+                query: "image/@width/number()"
             }
-            ListElement {
-                name: "DVD"
-                imageSource: "DVD.png"
-                imageWidth: 70
-                imageHeight: 70
-                projectorInput: "RGB1"
-                switcherInput: 4
+            XmlRole {
+                name: "imageHeight"
+                query: "image/@height/number()"
             }
         }
     ]
-
     height: parent.height
     width: parent.width
     radius: 20

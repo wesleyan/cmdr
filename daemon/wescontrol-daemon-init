@@ -19,10 +19,10 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 DESC="The daemon for wescontrol"
 NAME=wescontrol-daemon
 DAEMON=/usr/local/wescontrol/daemon/$NAME
-DAEMON_ARGS="/etc/wescontrol.yaml"
+DAEMON_ARGS=/etc/wescontrol.yaml
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-CONFIG_FILE=/etc/wescontrol.json
+CONFIG_FILE=/etc/wescontrol.yaml
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0

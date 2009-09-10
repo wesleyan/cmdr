@@ -2,6 +2,7 @@
 
 #include "wescontrol.h"
 #include "sourcecontroller.h"
+#include "iremitter.h"
 
 #include <QtDeclarative/qmlcontext.h>
 #include "qml.h"
@@ -24,6 +25,7 @@
 #include <QmlEngine>
 #include <QmlComponent>
 #include <QDebug>
+#include <QDateTime>
 
 
 WesControl::WesControl(QWidget *parent, Qt::WindowFlags flags)
@@ -90,12 +92,15 @@ void WesControl::openQml(const QString& fileName)
 
     messages = new MessageModel;
     SourceController *sourcecontroller = new SourceController;
+    IREmitter *iremitter = new IREmitter;
     //connect(projector, SIGNAL(sendMessage(QString,int)), messages, SLOT(addMessage(QString,int)));
 
     QmlContext *ctxt = canvas->rootContext();
     //ctxt->setContextProperty("projector", projector);
     ctxt->setContextProperty("messages", messages);
     ctxt->setContextProperty("sourcecontroller", sourcecontroller);
+    ctxt->setContextProperty("datetime", QDateTime::currentDateTime());
+    ctxt->setContextProperty("iremitter", iremitter);
 
     canvas->execute();
     qWarning() << "Wall startup time:" << t.elapsed();

@@ -2,7 +2,7 @@ require 'rubygems'
 require 'serialport'
 require 'bitpack'
 
-require 'devices/Projector'
+require '/usr/local/wescontrol/daemon/devices/Projector'
 
 class NECProjector < Projector
 	
@@ -18,11 +18,11 @@ class NECProjector < Projector
 	
 	MODEL_MAP = {[10, 4, 9]=>"NP300", [3, 0, 6]=>"VT80", [12, 0, 8]=>"NP1150/NP2150/NP3150", [11, 1, 0]=>"NP62", [10, 1, 9]=>"NP500", [2, 2, 3]=>"LT240K/LT260K", [12, 2, 9]=>"VT800", [4, 0, 3]=>"GT5000", [4, 1, 1]=>"GT2150", [2, 1, 3]=>"LT220", [2, 0, 6]=>"LT380", [1, 2, 3]=>"MT1075", [10, 3, 9]=>"NP400", [8, 0, 7]=>"NP4000/NP4001", [6, 0, 5]=>"WT610/WT615", [3, 0, 4]=>"VT770", [11, 0, 0]=>"NP41/61", [10, 0, 9]=>"NP600", [5, 0, 3]=>"HT1000", [2, 0, 5]=>"LT245/LT265", [1, 0, 6]=>"NP1000/NP2000", [12, 1, 9]=>"NP901W", [4, 1, 3]=>"GT6000", [4, 0, 1]=>"GT1150", [1, 0, 1]=>"MT1060/MT1065", [10, 0, 8]=>"VT700", [2, 1, 6]=>"LT280", [12, 1, 8]=>"NP3151W", [10, 2, 9]=>"NP500", [6, 0, 3]=>"WT600", [5, 0, 4]=>"HT1100", [3, 0, 7]=>"VT90", [2, 0, 3]=>"LT240/LT260", [12, 0, 9]=>"NP905", [1, 1, 3]=>"MT860"}
 
-	def initialize(name, port, bus)
-		puts "Initializing projector on port #{port} with name #{name}"
+	def initialize(name, bus, config)
+		puts "Initializing projector on port #{config['port']} with name #{name}"
 		Thread.abort_on_exception = true
 	
-		super(port, 9600, 8, 1, name, bus)
+		super(config['port'], 9600, 8, 1, name, bus)
 
 		#@frames stores an array of messages that are currently being sent, indexed by id2 (which seems to be unique for each command--honestly, I have no
 		#clue how id1 and id2 are supposed to work, despite several hours of trying to figure out. For the input command (id2=3) any id1 in the format
@@ -38,6 +38,7 @@ class NECProjector < Projector
 			:power=              => [2, proc {|on| on ? 0 : 1}, nil, nil],
 			:video_mute=         => [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
 			:input=              => [2, 3, proc {|source| [1, INPUT_HASH[source]].pack("cc")}, nil],
+			:brightness=		 => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
 			:running_sense       => [0, 0x81, nil, proc {|frame|
 				@power       = frame["data"][0] & 2**1 != 0
 				@cooling     = frame["data"][0] & 2**5 != 0

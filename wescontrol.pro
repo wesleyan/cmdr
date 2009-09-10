@@ -4,7 +4,8 @@ SOURCES = src/wescontrol.cpp \
     src/videoswitcher.cpp \
     src/sourcecontroller.cpp \
     src/volume.cpp \
-    qml/modules/remote/inpolygondetector.cpp
+    qml/modules/remote/inpolygondetector.cpp \
+    src/iremitter.cpp
 QT += script \
     declarative \
     dbus \
@@ -54,7 +55,8 @@ HEADERS += src/wescontrol.h \
     src/videoswitcher.h \
     src/sourcecontroller.h \
     src/volume.h \
-    qml/modules/remote/inpolygondetector.h
+    qml/modules/remote/inpolygondetector.h \
+    src/iremitter.h
 OTHER_FILES += qml/LoginScreen.qml \
     qml/TopBar.qml \
     qml/keyboard.qml \
@@ -68,7 +70,6 @@ OTHER_FILES += qml/LoginScreen.qml \
     qml/modules/sources/SourcesPage.qml \
     qml/modules/projector/ButtonComponent.qml \
     qml/modules/projector/ProjectorController.qml \
-    qml/modules/sources/SourceController.qml \
     qml/modules/volume/VolumePage.qml \
     qml/modules/volume/VolumeButton.qml \
     qml/modules/remote/RemotePage.qml \
@@ -81,4 +82,3 @@ UI_DIR = $$builddir
 RCC_DIR = $$builddir
 DEPENDPATH += src/
 INCLUDEPATH += src/
-

@@ -19,17 +19,17 @@
 				<source>
 					<name>PC</name>
 					<image source="computer.svg" width="95" height="95" />
-					<input projector="RGB1" switcher="2" />
+					<input projector="RGB1" switcher="4" />
 				</source>
 				<source>
 					<name>Laptop</name>
 					<image source="laptop.svg" width="80" height="73" />
-					<input projector="RGB1" switcher="3" />
+					<input projector="RGB1" switcher="2" />
 				</source>
 				<source>
 					<name>DVD</name>
 					<image source="DVD.png" width="70" height="70" />
-					<input projector="VIDEO" switcher="4" />
+					<input projector="VIDEO" switcher="3" />
 				</source>
 			</sources>
 		</configuration>

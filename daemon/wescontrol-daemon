@@ -1,12 +1,15 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'dbus'
-require 'dbus_fix'
+require '/usr/local/wescontrol/daemon/dbus_fix.rb'
 require 'yaml'
+require 'drb/drb'
 
-require 'devices/device'
-require 'devices/Projector'
-require 'devices/VideoSwitcher'
+require '/usr/local/wescontrol/daemon/devices/device'
+require '/usr/local/wescontrol/daemon/devices/Projector'
+require '/usr/local/wescontrol/daemon/devices/VideoSwitcher'
+
+URI = "druby://localhost:8787"
 
 class RControl < DBus::Object
 	@room_name
@@ -32,24 +35,28 @@ end
 
 @devices = {}
 
-bus          = DBus.session_bus
+bus          = DBus::SystemBus.instance
 service      = bus.request_service("edu.wesleyan.WesControl")
 rcontrol     = RControl.new(config['room_name'])
 service.export(rcontrol)
 
 config['devices'].each{|device|
-	require "devices/#{device['class']}"
-	device = Object.const_get(device['class']).new(device['name'], device['port'], bus)
+	require "/usr/local/wescontrol/daemon/devices/#{device['class']}"
+	device = Object.const_get(device['class']).new(device['name'], bus, device)
 	@devices[device.name] = device
 	service.export(device)
 }
 
+FRONT_OBJECT = @devices
+$SAFE = 1 # disable eval() and friends
+DRb.start_service(URI, FRONT_OBJECT)
+
 while(true) do
-	begin
+	#begin
 		main = DBus::Main.new
 		main << bus
 		main.run
-	rescue
-		puts "Error: $!"
-	end
+	#rescue
+	#	puts "Error: #{$!}"
+	#end
 end
