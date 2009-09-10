@@ -44,22 +44,22 @@ Item {
                     height: componentHeight
                     width: componentWidth
                     //transform: Rotation3D { id: rotation; axis.endY: 60; angle: 0 }
-                    Item {
+                    Loader {
                         id: pageItem
-                        qml: pageItemURL
+                        source: pageItemURL
                         anchors.fill: parent
 
                     }
                     states: [
                         State {
                             name: "rightOfIndex"
-                            SetProperties {
+                            PropertyChanges {
                                 target: rotation
                                 angle: 29
                                 axis.startX: 0
                                 axis.endX: 0
                             }
-                            /*SetProperties {
+                            /*PropertyChanges {
                                 target: pageRect
                                 opacity: 0.6
                                 scale: 0.6
@@ -68,13 +68,13 @@ Item {
                         },
                         State {
                             name: "leftOfIndex"
-                            SetProperties {
+                            PropertyChanges {
                                 target: rotation
                                 angle: -29
                                 axis.startX: componentWidth
                                 axis.endX: componentWidth
                             }
-                            /*SetProperties {
+                            /*PropertyChanges {
                                 target: pageRect
                                 opacity: 0.6
                                 scale: 0.6
@@ -85,10 +85,10 @@ Item {
                     ]
                     transitions: [
                         Transition {
-                            fromState: ""
-                            toState: "*"
+                            from: ""
+                            to: "*"
                             SequentialAnimation {
-                                SetPropertyAction {
+                                PropertyAction {
                                     target: rotation;
                                     properties: "axis.startX,axis.startY";
                                 }
@@ -99,24 +99,24 @@ Item {
                             }
                         },
                         Transition {
-                            fromState: "leftOfIndex"
-                            toState: ""
+                            from: "leftOfIndex"
+                            to: ""
                             SequentialAnimation {
                                 NumberAnimation {
                                     properties: "angle"
                                     duration: 300
                                 }
-                                SetPropertyAction {
+                                PropertyAction {
                                     target: rotation;
                                     properties: "axis.startX,axis.endX";
                                 }
                             }
                         },
                         Transition {
-                            fromState: "rightOfIndex"
-                            toState: ""
+                            from: "rightOfIndex"
+                            to: ""
                             SequentialAnimation {
-                                SetPropertyAction {
+                                PropertyAction {
                                     target: rotation;
                                     properties: "axis.startX,axis.endX";
                                 }

@@ -7,9 +7,9 @@ Item {
     Image {
         id: sourcesButton
         source: "remote.png"
+        fillMode: PreserveAspectFit
         smooth: true
         anchors.horizontalCenter: parent.horizontalCenter
-        preserveAspect: true
         height: 50
         y: 5
     }

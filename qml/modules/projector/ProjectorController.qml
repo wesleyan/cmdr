@@ -15,7 +15,7 @@ Item {
     states: [
         State {
             name: "onState"
-            SetProperties {
+            PropertyChanges {
                 target: projector
                 power: true
                 video_mute: false
@@ -23,14 +23,14 @@ Item {
         },
         State {
             name: "offState"
-            SetProperties {
+            PropertyChanges {
                 target: projector
                 power: false
             }
         },
         State {
             name: "muteState"
-            SetProperties {
+            PropertyChanges {
                 target: projector
                 video_mute: true
             }

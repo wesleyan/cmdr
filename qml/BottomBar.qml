@@ -30,9 +30,11 @@ Item {
                 anchors.fill: parent
                 opacity: 0.9
 
-                Item {
-                    id: buttonImage
-                    qml: buttonItemURL
+                Loader {
+                    item: Item {
+                        id: buttonImage
+                    }
+                    source: buttonItemURL
                 }
 
             }
@@ -41,7 +43,7 @@ Item {
                 color: "white"
                 text: name
                 font.family: "Myriad Pro"
-                font.size: 12
+                font.pointSize: 12
                 y: 56
                 anchors.horizontalCenter: parent.horizontalCenter
             }
@@ -55,11 +57,11 @@ Item {
                 State {
                     name: "not_selected"
                     when: index != buttonsView.currentIndex
-                    SetProperties {
+                    PropertyChanges {
                         target: nameText
                         color: "gray"
                     }
-                    SetProperties {
+                    PropertyChanges {
                         target: button
                         opacity: 0.5
                     }
@@ -78,13 +80,13 @@ Item {
             ]
         }
     }
-    Rect {
+    Rectangle {
         width: parent.width
         height: parent.height
         color: "black"
         anchors.bottom: parent.bottom
 
-        Rect {
+        Rectangle {
             width: parent.width
             height: parent.height/2
             anchors.top: parent.top
@@ -96,7 +98,7 @@ Item {
             Item {
                 height: parent.height
                 width: 90
-                Rect {
+                Rectangle {
                     width: 90
                     height: 80
                     color: "#828282"

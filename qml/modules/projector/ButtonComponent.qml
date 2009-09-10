@@ -13,7 +13,7 @@ Item {
             duration: 200
         }
     }
-    Rect {
+    Rectangle {
         radius: 20
         pen.color: "white"
         opacity: 0.5
@@ -36,7 +36,7 @@ Item {
         }
         Text {
             id: displayText
-            font.size: 40
+            font.pointSize: 40
             color: "white"
             font.family: "Myriad Pro"
             font.bold: true
@@ -57,15 +57,15 @@ Item {
         State {
             name: "pressed"
             when: mouseRegion.pressed
-            SetProperties {
+            PropertyChanges {
                 target: gradientStop1
                 color: "#000000"
             }
-            SetProperties {
+            PropertyChanges {
                 target: gradientStop2
                 color: "#666666"
             }
-            SetProperties {
+            PropertyChanges {
                 target: buttonContent
                 scale: 0.95
             }

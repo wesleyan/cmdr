@@ -1,6 +1,6 @@
 import Qt 4.6
 import WesControl
-Rect {
+Rectangle {
     resources: [
         XmlListModel {
             id: SourcesModel
@@ -36,7 +36,7 @@ Rect {
         Item {
             height: 90
             width: parent.width
-            Rect {
+            Rectangle {
                 id: backgroundRect
                 anchors.fill: parent
                 opacity: 0
@@ -71,12 +71,12 @@ Rect {
                     id: nameText
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: "Myriad Pro"
-                    font.size: 54
+                    font.pointSize: 54
                     text: name
                     color: "black"
                 }
             }
-            Rect {
+            Rectangle {
                 height: 1
                 width: parent.width
                 color: "#CCCCCC"
@@ -101,20 +101,20 @@ Rect {
                 State {
                     name: "selected"
                     when: sourcesView.currentIndex == index
-                    SetProperties {
+                    PropertyChanges {
                         target: backgroundRect
                         opacity: 1
                     }
-                    SetProperties {
+                    PropertyChanges {
                         target: nameText
                         color: "white"
                     }
 
-                    /*SetProperties {
+                    /*PropertyChanges {
                         target: projector
                         input: projectorInput
                     }
-                    SetProperties {
+                    PropertyChanges {
                         target: videoswitcher
                         input: switcherInput
                     }*/

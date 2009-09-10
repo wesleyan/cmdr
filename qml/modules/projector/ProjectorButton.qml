@@ -10,6 +10,6 @@ Item {
         height: 67
         source: "images/button/" + projector.realState + ".png"
         smooth: true
-        anchors.centeredIn: parent
+        anchors.centerIn: parent
     }
 }

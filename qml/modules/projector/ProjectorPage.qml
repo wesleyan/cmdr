@@ -5,7 +5,7 @@ Item {
     ProjectorController {
         id: projector
     }
-    Rect {
+    Rectangle {
         color:"black"
         radius: 20
         opacity: 0.8
@@ -52,7 +52,7 @@ Item {
         states: [
             State {
                 name: "hidden"
-                SetProperties {
+                PropertyChanges {
                     target: muteButton
                     opacity: 0
                 }

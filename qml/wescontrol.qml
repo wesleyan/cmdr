@@ -1,5 +1,5 @@
 import Qt 4.6
-Rect {
+Rectangle {
     id: Root
     color: "#000"
     width: 1024
@@ -83,21 +83,21 @@ Rect {
                 height: 85
                 width: parent.width
                 anchors.horizontalCenter: parent.horizontalCenter
-                Rect {
+                Rectangle {
                     color: "black"
                     radius: 10
                     height: messageText.height + 15 < 80 ? 81 : messageText.height + 15
                     width: parent.width - 10
-                    anchors.centeredIn: parent
+                    anchors.centerIn: parent
                     opacity: 0.75
                     Text {
                         id: messageText
                         width: parent.width - 10
                         text: message
                         font.family: "Myriad Pro"
-                        font.size: 14
+                        font.pointSize: 14
                         color: "white"
-                        anchors.centeredIn: parent
+                        anchors.centerIn: parent
                         wrap: true
                     }
                 }

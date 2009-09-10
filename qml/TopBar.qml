@@ -9,7 +9,7 @@ Item {
         width: parent.width
         text: Formatter.timeText
         color: "white"
-        font.size: 18
+        font.pointSize: 18
         font.family: "Myriad Pro"
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -19,7 +19,7 @@ Item {
 
     Text {
         text: "Exley 121"
-        font.size: 22
+        font.pointSize: 22
         color: "white"
         font.family: "Myriad Pro"
         anchors.bottom: parent.bottom
@@ -28,7 +28,7 @@ Item {
 
     }
 
-    Rect {
+    Rectangle {
         radius: 10
         width: 112
         height: 28
@@ -42,8 +42,8 @@ Item {
             text: "Log In"
             color: "white"
             font.family: "Myriad Pro"
-            font.size: 12
-            anchors.centeredIn: parent
+            font.pointSize: 12
+            anchors.centerIn: parent
         }
     }
 }

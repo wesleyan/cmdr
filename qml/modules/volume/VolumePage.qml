@@ -53,7 +53,7 @@ Item {
         onClicked: {
             muteLightRect.state = muteLightRect.state == "" ? "muteOnState" : ""
         }
-        Rect {
+        Rectangle {
             id: muteLightRect
             color: "#E82725"
             opacity: 0.0
@@ -79,15 +79,15 @@ Item {
             states: [
                 State {
                     name: "muteOnState"
-                    SetProperties {
+                    PropertyChanges {
                         target: muteLightAnimation
                         running: true
                     }
-                    SetProperties {
+                    PropertyChanges {
                         target: muteLightRect
                         opacity: 0
                     }
-                    SetProperties {
+                    PropertyChanges {
                         target: blurredSpeakerImage
                         opacity: 0
                     }
