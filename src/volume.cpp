@@ -9,7 +9,7 @@
 #include <QtDeclarative/qmlengine.h>
 #include "qml.h"
 
-QDBusConnection volume_dbus = QDBusConnection::sessionBus();
+QDBusConnection volume_dbus = QDBusConnection::systemBus();
 QString volume_service    = "edu.wesleyan.WesControl";
 QString volume_object    = "/edu/wesleyan/WesControl/extron";
 QString volume_interface  = "edu.wesleyan.WesControl.videoSwitcher";

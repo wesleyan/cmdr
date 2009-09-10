@@ -43,7 +43,7 @@ Item {
                     opacity: 1
                     height: componentHeight
                     width: componentWidth
-                    transform: Rotation3D { id: rotation; axis.endY: 60; angle: 0 }
+                    //transform: Rotation3D { id: rotation; axis.endY: 60; angle: 0 }
                     Item {
                         id: pageItem
                         qml: pageItemURL
