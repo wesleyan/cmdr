@@ -7,7 +7,7 @@ Item {
     Image {
         id: sourcesButton
         source: "remote.png"
-        fillMode: PreserveAspectFit
+        fillMode: "PreserveAspectFit"
         smooth: true
         anchors.horizontalCenter: parent.horizontalCenter
         height: 50

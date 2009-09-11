@@ -38,9 +38,9 @@ Item {
             id: sliderMouseRegion
             anchors.fill: parent
             drag.target: sliderImage
-            drag.axis: "y"
-            drag.ymin: -sliderImage.height/2 + 14
-            drag.ymax: parent.height - sliderImage.height/2 - 17
+            drag.axis: "YAxis"
+            drag.minimumY: -sliderImage.height/2 + 14
+            drag.maximumY: parent.height - sliderImage.height/2 - 17
         }
     }
 

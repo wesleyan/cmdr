@@ -122,8 +122,8 @@ Rectangle {
             ]
             transitions: [
                 Transition {
-                    fromState: ""
-                    toState: "selected"
+                    from: ""
+                    to: "selected"
                     NumberAnimation {
                     }
                 }

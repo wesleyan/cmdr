@@ -15,7 +15,7 @@ Item {
     }
     Rectangle {
         radius: 20
-        pen.color: "white"
+        border.color: "white"
         opacity: 0.5
         anchors.fill: parent
         gradient: Gradient {
