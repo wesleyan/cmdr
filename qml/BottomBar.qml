@@ -119,7 +119,7 @@ Item {
             highlight: HighlightComponent
             focus: true
             autoHighlight: true
-            locked: true
+            interactive: false
             x: 20
         }
 

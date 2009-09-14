@@ -49,7 +49,7 @@ Item {
         y: 10
     }
     Repeater {
-        component: ImageComponent
-        dataSource: SourcesModel
+        delegate: ImageComponent
+        model: SourcesModel
     }
 }

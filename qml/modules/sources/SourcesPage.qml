@@ -36,21 +36,6 @@ Rectangle {
         Item {
             height: 90
             width: parent.width
-            Rectangle {
-                id: backgroundRect
-                anchors.fill: parent
-                opacity: 0
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0
-                        color: "#6E6E6E"
-                    }
-                    GradientStop {
-                        position: 1
-                        color: "#292929"
-                    }
-                }
-            }
             Item {
                 id: imageBox
                 width: 150
@@ -81,6 +66,7 @@ Rectangle {
                 width: parent.width
                 color: "#CCCCCC"
                 anchors.top: parent.bottom
+                z: -5
             }
             MouseRegion {
                 id: sourceMouseRegion
@@ -102,33 +88,80 @@ Rectangle {
                     name: "selected"
                     when: sourcesView.currentIndex == index
                     PropertyChanges {
-                        target: backgroundRect
-                        opacity: 1
-                    }
-                    PropertyChanges {
                         target: nameText
                         color: "white"
                     }
-
-                    /*PropertyChanges {
-                        target: projector
-                        input: projectorInput
-                    }
-                    PropertyChanges {
-                        target: videoswitcher
-                        input: switcherInput
-                    }*/
                 }
             ]
             transitions: [
                 Transition {
-                    from: ""
-                    to: "selected"
-                    NumberAnimation {
+                    SequentialAnimation {
+                        PauseAnimation {
+                            duration: 50
+                        }
+                        ColorAnimation {
+                            duration: 300
+                        }
                     }
                 }
             ]
         }
+    }
+
+    Item {
+        id: backgroundRect
+        width: parent.width
+        height: 90
+        clip: true
+        Rectangle {
+            id: gradientRect
+            smooth: true
+            width: parent.width
+            height: 90
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: "#6E6E6E"
+                }
+                GradientStop {
+                    position: 1
+                    color: "#292929"
+                }
+            }
+        }
+        y: SpringFollow {
+             source: sourcesView.currentItem.y
+             spring: 5
+             damping: 0.3
+        }
+        z: 0
+        states: [
+            State {
+                name: "up"
+                when: sourcesView.currentIndex == 0
+                PropertyChanges {
+                    target: gradientRect
+                    height: 110
+                    radius: 20
+                }
+            },
+            State {
+                name: "down"
+                when: sourcesView.currentIndex != 0
+                PropertyChanges {
+                    target: gradientRect
+                    radius: 0
+                }
+            }
+        ]
+        transitions: [
+            Transition {
+                NumberAnimation {
+                    properties: "radius"
+                    duration: 100
+                }
+            }
+        ]
     }
 
     ListView {
@@ -137,8 +170,9 @@ Rectangle {
         width: parent.width
         delegate: ListDelegate
         model: SourcesModel
+        //highlight: highlightComponent
         clip: true
-        //locked: true
-        //currentItemPositioning: "SnapAuto"
+        interactive: false
+        autoHighlight: false
     }
 }
