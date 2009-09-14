@@ -50,12 +50,23 @@ Volume::Volume()
 
     qDebug() << "Done with volume calls";
 
+    if(m_connected != connected)
+    {
+        m_connected = connected;
+        emit connectedChanged(m_connected);
+    }
+
     if(!connected)
     {
         qDebug() << "Not connected to volume controller";
         //emit sendMessage("Failed to communicate with server", 5000);
     }
 
+}
+
+bool Volume::connected() const
+{
+    return m_connected;
 }
 
 double Volume::volume() const

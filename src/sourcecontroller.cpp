@@ -87,6 +87,14 @@ SourceController::SourceController()
 
     connect(switcher, SIGNAL(inputChanged(int)), this, SLOT(switcher_input_changed()));
     connect(projector, SIGNAL(powerChanged(bool)), this, SLOT(projector_power_changed(bool)));
+
+    connect(switcher, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
+    connect(projector, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
+}
+
+bool SourceController::connected() const
+{
+    return switcher->connected() && projector->connected();
 }
 
 QString SourceController::source() const

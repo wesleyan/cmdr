@@ -39,12 +39,23 @@ VideoSwitcher::VideoSwitcher()
 
     qDebug() << "Done with extron calls";
 
+    if(m_connected != connected)
+    {
+        m_connected = connected;
+        emit connectedChanged(m_connected);
+    }
+
     if(!connected)
     {
         qDebug() << "Not connected to extron";
         //emit sendMessage("Failed to communicate with server", 5000);
     }
 
+}
+
+bool VideoSwitcher::connected() const
+{
+    return m_connected;
 }
 
 int VideoSwitcher::input() const

@@ -16,12 +16,15 @@ public:
     VideoSwitcher();
 
     Q_PROPERTY(int input READ input WRITE setInput NOTIFY inputChanged);
+    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged);
 
     int input() const;
     void setInput(int input);
+    bool connected() const;
 
     signals:
         void inputChanged(int);
+        void connectedChanged(bool);
         void sendMessage(QString message, int timeout);
 
     private slots:
@@ -31,6 +34,7 @@ public:
 
     private:
         int m_input;
+        bool m_connected;
 };
 QML_DECLARE_TYPE(VideoSwitcher);
 

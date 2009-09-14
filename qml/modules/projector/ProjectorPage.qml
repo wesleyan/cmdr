@@ -5,6 +5,45 @@ Item {
     ProjectorController {
         id: projector
     }
+    Item {
+        anchors.fill: parent
+        z: projector.connected? -1 : 1
+        opacity: projector.connected? 0 : 1
+        Rectangle {
+            color: "black"
+            radius: 20
+            opacity: 0.95
+            anchors.fill: parent
+            anchors.horizontalCenter: parent.horizontalCenter
+            MouseRegion {
+                anchors.fill: parent
+            }
+        }
+        Text {
+            id: unableToConnectText
+            text: "Unable to connect to projector"
+            font.family: "Myriad Pro"
+            font.pointSize: 40
+            color: "white"
+            wrap: true
+            width: parent.width-30
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 100
+            horizontalAlignment: "AlignHCenter"
+        }
+        Text {
+            text: "Please call #4959 for assistance"
+            font.family: "Myriad Pro"
+            font.pointSize: 20
+            color: "white"
+            width: parent.width-30
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: unableToConnectText.bottom
+            anchors.topMargin: 50
+            horizontalAlignment: "AlignHCenter"
+        }
+    }
     Rectangle {
         color:"black"
         radius: 20

@@ -23,6 +23,7 @@ QML_DEFINE_TYPE(WesControl , 1, 0, 0, Projector, Projector);
 
 Projector::Projector()
 {
+
     trueArgument << QVariant(true);
     falseArgument << QVariant(false);
 
@@ -93,12 +94,23 @@ Projector::Projector()
 
     qDebug() << "Done with setup";
 
+    if(m_connected != connected)
+    {
+        m_connected = connected;
+        emit connectedChanged(m_connected);
+    }
+    
     if(!connected)
     {
         qDebug() << "Not connected";
         emit sendMessage("Failed to communicate with server", 5000);
     }
 
+}
+
+bool Projector::connected() const
+{
+    return m_connected;
 }
 
 QString Projector::input() const

@@ -21,12 +21,14 @@ public:
     Q_PROPERTY(bool video_mute READ videoMute WRITE setVideoMute NOTIFY videoMuteChanged);
     Q_PROPERTY(bool cooling READ cooling NOTIFY coolingChanged(bool));
     Q_PROPERTY(bool warming READ warming NOTIFY warmingChanged(bool));
+    Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged(bool));
 
     QString input() const;
     bool power() const;
     bool videoMute() const;
     bool cooling() const;
     bool warming() const;
+    bool connected() const;
 
     void setPower(bool on);
     void setVideoMute(bool on);
@@ -39,6 +41,7 @@ public:
         void coolingChanged(bool);
         void warmingChanged(bool);
         void inputChanged(QString);
+        void connectedChanged(bool);
         void sendMessage(QString message, int timeout);
 
     private slots:
@@ -55,6 +58,7 @@ public:
         bool m_video_mute;
         bool m_warming;
         bool m_cooling;
+        bool m_connected;
         QString m_input;
 
        // QDBusConnection dbus;
