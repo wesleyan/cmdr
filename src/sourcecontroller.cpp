@@ -94,7 +94,7 @@ SourceController::SourceController()
 
 bool SourceController::connected() const
 {
-    return switcher->connected() && projector->connected();
+    return switcher->connected();// && projector->connected();
 }
 
 QString SourceController::source() const

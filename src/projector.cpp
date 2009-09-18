@@ -71,24 +71,24 @@ Projector::Projector()
     qDebug() << "Starting calls";
     QDBusReply<bool> reply;
 
-    reply = iface.call(QDBus::BlockWithGui, "power");
+    reply = iface.call("power");
     if(reply.isValid())m_power = reply.value();
     connected = connected && reply.isValid();
 
-    reply = iface.call(QDBus::BlockWithGui, "video_mute");
+    reply = iface.call("video_mute");
     if(reply.isValid())m_video_mute = reply.value();
     connected = connected && reply.isValid();
 
-    reply = iface.call(QDBus::BlockWithGui, "warming");
+    reply = iface.call("warming");
     if(reply.isValid())m_warming = reply.value();
     connected = connected && reply.isValid();
 
-    reply = iface.call(QDBus::BlockWithGui, "cooling");
+    reply = iface.call("cooling");
     if(reply.isValid())m_cooling = reply.value();
     connected = connected && reply.isValid();
 
     QDBusReply<QString> stringReply;
-    stringReply = iface.call(QDBus::BlockWithGui, "input");
+    stringReply = iface.call("input");
     if(stringReply.isValid())m_input = stringReply.value();
     connected = connected && stringReply.isValid();
 

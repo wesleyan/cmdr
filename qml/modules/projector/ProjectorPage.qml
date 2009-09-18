@@ -7,8 +7,8 @@ Item {
     }
     Item {
         anchors.fill: parent
-        z: projector.connected? -1 : 1
-        opacity: projector.connected? 0 : 1
+        z: projector.connected || true? -1 : 1
+        opacity: projector.connected || true? 0 : 1
         Rectangle {
             color: "black"
             radius: 20
@@ -73,6 +73,7 @@ Item {
             if(projector.realState == "offState")projector.state = "onState";
             if(projector.realState == "onState")projector.state = "offState";
         }
+        opacity: projector.realState == "offState" || projector.realState == "onState" || projector.realState == "muteState" ? 1 : 0
     }
     ButtonComponent {
         id: muteButton

@@ -5,8 +5,8 @@ Item {
     anchors.horizontalCenter: parent.horizontalCenter
     Item {
         anchors.fill: parent
-        z: volumeController.connected? -1 : 1
-        opacity: volumeController.connected? 0 : 1
+        z: volumeController.connected || true? -1 : 1
+        opacity: volumeController.connected || true? 0 : 1
         Rectangle {
             color: "black"
             radius: 20

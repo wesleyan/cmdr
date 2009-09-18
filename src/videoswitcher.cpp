@@ -35,10 +35,11 @@ VideoSwitcher::VideoSwitcher()
 
     reply = switcher_iface.call(QDBus::BlockWithGui, "input");
     if(reply.isValid())m_input = reply.value();
-    connected = connected && reply.isValid();
+    //connected = connected && reply.isValid();
 
     qDebug() << "Done with extron calls";
 
+    connected = true;
     if(m_connected != connected)
     {
         m_connected = connected;
