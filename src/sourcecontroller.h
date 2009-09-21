@@ -12,9 +12,12 @@ Q_OBJECT
 public:
     SourceController();
 
+    Q_PROPERTY(QString sourceImageURL READ sourceImageURL NOTIFY sourceChanged);
     Q_PROPERTY(QString source READ source WRITE setSource NOTIFY sourceChanged);
     Q_PROPERTY(QString state READ state WRITE setState);
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged);
+
+    QString sourceImageURL() const;
     QString source() const;
     void setSource(QString source);
     QString state() const;
@@ -38,6 +41,7 @@ public:
         VideoSwitcher *switcher;
         QString m_state;
         QHash<int, QString> nameToExtronMap;
+        QHash<QString, QString> nameToImageMap;
 };
 
 #endif // SOURCECONTROLLER_H

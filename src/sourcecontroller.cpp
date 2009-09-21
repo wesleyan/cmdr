@@ -50,13 +50,15 @@ SourceController::SourceController()
     QStringList names;
     QStringList projector_inputs;
     QStringList switcher_inputs;
+    QStringList image_urls;
     query.setQuery("doc('pages.xml')//page[name=\"Source\"]/configuration/sources/source/name/string()");
     query.evaluateTo(&names);
     query.setQuery("doc('pages.xml')//page[name=\"Source\"]/configuration/sources/source/input/@projector/string()");
     query.evaluateTo(&projector_inputs);
     query.setQuery("doc('pages.xml')//page[name=\"Source\"]/configuration/sources/source/input/@switcher/string()");
     query.evaluateTo(&switcher_inputs);
-
+    query.setQuery("doc('pages.xml')//page[name=\"Source\"]/configuration/sources/source/image/@source/string()");
+    query.evaluateTo(&image_urls);
     if(names.count() > 0 && (names.count() != projector_inputs.count() || names.count() != switcher_inputs.count()))
     {
         //there was a problem
@@ -78,6 +80,7 @@ SourceController::SourceController()
             t->setTargetState(state);
             parentState->addTransition(t);
             nameToExtronMap[switcher_inputs.at(i).toInt()] = names.at(i);
+            nameToImageMap[names.at(i)] = image_urls.at(i);
         }
         parentState->setInitialState(firstState);
         stateMachine.addState(parentState);
@@ -97,8 +100,15 @@ bool SourceController::connected() const
     return switcher->connected();// && projector->connected();
 }
 
+QString SourceController::sourceImageURL() const
+{
+    qDebug() << "Trying to find image for " << this->source() << ": " << nameToImageMap[m_source];
+    return nameToImageMap[this->source()];
+}
+
 QString SourceController::source() const
 {
+    qDebug() << "Returning source: " << m_source;
     return m_source;
 }
 void SourceController::setSource(QString source)

@@ -91,6 +91,7 @@ void WesControl::openQml(const QString& fileName)
     t.start();
 
     messages = new MessageModel;
+    //messages->addMessage("This is a test", 5000);
     SourceController *sourcecontroller = new SourceController;
     IREmitter *iremitter = new IREmitter;
     //connect(projector, SIGNAL(sendMessage(QString,int)), messages, SLOT(addMessage(QString,int)));
@@ -106,8 +107,10 @@ void WesControl::openQml(const QString& fileName)
     qWarning() << "Wall startup time:" << t.elapsed();
     //projector->updateVariables();
 
-    canvas->resize(canvas->sizeHint());
-    resize(sizeHint());
+   // canvas->resize(canvas->sizeHint());
+    canvas->resize(1024, 768);
+   // resize(sizeHint());
+    resize(1024, 768);
 
 }
 

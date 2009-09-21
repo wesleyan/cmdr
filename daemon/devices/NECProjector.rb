@@ -41,16 +41,17 @@ class NECProjector < Projector
 			:brightness=		 => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
 			:running_sense       => [0, 0x81, nil, proc {|frame|
 				@power       = frame["data"][0] & 2**1 != 0
+				was_cooling = @cooling
 				@cooling     = frame["data"][0] & 2**5 != 0 && !@warming
 				#projector is warming if it is doing power processing (bit 7) and not cooling
 				#this is not supported on MT1065's, but is on NPs
-				@warming     = (frame["data"][0] & 2**7 != 0) && !@cooling
+				@warming     = (frame["data"][0] & 2**7 != 0) && !was_cooling
 			}],
 			:common_data_request => [0, 0xC0, nil, proc {|frame|
 				data = frame["data"]
 				@power = data[3] == 1
-				@cooling = data[4] == 1
-				puts "DATA: #{data[6..7]}"
+				@cooling = data[4] == 1 if !@warming
+				#puts "DATA: #{data[6..7]}"
 				case data[6..7]
 					when [1, 1] then @input = "RGB1"
 					when [2, 1] then @input = "RGB2"
@@ -204,7 +205,7 @@ class NECProjector < Projector
 				#puts "Data size = #{data_size}"
 				#we make sure that, assuming that a frame started on index i of the buffer, we have all of the
 				#bytes that make up the frame
-				if @buffer.size - i >= 5 + data_size
+				if @buffer.size && @buffer.size - i >= 5 + data_size
 					#we add up the bytes of the supposed frame, and see if it matches the checksum
 					#if it does, it's probably a frame and we will treat it as such
 					bytes = @buffer[i..(i + 4 + data_size + 1)]

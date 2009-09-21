@@ -6,7 +6,9 @@ Item {
 
     Projector {
         id: projector
+        onSendMessage: messages.addMessage(message, timeout);
     }
+
 
     realState: projector.warming ? "warmingState" :
         (projector.cooling ? "coolingState" :

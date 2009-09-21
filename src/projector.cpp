@@ -165,6 +165,8 @@ void Projector::input_changed(QString input)
 
 void Projector::setPower(bool on)
 {
+                emit sendMessage("Tried to turn on", 10000);
+
     iface.callWithCallback("set_power",
                            on ? trueArgument : falseArgument,
                            this,
@@ -183,17 +185,14 @@ void Projector::setVideoMute(bool on)
 
 void Projector::setInput(QString input)
 {
-    if(input != m_input)
-    {
-        qDebug() << "Setting projector input to " << input;
-        QList<QVariant> inputArgument;
-        inputArgument << QVariant(input);
-        iface.callWithCallback("set_input",
-                               inputArgument,
-                               this,
-                               SLOT(responseFromProjector(QDBusMessage)),
-                               SLOT(errorFromProjector(QDBusError)));
-    }
+    qDebug() << "Setting projector input to " << input;
+    QList<QVariant> inputArgument;
+    inputArgument << QVariant(input);
+    iface.callWithCallback("set_input",
+                           inputArgument,
+                           this,
+                           SLOT(responseFromProjector(QDBusMessage)),
+                           SLOT(errorFromProjector(QDBusError)));
 }
 
 

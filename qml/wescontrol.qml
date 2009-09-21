@@ -104,15 +104,16 @@ Rectangle {
             }
         }
 
-        /*ListView {
+        ListView {
             id: messageListView
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
+            height: parent.height
             width: parent.width
             model: messages
             delegate: MessageComponent
-            locked: true
-        }*/
+            interactive: false
+        }
     }
 }
 
