@@ -46,23 +46,12 @@ Item {
     width: 90
     Image {
         id: sourcesButton
-        height: 33.9
+        height: 40
+        width: 70
         smooth: true
         anchors.horizontalCenter: parent.horizontalCenter
         y: 10
         source: "images/" + sourcecontroller.sourceImageURL
         fillMode: "PreserveAspectFit"
     }
-    /*Repeater {
-        delegate: ImageComponent
-        model: SourcesModel
-    }*/
-    Connection {
-        sender: sourcecontroller
-        signal: "sourceChanged()"
-        script: {
-            print("THE BUTTON SAW THE SOURCE CHANGE: " + sourcecontroller.sourceImageURL);
-        }
-    }
-
 }

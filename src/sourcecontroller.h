@@ -33,6 +33,7 @@ public:
         void projector_input_changed(QString input);
         void switcher_input_changed();
         void projector_power_changed(bool on);
+        void setUp();
 
     private:
         QString m_source;

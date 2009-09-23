@@ -41,11 +41,11 @@ class NECProjector < Projector
 			:brightness=		 => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
 			:running_sense       => [0, 0x81, nil, proc {|frame|
 				@power       = frame["data"][0] & 2**1 != 0
-				was_cooling = @cooling
-				@cooling     = frame["data"][0] & 2**5 != 0 && !@warming
+				@cooling     = frame["data"][0] & 2**5 != 0
 				#projector is warming if it is doing power processing (bit 7) and not cooling
 				#this is not supported on MT1065's, but is on NPs
-				@warming     = (frame["data"][0] & 2**7 != 0) && !was_cooling
+				@warming     = (frame["data"][0] & 2**7 != 0) && !@cooling && !@cooling_last_time
+				@cooling_last_time = @cooling
 			}],
 			:common_data_request => [0, 0xC0, nil, proc {|frame|
 				data = frame["data"]

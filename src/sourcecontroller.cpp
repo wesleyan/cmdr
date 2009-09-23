@@ -85,6 +85,7 @@ SourceController::SourceController()
         parentState->setInitialState(firstState);
         stateMachine.addState(parentState);
         stateMachine.setInitialState(parentState);
+        connect(&stateMachine, SIGNAL(started()), this, SLOT(setUp()));
         stateMachine.start();
     }
 
@@ -94,6 +95,13 @@ SourceController::SourceController()
     connect(switcher, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
     connect(projector, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
 }
+void SourceController::setUp()
+{
+    qDebug() << "   STARTING EXTRON SOURCE: " << switcher->input();
+    //Call the changed slots so that we start out with the correct state
+    switcher_input_changed();
+    projector_input_changed(projector->input());
+}
 
 bool SourceController::connected() const
 {
@@ -102,20 +110,19 @@ bool SourceController::connected() const
 
 QString SourceController::sourceImageURL() const
 {
-    qDebug() << "Trying to find image for " << this->source() << ": " << nameToImageMap[m_source];
     return nameToImageMap[this->source()];
 }
 
 QString SourceController::source() const
 {
-    qDebug() << "Returning source: " << m_source;
     return m_source;
 }
 void SourceController::setSource(QString source)
 {
     stateMachine.postEvent(new StringEvent(source));
-    if(m_source != source)emit sourceChanged();
+    bool changed = m_source != source;
     m_source = source;
+    if(changed)emit sourceChanged();
 }
 
 QString SourceController::state() const
@@ -137,12 +144,10 @@ void SourceController::projector_power_changed(bool on)
 
 void SourceController::projector_input_changed(QString input)
 {
-    qDebug("Projector input changed");
 }
 
 void SourceController::switcher_input_changed()
 {
-    qDebug("Video mute changed");
     stateMachine.postEvent(new StringEvent(nameToExtronMap[switcher->input()]));
     m_source = nameToExtronMap[switcher->input()];
     emit sourceChanged();

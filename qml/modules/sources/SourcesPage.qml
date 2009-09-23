@@ -116,13 +116,21 @@ Item {
                     anchors.fill: parent
                     onPressed: {
                         if(sourcesView.currentIndex != index)sourcecontroller.source = name
-                        sourcesView.currentIndex = index
+                        //sourcesView.currentIndex = index
                     }
                 }
                 Connection {
                     sender: sourcecontroller
                     signal: "sourceChanged()"
                     script: {
+                        if(sourcecontroller.source == name)sourcesView.currentIndex = index
+                    }
+                }
+                Timer {
+                    interval: 1000
+                    running: true
+                    repeat: true
+                    onTriggered: {
                         if(sourcecontroller.source == name)sourcesView.currentIndex = index
                     }
                 }
