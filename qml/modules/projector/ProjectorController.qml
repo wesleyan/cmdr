@@ -2,12 +2,12 @@ import Qt 4.6
 import WesControl 1.0
 Item {
     property string realState
-    property alias connected: projector.connected
+    //property alias connected: projector.connected
 
-    Projector {
+    /*Projector {
         id: projector
         onSendMessage: messages.addMessage(message, timeout);
-    }
+    }*/
 
 
     realState: projector.warming ? "warmingState" :

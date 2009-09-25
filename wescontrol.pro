@@ -5,7 +5,8 @@ SOURCES = src/wescontrol.cpp \
     src/sourcecontroller.cpp \
     src/volume.cpp \
     qml/modules/remote/inpolygondetector.cpp \
-    src/iremitter.cpp
+    src/iremitter.cpp \
+    src/projectorcontroller.cpp
 QT += script \
     declarative \
     dbus \
@@ -56,7 +57,8 @@ HEADERS += src/wescontrol.h \
     src/sourcecontroller.h \
     src/volume.h \
     qml/modules/remote/inpolygondetector.h \
-    src/iremitter.h
+    src/iremitter.h \
+    src/projectorcontroller.h
 OTHER_FILES += qml/LoginScreen.qml \
     qml/TopBar.qml \
     qml/keyboard.qml \

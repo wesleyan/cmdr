@@ -7,8 +7,8 @@ Item {
     }
     Item {
         anchors.fill: parent
-        z: projector.connected || true? -1 : 1
-        opacity: projector.connected || true? 0 : 1
+        z: true || true? -1 : 1
+        opacity: true || true? 0 : 1
         Rectangle {
             color: "black"
             radius: 20

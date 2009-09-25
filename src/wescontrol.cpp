@@ -3,6 +3,7 @@
 #include "wescontrol.h"
 #include "sourcecontroller.h"
 #include "iremitter.h"
+#include "projector.h"
 
 #include <QtDeclarative/qmlcontext.h>
 #include "qml.h"
@@ -94,10 +95,12 @@ void WesControl::openQml(const QString& fileName)
     //messages->addMessage("This is a test", 5000);
     SourceController *sourcecontroller = new SourceController;
     IREmitter *iremitter = new IREmitter;
+    Projector *projector = new Projector("edu.wesleyan.WesControl", "/edu/wesleyan/WesControl/projector",
+                           QDBusConnection::systemBus(), this);
     //connect(projector, SIGNAL(sendMessage(QString,int)), messages, SLOT(addMessage(QString,int)));
 
     QmlContext *ctxt = canvas->rootContext();
-    //ctxt->setContextProperty("projector", projector);
+    ctxt->setContextProperty("projector", projector);
     ctxt->setContextProperty("messages", messages);
     ctxt->setContextProperty("sourcecontroller", sourcecontroller);
     ctxt->setContextProperty("datetime", QDateTime::currentDateTime());

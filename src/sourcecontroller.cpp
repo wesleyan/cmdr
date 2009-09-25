@@ -27,9 +27,9 @@ protected:
     }
     virtual void onTransition(QEvent *)
     {
-            m_projector->setInput(m_projector_input);
+            m_projector->set_input(m_projector_input);
             qDebug() << "Switched projector to " << m_projector_input << " from " << m_projector->input();
-            m_switcher->setInput(m_extron_input);
+            m_switcher->set_input(m_extron_input);
             qDebug() << "Switched extron to " << m_extron_input;
     }
 
@@ -43,8 +43,11 @@ private:
 
 SourceController::SourceController()
 {
-    projector = new Projector();
-    switcher = new VideoSwitcher();
+    projector = new Projector("edu.wesleyan.WesControl", "/edu/wesleyan/WesControl/projector",
+                           QDBusConnection::systemBus(), this);
+
+    switcher = new VideoSwitcher("edu.wesleyan.WesControl", "/edu/wesleyan/WesControl/extron",
+                           QDBusConnection::systemBus(), this);
 
     QXmlQuery query;
     QStringList names;
@@ -89,15 +92,14 @@ SourceController::SourceController()
         stateMachine.start();
     }
 
-    connect(switcher, SIGNAL(inputChanged(int)), this, SLOT(switcher_input_changed()));
-    connect(projector, SIGNAL(powerChanged(bool)), this, SLOT(projector_power_changed(bool)));
+    connect(switcher, SIGNAL(input_changed(uint)), this, SLOT(switcher_input_changed()));
+    connect(projector, SIGNAL(power_changed(bool)), this, SLOT(projector_power_changed(bool)));
 
-    connect(switcher, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
-    connect(projector, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
+    connect(switcher, SIGNAL(connected_changed(bool)), this, SIGNAL(connectedChanged(bool)));
+    //connect(projector, SIGNAL(connectedChanged(bool)), this, SIGNAL(connectedChanged(bool)));
 }
 void SourceController::setUp()
 {
-    qDebug() << "   STARTING EXTRON SOURCE: " << switcher->input();
     //Call the changed slots so that we start out with the correct state
     switcher_input_changed();
     projector_input_changed(projector->input());
