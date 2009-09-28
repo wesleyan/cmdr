@@ -2,9 +2,7 @@ import Qt 4.6
 Item {
     anchors.fill: parent
     anchors.horizontalCenter: parent.horizontalCenter
-    ProjectorController {
-        id: projector
-    }
+
     Item {
         anchors.fill: parent
         z: true || true? -1 : 1
@@ -53,7 +51,7 @@ Item {
     }
     Image {
         id: projectorImage
-        source: "images/large/" + projector.realState + ".png"
+        source: "images/large/" + projectorcontroller.state + ".png"
         height: 230
         width: 195
         anchors.horizontalCenter: parent.horizontalCenter
@@ -65,15 +63,14 @@ Item {
         imageSource: "images/off_symbol.png"
         imageWidth: 36.36
         imageHeight: 43.154
-        text: projector.realState == "offState" ? "power on" : "power off"
+        text: projectorcontroller.state == "offState" ? "power on" : "power off"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: projectorImage.bottom
         anchors.topMargin: 20
         onClicked: {
-            if(projector.realState == "offState")projector.state = "onState";
-            if(projector.realState == "onState")projector.state = "offState";
+            projectorcontroller.setPower(projectorcontroller.state == "offState");
         }
-        opacity: projector.realState == "offState" || projector.realState == "onState" || projector.realState == "muteState" ? 1 : 0
+        opacity: projectorcontroller.state == "offState" || projectorcontroller.state == "onState" || projectorcontroller.state == "muteState" ? 1 : 0
     }
     ButtonComponent {
         id: muteButton
@@ -81,13 +78,12 @@ Item {
         imageWidth: 44
         imageHeight: 44
         text: "mute video"
-        state: projector.realState == ("onState" || "muteState") ? "" : "hidden"
+        state: projectorcontroller.state == ("onState" || "muteState") ? "" : "hidden"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: offButton.bottom
         anchors.topMargin: 20
         onClicked: {
-            if(projector.realState == "muteState")projector.state = "onState";
-            else if(projector.realState == "onState") projector.state = "muteState";
+            projectorcontroller.setVideoMute(projectorcontroller.state == "onState");
         }
         states: [
             State {

@@ -41,16 +41,29 @@ class NECProjector < Projector
 			:brightness=		 => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
 			:running_sense       => [0, 0x81, nil, proc {|frame|
 				@power       = frame["data"][0] & 2**1 != 0
-				@cooling     = frame["data"][0] & 2**5 != 0
+				@cooling_maybe   = frame["data"][0] & 2**5 != 0
+				if @cooling_maybe != @cooling
+					Thread.new{
+						cooling_maybe_was = @cooling_maybe
+						sleep(4)
+						@cooling = @cooling_maybe if @cooling_maybe == cooling_maybe_was
+					}
+				end
 				#projector is warming if it is doing power processing (bit 7) and not cooling
 				#this is not supported on MT1065's, but is on NPs
-				@warming     = (frame["data"][0] & 2**7 != 0) && !@cooling && !@cooling_last_time
-				@cooling_last_time = @cooling
+				@warming_maybe     = (frame["data"][0] & 2**7 != 0) && !@cooling
+				if @warming_maybe != @warming
+					Thread.new{
+						warming_maybe_was = @warming_maybe
+						sleep(4)
+						@warming = @warming_maybe if @warming_maybe == warming_maybe_was
+					}
+				end
 			}],
 			:common_data_request => [0, 0xC0, nil, proc {|frame|
 				data = frame["data"]
-				@power = data[3] == 1
-				@cooling = data[4] == 1 if !@warming
+				#@power = data[3] == 1
+				#@cooling = data[4] == 1
 				#puts "DATA: #{data[6..7]}"
 				case data[6..7]
 					when [1, 1] then @input = "RGB1"
