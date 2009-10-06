@@ -1,4 +1,4 @@
-#include <qfxview.h>
+#include <qmlview.h>
 
 #include "wescontrol.h"
 #include "sourcecontroller.h"
@@ -32,10 +32,10 @@
 WesControl::WesControl(QWidget *parent, Qt::WindowFlags flags)
     : QWidget(parent, flags)
 {
-    canvas = new QFxView(this);
+    canvas = new QmlView(this);
     canvas->setAttribute(Qt::WA_OpaquePaintEvent);
     canvas->setAttribute(Qt::WA_NoSystemBackground);
-    canvas->setContentResizable(true);
+    canvas->setContentResizable(false);
 
     //QObject::connect(canvas, SIGNAL(sceneResized(QSize)), this, SLOT(sceneResized(QSize)));
 
@@ -109,10 +109,10 @@ void WesControl::openQml(const QString& fileName)
     qWarning() << "Wall startup time:" << t.elapsed();
     //projector->updateVariables();
 
-   // canvas->resize(canvas->sizeHint());
-    canvas->resize(1024, 768);
-   // resize(sizeHint());
-    resize(1024, 768);
+   canvas->resize(canvas->sizeHint());
+    //canvas->resize(1024, 768);
+   resize(sizeHint());
+    //resize(1024, 768);
 
 }
 

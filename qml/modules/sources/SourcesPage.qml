@@ -4,8 +4,8 @@ Item {
     anchors.fill: parent
     Item {
         anchors.fill: parent
-        z: sourcecontroller.connected? -1 : 1
-        opacity: sourcecontroller.connected? 0 : 1
+        z: sourcecontroller.connected? -1 : -1
+        opacity: sourcecontroller.connected? 0 : 0
         Rectangle {
             color: "black"
             radius: 20
@@ -224,7 +224,6 @@ Item {
             //highlight: highlightComponent
             clip: true
             interactive: false
-            autoHighlight: false
         }
     }
 }

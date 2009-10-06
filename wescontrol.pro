@@ -26,20 +26,22 @@ daemon.path = /usr/local/wescontrol
 daemon.extra = chmod \
     +x \
     daemon/wescontrol-daemon
-daemoninit.path = /etc/init.d
-daemoninit.extra = cp \
-    daemon/wescontrol-daemon-init \
-    /etc/init.d/wescontrol-daemon \
-    && \
-    chmod \
-    +x \
-    /etc/init.d/wescontrol-daemon \
-    && \
-    update-rc.d \
-    wescontrol-daemon \
-    defaults
-defaults.files = daemon/wescontrol-daemon-default
-defaults.path = /etc/default/wescontrol-daemon
+daemonupstart.path = /etc/init
+daemonupstart.files = daemon/wescontrol.conf
+#daemoninit.path = /etc/init.d
+#daemoninit.extra = cp \
+#    daemon/wescontrol-daemon-init \
+#    /etc/init.d/wescontrol-daemon \
+#    && \
+#    chmod \
+#    +x \
+#    /etc/init.d/wescontrol-daemon \
+#    && \
+#    update-rc.d \
+#     wescontrol-daemon \
+ #   defaults
+#defaults.files = daemon/wescontrol-daemon-default
+#defaults.path = /etc/default/wescontrol-daemon
 fonts.files = MyriadPro/
 fonts.path = /usr/share/fonts
 INSTALLS += target \
@@ -47,8 +49,9 @@ INSTALLS += target \
     qml \
     posttarget \
     daemon \
-    daemoninit \
-    defaults \
+    daemonupstart \
+    #daemoninit \
+    #defaults \
     fonts
 HEADERS += src/wescontrol.h \
     src/projector.h \

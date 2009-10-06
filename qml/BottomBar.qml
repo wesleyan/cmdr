@@ -106,6 +106,12 @@ Item {
                     opacity: 0.6
                     anchors.verticalCenter: parent.verticalCenter
                 }
+                x: SpringFollow {
+                    source: buttonsView.currentItem.x
+                    spring: 3
+                    damping: 0.3
+                }
+
             }
         }
 
@@ -118,7 +124,7 @@ Item {
             orientation: "Horizontal"
             highlight: HighlightComponent
             focus: true
-            autoHighlight: true
+            highlightFollowsCurrentItem: false
             interactive: false
             x: 20
         }

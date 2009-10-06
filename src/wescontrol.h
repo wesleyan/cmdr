@@ -16,15 +16,16 @@
 
 #include <QBasicTimer>
 #include <QTime>
-#include <qfxtestengine.h>
 #include <QList>
 #include <QWidget>
 #include "messagemodel.h"
 
+QT_BEGIN_NAMESPACE
 
-class QFxView;
+class QmlView;
 class QFxTestEngine;
 class QProcess;
+class QFxTester;
 
 class WesControl : public QWidget
 {
@@ -50,10 +51,12 @@ protected:
 
 private:
     QString currentFileName;
-    QFxView *canvas;
+    QmlView *canvas;
     void init(const QString &, const QString& fileName);
     MessageModel *messages;
 
 };
+
+QT_END_NAMESPACE
 
 #endif

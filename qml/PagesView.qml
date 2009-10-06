@@ -139,10 +139,11 @@ Item {
         model: PagesModel
         delegate: PagesDelegate
         orientation: "Horizontal"
-        currentItemPositioning: "SnapAuto"
-        snapPosition: parent.width/2 - (componentWidth+20)/2
+        //snapPosition: parent.width/2 - (componentWidth+20)/2
+        preferredHighlightBegin: parent.width/2 - (componentWidth+20)/2
+        preferredHighlightEnd: parent.width/2 + (componentWidth+20)/2
+        strictlyEnforceHighlightRange: true
         maximumFlickVelocity: 700
         cacheBuffer: 5000
-        //locked: true
     }
 }
