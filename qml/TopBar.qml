@@ -2,12 +2,17 @@ import Qt 4.6
 Item {
     id: topBar
 
-    DateTimeFormatter { id: Formatter; dateTime: datetime }
+    Script { source: "date.format.js" }
+
+    Timer {
+         interval: 500; running: true; repeat: true
+         onTriggered: timeText.text = (new Date()).format("h:MM TT")
+     }
 
     Text {
         id: timeText
         width: parent.width
-        text: Formatter.timeText
+        text: (new Date()).format("h:MM TT")
         color: "white"
         font.pointSize: 18
         font.family: "Myriad Pro"

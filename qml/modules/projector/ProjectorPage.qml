@@ -77,22 +77,13 @@ Item {
         imageSource: "images/mute_symbol.png"
         imageWidth: 44
         imageHeight: 44
-        text: "mute video"
-        state: projectorcontroller.state == ("onState" || "muteState") ? "" : "hidden"
+        text: projectorcontroller.state == "onState" ? "mute video" : "unmute video"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: offButton.bottom
         anchors.topMargin: 20
         onClicked: {
             projectorcontroller.setVideoMute(projectorcontroller.state == "onState");
         }
-        states: [
-            State {
-                name: "hidden"
-                PropertyChanges {
-                    target: muteButton
-                    opacity: 0
-                }
-            }
-        ]
+        opacity: projectorcontroller.state == "onState" || projectorcontroller.state == "muteState" ? 1 : 0
     }
 }

@@ -133,7 +133,5 @@ class ExtronVideoSwitcher < VideoSwitcher
 			end
 		}
 	end
-	def self.test
-		return self.new("extron", "/dev/ttyUSB1", nil)
-	end
+
 end

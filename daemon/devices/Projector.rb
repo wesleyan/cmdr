@@ -64,6 +64,15 @@ class Projector < RS232Device
 		dbus_signal :input_changed, "input:s"
 		dbus_signal :cooling_changed, "on:b"
 		dbus_signal :warming_changed,"on:b"
-
+	end
+	dbus_interface "edu.wesleyan.WesControl.volume" do
+		dbus_method :volume, "out volume:d", do
+			return [this.volume]
+		end
+		dbus_method :set_volume, "in volume:d, out response:s" do
+			response = self.volume = volume
+			return [response]
+		end
+		dbus_signal :volume_changed, "volume:d"
 	end
 end

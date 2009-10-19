@@ -54,10 +54,14 @@ class VideoSwitcher < RS232Device
 		dbus_signal :mute_changed, "on:b"
 		dbus_signal :volume_changed, "volume:d"
 	end
-	#dbus_interface "edu.wesleyan.WesControl.volume" do
-	#	dbus_method :volume, "", do
-	#		return [this.volume]
-	#	end
-	#	dbus_method :set_volume ""
-	#end
+	dbus_interface "edu.wesleyan.WesControl.volume" do
+		dbus_method :volume, "out volume:d", do
+			return [this.volume]
+		end
+		dbus_method :set_volume, "in volume:d, out response:s" do
+			response = self.volume = volume
+			return [response]
+		end
+		dbus_signal :volume_changed, "volume:d"
+	end
 end
