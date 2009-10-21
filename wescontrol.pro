@@ -6,7 +6,8 @@ SOURCES = src/wescontrol.cpp \
     src/volume.cpp \
     qml/modules/remote/inpolygondetector.cpp \
     src/iremitter.cpp \
-    src/projectorcontroller.cpp
+    src/projectorcontroller.cpp \
+    src/volumecontroller.cpp
 QT += script \
     declarative \
     dbus \
@@ -28,20 +29,21 @@ daemon.extra = chmod \
     daemon/wescontrol-daemon
 daemonupstart.path = /etc/init
 daemonupstart.files = daemon/wescontrol.conf
-#daemoninit.path = /etc/init.d
-#daemoninit.extra = cp \
-#    daemon/wescontrol-daemon-init \
-#    /etc/init.d/wescontrol-daemon \
-#    && \
-#    chmod \
-#    +x \
-#    /etc/init.d/wescontrol-daemon \
-#    && \
-#    update-rc.d \
-#     wescontrol-daemon \
- #   defaults
-#defaults.files = daemon/wescontrol-daemon-default
-#defaults.path = /etc/default/wescontrol-daemon
+
+# daemoninit.path = /etc/init.d
+# daemoninit.extra = cp \
+# daemon/wescontrol-daemon-init \
+# /etc/init.d/wescontrol-daemon \
+# && \
+# chmod \
+# +x \
+# /etc/init.d/wescontrol-daemon \
+# && \
+# update-rc.d \
+# wescontrol-daemon \
+# defaults
+# defaults.files = daemon/wescontrol-daemon-default
+# defaults.path = /etc/default/wescontrol-daemon
 fonts.files = MyriadPro/
 fonts.path = /usr/share/fonts
 INSTALLS += target \
@@ -50,8 +52,8 @@ INSTALLS += target \
     posttarget \
     daemon \
     daemonupstart \
-    #daemoninit \
-    #defaults \
+    \ \ # daemoninit \
+# defaults \
     fonts
 HEADERS += src/wescontrol.h \
     src/projector.h \
@@ -61,7 +63,8 @@ HEADERS += src/wescontrol.h \
     src/volume.h \
     qml/modules/remote/inpolygondetector.h \
     src/iremitter.h \
-    src/projectorcontroller.h
+    src/projectorcontroller.h \
+    src/volumecontroller.h
 OTHER_FILES += qml/LoginScreen.qml \
     qml/TopBar.qml \
     qml/keyboard.qml \

@@ -14,19 +14,16 @@ Item {
         fillMode: "PreserveAspectFit"
         y: 5
     }
-    Volume {
-        id: volumeController
-    }
     Text {
         id: volumeText
         color: "#CCCCCC"
         font.family: "Myriad Pro"
         font.pointSize: 20
-        text: volumeController.volume.round
+        text: (volumecontroller.volume * 100).round
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.topMargin: 25
         anchors.rightMargin: 10
-        opacity: (volumeController.volume >= 0 && volumeController.volume <= 1) ? 1 : 0
+        opacity: (volumecontroller.volume >= 0 && volumecontroller.volume <= 1) ? 1 : 0
     }
 }

@@ -4,6 +4,7 @@
 #include "sourcecontroller.h"
 #include "iremitter.h"
 #include "projectorcontroller.h"
+#include "volumecontroller.h"
 
 #include <QtDeclarative/qmlcontext.h>
 #include "qml.h"
@@ -91,16 +92,12 @@ void WesControl::openQml(const QString& fileName)
     QTime t;
     t.start();
 
-    /*QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
-    timer->setInterval(50);
-    timer->start();*/
-
 
     messages = new MessageModel;
     //messages->addMessage("This is a test", 5000);
     ProjectorController *projectorcontroller = new ProjectorController();
     SourceController *sourcecontroller = new SourceController();
+    VolumeController *volumecontroller = new VolumeController();
     IREmitter *iremitter = new IREmitter;
     //connect(projector, SIGNAL(sendMessage(QString,int)), messages, SLOT(addMessage(QString,int)));
 
@@ -110,6 +107,7 @@ void WesControl::openQml(const QString& fileName)
     ctxt->setContextProperty("sourcecontroller", sourcecontroller);
     //ctxt->setContextProperty("datetime", time);
     ctxt->setContextProperty("iremitter", iremitter);
+    ctxt->setContextProperty("volumecontroller", volumecontroller);
 
     canvas->execute();
     qWarning() << "Wall startup time:" << t.elapsed();
@@ -120,11 +118,6 @@ void WesControl::openQml(const QString& fileName)
    resize(sizeHint());
     //resize(1024, 768);
 
-}
-
-void WesControl::updateTime()
-{
-    time->setTime_t(QDateTime::currentDateTime().toTime_t());
 }
 
 void WesControl::reload()

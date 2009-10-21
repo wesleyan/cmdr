@@ -5,8 +5,10 @@ Item {
     anchors.horizontalCenter: parent.horizontalCenter
     Item {
         anchors.fill: parent
-        z: volumeController.connected || true? -1 : 1
-        opacity: volumeController.connected || true? 0 : 1
+        //z: volumeController.connected || true? -1 : 1
+        //opacity: volumeController.connected || true? 0 : 1
+        z: -1
+        opacity: 0
         Rectangle {
             color: "black"
             radius: 20
@@ -51,10 +53,6 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
     }
-    Volume {
-        id: volumeController
-        volume: sliderImage.level
-    }
     Item {
         id: sliderContainer
         y: 20
@@ -73,6 +71,7 @@ Item {
             width: 32
             height: 51.4
         }
+        Binding { target: volumecontroller; property: "volume"; value: sliderImage.level }
         MouseRegion {
             id: sliderMouseRegion
             anchors.fill: parent

@@ -143,7 +143,8 @@ Item {
         preferredHighlightBegin: parent.width/2 - (componentWidth+20)/2
         preferredHighlightEnd: parent.width/2 + (componentWidth+20)/2
         strictlyEnforceHighlightRange: true
-        maximumFlickVelocity: 700
+        maximumFlickVelocity: 1200
         cacheBuffer: 5000
+        highlightMoveSpeed: 2000
     }
 }

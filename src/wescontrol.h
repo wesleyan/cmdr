@@ -46,9 +46,6 @@ public slots:
     void openQml(const QString& fileName);
     void reload();
 
-private slots:
-    void updateTime();
-
 protected:
     virtual void keyPressEvent(QKeyEvent *);
 
@@ -57,7 +54,6 @@ private:
     QmlView *canvas;
     void init(const QString &, const QString& fileName);
     MessageModel *messages;
-    QDateTime *time;
 };
 
 QT_END_NAMESPACE
