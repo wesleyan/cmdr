@@ -67,14 +67,14 @@ class Projector < RS232Device
 	end
 	dbus_interface "edu.wesleyan.WesControl.volume" do
 		dbus_method :volume, "out volume:d" do
-			return [this.volume]
+			return [self.volume]
 		end
 		dbus_method :set_volume, "in volume:d, out response:s" do
 			response = (self.volume = volume)
 			return [response]
 		end
 		dbus_method :mute, "out on:b" do
-			return [this.mute]
+			return [self.mute]
 		end
 		dbus_method :set_mute, "in on:b, out response:s" do
 			response = (self.mute = on)

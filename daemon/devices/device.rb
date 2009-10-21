@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'dbus'
-require '/usr/local/wescontrol/daemon/dbus_fix.rb'
+#require '/usr/local/wescontrol/daemon/dbus_fix.rb'
 
 class Device < DBus::Object
 	attr_reader :name

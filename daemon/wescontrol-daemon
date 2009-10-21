@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'dbus'
-require '/usr/local/wescontrol/daemon/dbus_fix.rb'
+#require '/usr/local/wescontrol/daemon/dbus_fix.rb'
 require 'yaml'
 require 'drb/drb'
 
