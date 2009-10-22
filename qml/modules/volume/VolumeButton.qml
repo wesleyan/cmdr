@@ -19,7 +19,7 @@ Item {
         color: "#CCCCCC"
         font.family: "Myriad Pro"
         font.pointSize: 20
-        text: (volumecontroller.volume * 100).round
+        text: Math.round(volumecontroller.volume * 100)
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.topMargin: 25

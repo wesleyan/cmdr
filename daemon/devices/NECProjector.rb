@@ -8,7 +8,7 @@ class NECProjector < Projector
 	
 	attr_reader :power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
 		:projector_model, :projector_id, :projector_name, :lamp_hours, :percent_lamp_used, 
-		:filter_hours, :projector_usage, :warming
+		:filter_hours, :projector_usage, :warming, :volume, :mute
 	
 	RGB1   = 1
 	RGB2   = 2
@@ -33,12 +33,17 @@ class NECProjector < Projector
 		
 		@buffer = []
 		
+		@max_volume = 63
+		@max_volume = 0
+		
 		@commands = {
 			#format is :name => [id1, id2, data, callback]
 			:power=              => [2, proc {|on| on ? 0 : 1}, nil, nil],
 			:video_mute=         => [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
 			:input=              => [2, 3, proc {|source| [1, INPUT_HASH[source]].pack("cc")}, nil],
 			:brightness=		 => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
+			:volume=			 => [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
+			:mute=				 => [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
 			:running_sense       => [0, 0x81, nil, proc {|frame|
 				@power       = frame["data"][0] & 2**1 != 0
 				@cooling_maybe   = frame["data"][0] & 2**5 != 0
@@ -72,6 +77,7 @@ class NECProjector < Projector
 					when [1, 3] then @input = "SVIDEO"
 				end
 				@video_mute = data[28] == 1
+				@mute = data[29] == 1
 				@projector_model = MODEL_MAP[[data[0], data[69], data[70]]]
 				@has_signal = data[84] != 1
 				@picture_displaying = data[84] == 0
@@ -91,6 +97,16 @@ class NECProjector < Projector
 			}],
 			:lamp_remaining => [3, 0x94, nil, proc {|frame|
 				@percent_lamp_used = 100-frame['data'][4] #percent remaining is what's returned
+			}],
+			:volume_request => [3, 4, [5, 0].pack("cc"), proc {|frame|
+				#potentially interesting note: you can detect whether you can change gain with DATA01
+				data = frame["data"]
+				#if data[0] != 0 #if it's 0, "display [gain] impossible"
+					#@max_volume = data[1] + data[2] * 2**8
+					#@min_volume = data[3] + data[4] * 2**8
+					@volume = (data[7] + data[8] * 2**8) / 63.to_f
+					#puts "Volume should be [#{@min_volume}, #{@max_volume}]"
+				#end
 			}]
 		}
 
@@ -105,6 +121,7 @@ class NECProjector < Projector
 		Thread.new{
 			while true do
 				self.common_data_request
+				self.volume_request
 				sleep(1)
 			end
 		}
@@ -261,7 +278,7 @@ class NECProjector < Projector
 		Thread.new{
 			class_vars = [:power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
 						:projector_model, :projector_name, :lamp_hours, :percent_lamp_used, 
-						:filter_hours, :projector_usage, :warming]
+						:filter_hours, :projector_usage, :warming, :volume, :mute]
 			size = class_vars.collect{|var| var.to_s.size}.max
 			old_values = {}
 			while true do

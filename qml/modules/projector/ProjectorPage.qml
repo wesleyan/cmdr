@@ -77,7 +77,7 @@ Item {
         imageSource: "images/mute_symbol.png"
         imageWidth: 44
         imageHeight: 44
-        text: projectorcontroller.state == "onState" ? "mute video" : "unmute video"
+        text: projectorcontroller.state == "onState" ? "mute video" : "show video"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: offButton.bottom
         anchors.topMargin: 20

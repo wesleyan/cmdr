@@ -63,24 +63,47 @@ Item {
         Image {
             property double level
             id: sliderImage
-            y: 300
+            //y: 433 * (0.975 - volumecontroller.volume)
+            y: NumberAnimation {
+                duration: 500
+                easing: "easeOutBounce"
+            }
             level: (100-Math.round(y/(433) * 100 + 2.5))/100
-
             source: "images/slider.png"
             anchors.horizontalCenter: parent.horizontalCenter
             width: 32
             height: 51.4
+
+        }
+        Timer {
+            interval: 1000
+            onTriggered: if(sliderMouseRegion.state != "dragging")sliderImage.y = 433 * (0.975 - volumecontroller.volume);
         }
         Binding { target: volumecontroller; property: "volume"; value: sliderImage.level }
         MouseRegion {
             id: sliderMouseRegion
-            anchors.fill: parent
+            width: 64
+            anchors.horizontalCenter: parent.horizontalCenter
+            height: parent.height
+            anchors.verticalCenter: parent.verticalCenter
             drag.target: sliderImage
             drag.axis: "YAxis"
             drag.minimumY: -sliderImage.height/2 + 14
             drag.maximumY: parent.height - sliderImage.height/2 - 17
+            onPressed: {
+                sliderMouseRegion.state = "dragging"
+            }
+            onReleased: {
+                sliderMouseRegion.state = ""
+            }
+            states: [
+                State {
+                    name: "dragging"
+                }
+            ]
         }
     }
+
 
     MouseRegion {
         id: muteButtonArea
@@ -89,7 +112,20 @@ Item {
         height: 31
         x: 343
         onClicked: {
-            muteLightRect.state = muteLightRect.state == "" ? "muteOnState" : ""
+            volumecontroller.mute = muteLightRect.state == ""
+            //muteLightRect.state = muteLightRect.state == "" ? "muteOnState" : ""
+        }
+        onPressed: {
+            mutePressIndicator.opacity = 0.4
+        }
+        onReleased: {
+            mutePressIndicator.opacity =  0.0
+        }
+        Rectangle {
+            id: mutePressIndicator
+            color: "#000000"
+            anchors.fill: parent
+            opacity: 0.0
         }
         Rectangle {
             id: muteLightRect
@@ -114,9 +150,26 @@ Item {
             y: 6
             radius: 3
             anchors.horizontalCenter: parent.horizontalCenter
+            state: volumecontroller.mute ? "muteOnState" : ""
             states: [
                 State {
+                    name: ""
+                    PropertyChanges {
+                        target: muteLightAnimation
+                        running: false
+                    }
+                    PropertyChanges {
+                        target: muteLightRect
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: blurredSpeakerImage
+                        opacity: 1
+                    }
+                },
+                State {
                     name: "muteOnState"
+                    //when: volumecontroller.mute == true
                     PropertyChanges {
                         target: muteLightAnimation
                         running: true
@@ -131,6 +184,7 @@ Item {
                     }
                 }
             ]
+            //Binding { target: volumecontroller; property: "mute"; value: volumecontroller.state == "muteOnState" }
         }
     }
     Image {

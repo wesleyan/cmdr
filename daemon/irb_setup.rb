@@ -1,9 +1,11 @@
 require 'dbus'
-require '/usr/local/wescontrol/daemon/dbus_fix.rb'
 service = DBus::SystemBus.instance.service("edu.wesleyan.WesControl")
 p = service.object("/edu/wesleyan/WesControl/projector")
 p.introspect
 p.default_iface = "edu.wesleyan.WesControl.projector"
+v = service.object("/edu/wesleyan/WesControl/projector")
+v.introspect
+v.default_iface = "edu.wesleyan.WesControl.volume"
 e = service.object("/edu/wesleyan/WesControl/extron")
 e.introspect
 e.default_iface = "edu.wesleyan.WesControl.videoSwitcher"
