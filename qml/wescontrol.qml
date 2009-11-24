@@ -69,7 +69,7 @@ Rectangle {
         height: Behavior {
             SequentialAnimation {
                 NumberAnimation {
-                    properties: "height"
+                    matchProperties: "height"
                     //easing: "easeOutBounce"
                     duration: 200
                 }

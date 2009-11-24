@@ -74,7 +74,7 @@ Item {
                     }
                     NumberAnimation {
                         target: button
-                        properties: "opacity"
+                        property: "opacity"
                     }
                 }
             ]

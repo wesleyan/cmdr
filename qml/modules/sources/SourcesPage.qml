@@ -208,7 +208,7 @@ Item {
             transitions: [
                 Transition {
                     NumberAnimation {
-                        properties: "radius"
+                        property: "radius"
                         duration: 100
                     }
                 }

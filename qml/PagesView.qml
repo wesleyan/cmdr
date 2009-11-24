@@ -90,10 +90,10 @@ Item {
                             SequentialAnimation {
                                 PropertyAction {
                                     target: rotation;
-                                    properties: "axis.startX,axis.startY";
+                                    matchProperties: "axis.startX,axis.startY";
                                 }
                                 NumberAnimation {
-                                    properties: "angle"
+                                    property: "angle"
                                     duration: 300
                                 }
                             }
@@ -103,12 +103,12 @@ Item {
                             to: ""
                             SequentialAnimation {
                                 NumberAnimation {
-                                    properties: "angle"
+                                    property: "angle"
                                     duration: 300
                                 }
                                 PropertyAction {
                                     target: rotation;
-                                    properties: "axis.startX,axis.endX";
+                                    matchProperties: "axis.startX,axis.endX";
                                 }
                             }
                         },
@@ -118,10 +118,10 @@ Item {
                             SequentialAnimation {
                                 PropertyAction {
                                     target: rotation;
-                                    properties: "axis.startX,axis.endX";
+                                    matchProperties: "axis.startX,axis.endX";
                                 }
                                 NumberAnimation {
-                                    properties: "angle"
+                                    property: "angle"
                                     duration: 300
                                 }
                             }
@@ -139,10 +139,10 @@ Item {
         model: PagesModel
         delegate: PagesDelegate
         orientation: "Horizontal"
-        //snapPosition: parent.width/2 - (componentWidth+20)/2
         preferredHighlightBegin: parent.width/2 - (componentWidth+20)/2
         preferredHighlightEnd: parent.width/2 + (componentWidth+20)/2
-        strictlyEnforceHighlightRange: true
+        highlightRangeMode: StrictlyEnforceRange
+        highlightFollowsCurrentItem: true
         maximumFlickVelocity: 1200
         cacheBuffer: 5000
         highlightMoveSpeed: 2000

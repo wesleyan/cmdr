@@ -64,9 +64,11 @@ Item {
             property double level
             id: sliderImage
             //y: 433 * (0.975 - volumecontroller.volume)
-            y: NumberAnimation {
-                duration: 500
-                easing: "easeOutBounce"
+            y: Behavior {
+                NumberAnimation {
+                    duration: 500
+                    easing: "easeOutBounce"
+                }
             }
             level: (100-Math.round(y/(433) * 100 + 2.5))/100
             source: "images/slider.png"

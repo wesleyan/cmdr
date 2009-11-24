@@ -4,7 +4,7 @@ SOURCES = src/wescontrol.cpp \
     src/videoswitcher.cpp \
     src/sourcecontroller.cpp \
     src/volume.cpp \
-    qml/modules/remote/inpolygondetector.cpp \
+    #qml/modules/remote/inpolygondetector.cpp \
     src/iremitter.cpp \
     src/projectorcontroller.cpp \
     src/volumecontroller.cpp
@@ -61,10 +61,11 @@ HEADERS += src/wescontrol.h \
     src/videoswitcher.h \
     src/sourcecontroller.h \
     src/volume.h \
-    qml/modules/remote/inpolygondetector.h \
+    #sqml/modules/remote/inpolygondetector.h \
     src/iremitter.h \
     src/projectorcontroller.h \
-    src/volumecontroller.h
+    src/volumecontroller.h \
+    #src/qmlgraphicsmouseregion.h
 OTHER_FILES += qml/LoginScreen.qml \
     qml/TopBar.qml \
     qml/keyboard.qml \
