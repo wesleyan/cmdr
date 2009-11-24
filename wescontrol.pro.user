@@ -64,9 +64,9 @@
     <value type="QString" >GDM_KEYBOARD_LAYOUT=us</value>
     <value type="QString" >GDM_LANG=en_US.UTF-8</value>
     <value type="QString" >GNOME_DESKTOP_SESSION_ID=this-is-deprecated</value>
-    <value type="QString" >GNOME_KEYRING_PID=3302</value>
-    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-CTm6s9/socket</value>
-    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-ZlGJH4/S.gpg-agent:3381:1</value>
+    <value type="QString" >GNOME_KEYRING_PID=1768</value>
+    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-mz239k/socket</value>
+    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-Pod9Ci/S.gpg-agent:1847:1</value>
     <value type="QString" >GTK_MODULES=canberra-gtk-module</value>
     <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/mwylde/.gtkrc-1.2-gnome2</value>
     <value type="QString" >HOME=/home/mwylde</value>
@@ -77,16 +77,16 @@
     <value type="QString" >PATH=/usr/local/Trolltech/Qt-4.6.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
     <value type="QString" >PWD=/home/mwylde/qtcreator-1.1.80/bin</value>
     <value type="QString" >QTDIR=/usr/local/Trolltech/Qt-4.6.0</value>
-    <value type="QString" >SESSION_MANAGER=local/ubuntu:@/tmp/.ICE-unix/3317,unix/ubuntu:/tmp/.ICE-unix/3317</value>
+    <value type="QString" >SESSION_MANAGER=local/ubuntu:@/tmp/.ICE-unix/1783,unix/ubuntu:/tmp/.ICE-unix/1783</value>
     <value type="QString" >SHELL=/bin/bash</value>
     <value type="QString" >SPEECHD_PORT=7560</value>
-    <value type="QString" >SSH_AGENT_PID=3358</value>
-    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-CTm6s9/socket.ssh</value>
+    <value type="QString" >SSH_AGENT_PID=1824</value>
+    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-mz239k/socket.ssh</value>
     <value type="QString" >USER=mwylde</value>
     <value type="QString" >USERNAME=mwylde</value>
-    <value type="QString" >XAUTHORITY=/var/run/gdm/auth-for-mwylde-ioZNVp/database</value>
+    <value type="QString" >XAUTHORITY=/var/run/gdm/auth-for-mwylde-rGw19w/database</value>
     <value type="QString" >XDG_DATA_DIRS=/usr/share/gnome:/usr/local/share/:/usr/share/</value>
-    <value type="QString" >XDG_SESSION_COOKIE=5752c9ece71b4801c8a474a14a54a3d5-1255986182.887493-2051947596</value>
+    <value type="QString" >XDG_SESSION_COOKIE=5752c9ece71b4801c8a474a14a54a3d5-1257541676.146975-293895144</value>
    </valuelist>
    <valuelist key="abstractProcess.arguments" type="QVariantList" >
     <value type="QString" >/home/mwylde/hg/wescontrol/wescontrol/wescontrol.pro</value>
@@ -113,9 +113,9 @@
     <value type="QString" >GDM_KEYBOARD_LAYOUT=us</value>
     <value type="QString" >GDM_LANG=en_US.UTF-8</value>
     <value type="QString" >GNOME_DESKTOP_SESSION_ID=this-is-deprecated</value>
-    <value type="QString" >GNOME_KEYRING_PID=3302</value>
-    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-CTm6s9/socket</value>
-    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-ZlGJH4/S.gpg-agent:3381:1</value>
+    <value type="QString" >GNOME_KEYRING_PID=1768</value>
+    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-mz239k/socket</value>
+    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-Pod9Ci/S.gpg-agent:1847:1</value>
     <value type="QString" >GTK_MODULES=canberra-gtk-module</value>
     <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/mwylde/.gtkrc-1.2-gnome2</value>
     <value type="QString" >HOME=/home/mwylde</value>
@@ -126,16 +126,16 @@
     <value type="QString" >PATH=/usr/local/Trolltech/Qt-4.6.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
     <value type="QString" >PWD=/home/mwylde/qtcreator-1.1.80/bin</value>
     <value type="QString" >QTDIR=/usr/local/Trolltech/Qt-4.6.0</value>
-    <value type="QString" >SESSION_MANAGER=local/ubuntu:@/tmp/.ICE-unix/3317,unix/ubuntu:/tmp/.ICE-unix/3317</value>
+    <value type="QString" >SESSION_MANAGER=local/ubuntu:@/tmp/.ICE-unix/1783,unix/ubuntu:/tmp/.ICE-unix/1783</value>
     <value type="QString" >SHELL=/bin/bash</value>
     <value type="QString" >SPEECHD_PORT=7560</value>
-    <value type="QString" >SSH_AGENT_PID=3358</value>
-    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-CTm6s9/socket.ssh</value>
+    <value type="QString" >SSH_AGENT_PID=1824</value>
+    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-mz239k/socket.ssh</value>
     <value type="QString" >USER=mwylde</value>
     <value type="QString" >USERNAME=mwylde</value>
-    <value type="QString" >XAUTHORITY=/var/run/gdm/auth-for-mwylde-ioZNVp/database</value>
+    <value type="QString" >XAUTHORITY=/var/run/gdm/auth-for-mwylde-rGw19w/database</value>
     <value type="QString" >XDG_DATA_DIRS=/usr/share/gnome:/usr/local/share/:/usr/share/</value>
-    <value type="QString" >XDG_SESSION_COOKIE=5752c9ece71b4801c8a474a14a54a3d5-1255986182.887493-2051947596</value>
+    <value type="QString" >XDG_SESSION_COOKIE=5752c9ece71b4801c8a474a14a54a3d5-1257541676.146975-293895144</value>
    </valuelist>
    <valuelist key="abstractProcess.arguments" type="QVariantList" >
     <value type="QString" >-w</value>
@@ -157,9 +157,9 @@
     <value type="QString" >GDM_KEYBOARD_LAYOUT=us</value>
     <value type="QString" >GDM_LANG=en_US.UTF-8</value>
     <value type="QString" >GNOME_DESKTOP_SESSION_ID=this-is-deprecated</value>
-    <value type="QString" >GNOME_KEYRING_PID=3302</value>
-    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-CTm6s9/socket</value>
-    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-ZlGJH4/S.gpg-agent:3381:1</value>
+    <value type="QString" >GNOME_KEYRING_PID=1768</value>
+    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-mz239k/socket</value>
+    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-Pod9Ci/S.gpg-agent:1847:1</value>
     <value type="QString" >GTK_MODULES=canberra-gtk-module</value>
     <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/mwylde/.gtkrc-1.2-gnome2</value>
     <value type="QString" >HOME=/home/mwylde</value>
@@ -170,16 +170,16 @@
     <value type="QString" >PATH=/usr/local/Trolltech/Qt-4.6.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
     <value type="QString" >PWD=/home/mwylde/qtcreator-1.1.80/bin</value>
     <value type="QString" >QTDIR=/usr/local/Trolltech/Qt-4.6.0</value>
-    <value type="QString" >SESSION_MANAGER=local/ubuntu:@/tmp/.ICE-unix/3317,unix/ubuntu:/tmp/.ICE-unix/3317</value>
+    <value type="QString" >SESSION_MANAGER=local/ubuntu:@/tmp/.ICE-unix/1783,unix/ubuntu:/tmp/.ICE-unix/1783</value>
     <value type="QString" >SHELL=/bin/bash</value>
     <value type="QString" >SPEECHD_PORT=7560</value>
-    <value type="QString" >SSH_AGENT_PID=3358</value>
-    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-CTm6s9/socket.ssh</value>
+    <value type="QString" >SSH_AGENT_PID=1824</value>
+    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-mz239k/socket.ssh</value>
     <value type="QString" >USER=mwylde</value>
     <value type="QString" >USERNAME=mwylde</value>
-    <value type="QString" >XAUTHORITY=/var/run/gdm/auth-for-mwylde-ioZNVp/database</value>
+    <value type="QString" >XAUTHORITY=/var/run/gdm/auth-for-mwylde-rGw19w/database</value>
     <value type="QString" >XDG_DATA_DIRS=/usr/share/gnome:/usr/local/share/:/usr/share/</value>
-    <value type="QString" >XDG_SESSION_COOKIE=5752c9ece71b4801c8a474a14a54a3d5-1255986182.887493-2051947596</value>
+    <value type="QString" >XDG_SESSION_COOKIE=5752c9ece71b4801c8a474a14a54a3d5-1257541676.146975-293895144</value>
    </valuelist>
    <valuelist key="abstractProcess.arguments" type="QVariantList" >
     <value type="QString" >clean</value>

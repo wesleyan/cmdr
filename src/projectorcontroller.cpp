@@ -52,6 +52,7 @@ ProjectorController::ProjectorController()
     stateMachine.addState(warmingState);
     stateMachine.addState(coolingState);
 
+
     if(projector->warming())stateMachine.setInitialState(warmingState);
     else if(projector->cooling())stateMachine.setInitialState(coolingState);
     else if(!projector->power())stateMachine.setInitialState(offState);

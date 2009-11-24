@@ -26,9 +26,10 @@ Item {
             width: 90
             height: 80
             anchors.verticalCenter: parent.verticalCenter
+            opacity: 1
             Item {
                 anchors.fill: parent
-                opacity: 0.9
+                opacity: 1
 
                 Loader {
                     item: Item {
@@ -63,7 +64,7 @@ Item {
                     }
                     PropertyChanges {
                         target: button
-                        opacity: 0.5
+                       // opacity: 0.5
                     }
                 }
             ]

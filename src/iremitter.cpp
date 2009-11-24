@@ -8,11 +8,11 @@ IREmitter::IREmitter()
     interface = "edu.wesleyan.WesControl.irEmitter";
 }
 
-void IREmitter::send_command(QString command)
+void IREmitter::pulse_command(QString command)
 {
     QList<QVariant> inputArgument;
     inputArgument << QVariant(command);
-    QDBusInterface iface(service, object, interface, QDBusConnection::sessionBus());
+    QDBusInterface iface(service, object, interface, QDBusConnection::systemBus());
     iface.callWithCallback("pulse_command",
                            inputArgument,
                            this,

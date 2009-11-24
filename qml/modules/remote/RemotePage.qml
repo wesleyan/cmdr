@@ -51,7 +51,7 @@ Item {
                 source: selected == "" ? "images/navigation/navigation_buttons.png" : "images/navigation/navigation_" + selected + "_selected.png"
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/navigation/navigation_left_mask.png"
@@ -62,7 +62,7 @@ Item {
                         if(parent.selected == "left")parent.selected = ""
                     }
                 }
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/navigation/navigation_down_mask.png"
@@ -73,7 +73,7 @@ Item {
                         if(parent.selected == "down")parent.selected = ""
                     }
                 }
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/navigation/navigation_right_mask.png"
@@ -84,7 +84,7 @@ Item {
                         if(parent.selected == "right")parent.selected = ""
                     }
                 }
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/navigation/navigation_up_mask.png"
@@ -95,7 +95,7 @@ Item {
                         if(parent.selected == "up")parent.selected = ""
                     }
                 }
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/navigation/navigation_center_mask.png"
@@ -118,7 +118,7 @@ Item {
                 anchors.fill: parent
                 onPressed: {
                     parent.opacity = 0.6
-                    iremitter.send_command("play");
+                    iremitter.pulse_command("play");
                 }
                 onReleased: {
                     parent.opacity = 1
@@ -136,12 +136,13 @@ Item {
                 id: rewindButton
                 source: "images/Rewind_button.png"
                 anchors.left: parent.left
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/Rewind_button.png"
                     onPressed: {
                         parent.opacity = 0.6
+                        iremitter.pulse_command("back");
                     }
                     onReleased: {
                         parent.opacity = 1
@@ -152,13 +153,13 @@ Item {
                 id: pauseButton
                 source: "images/Pause_button.png"
                 anchors.horizontalCenter: parent.horizontalCenter
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/Pause_button.png"
                     onPressed: {
                         parent.opacity = 0.6;
-                        iremitter.send_command("pause");
+                        iremitter.pulse_command("pause");
                     }
                     onReleased: {
                         parent.opacity = 1
@@ -169,12 +170,13 @@ Item {
                 id: ffButton
                 source: "images/FF_button.png"
                 anchors.right: parent.right
-                MaskedMouseRegion
+                MouseRegion
                 {
                     anchors.fill: parent
                     maskPath: "qml/modules/remote/images/FF_button.png"
                     onPressed: {
                         parent.opacity = 0.6
+                        iremitter.pulse_command("forward");
                     }
                     onReleased: {
                         parent.opacity = 1
@@ -192,6 +194,7 @@ Item {
                 anchors.fill: parent
                 onPressed: {
                     parent.opacity = 0.6
+                    iremitter.pulse_command("stop");
                 }
                 onReleased: {
                     parent.opacity = 1

@@ -140,8 +140,8 @@ Item {
         delegate: PagesDelegate
         orientation: "Horizontal"
         preferredHighlightBegin: parent.width/2 - (componentWidth+20)/2
-        preferredHighlightEnd: parent.width/2 + (componentWidth+20)/2
-        highlightRangeMode: StrictlyEnforceRange
+        preferredHighlightEnd: parent.width/2 - (componentWidth+20)/2//+ (componentWidth+20)/2
+        highlightRangeMode: "StrictlyEnforceRange"
         highlightFollowsCurrentItem: true
         maximumFlickVelocity: 1200
         cacheBuffer: 5000

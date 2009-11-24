@@ -17,7 +17,7 @@ public:
     IREmitter();
 
 public slots:
-    void send_command(QString command);
+    void pulse_command(QString command);
     void responseFromServer(QDBusMessage message);
     void errorFromServer(QDBusError error);
 

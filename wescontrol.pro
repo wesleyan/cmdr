@@ -52,6 +52,7 @@ INSTALLS += target \
     posttarget \
     daemon \
     daemonupstart \
+    \ \
     \ \ # daemoninit \
 # defaults \
     fonts
@@ -61,11 +62,10 @@ HEADERS += src/wescontrol.h \
     src/videoswitcher.h \
     src/sourcecontroller.h \
     src/volume.h \
-    #sqml/modules/remote/inpolygondetector.h \
+    #qml/modules/remote/inpolygondetector.h \
     src/iremitter.h \
     src/projectorcontroller.h \
-    src/volumecontroller.h \
-    #src/qmlgraphicsmouseregion.h
+    src/volumecontroller.h
 OTHER_FILES += qml/LoginScreen.qml \
     qml/TopBar.qml \
     qml/keyboard.qml \
