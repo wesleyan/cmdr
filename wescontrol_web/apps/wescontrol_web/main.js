@@ -13,18 +13,19 @@
 //
 WescontrolWeb.main = function main() {
 
-  // Step 1: Instantiate Your Views
-  // The default code here will make the mainPane for your application visible
-  // on screen.  If you app gets any level of complexity, you will probably 
-  // create multiple pages and panes.  
-  WescontrolWeb.getPath('mainPage.mainPane').append() ;
+	// Step 1: Instantiate Your Views
+	// The default code here will make the mainPane for your application visible
+	// on screen.  If you app gets any level of complexity, you will probably 
+	// create multiple pages and panes.  
+	WescontrolWeb.getPath('mainPage.mainPane').append() ;
 
-  // Step 2. Set the content property on your primary controller.
-  // This will make your app come alive!
+	// Step 2. Set the content property on your primary controller.
+	// This will make your app come alive!
 
-  // TODO: Set the content property on your primary controller
-  // ex: WescontrolWeb.contactsController.set('content',WescontrolWeb.contacts);
-
+	// TODO: Set the content property on your primary controller
+	// ex: WescontrolWeb.contactsController.set('content',WescontrolWeb.contacts);
+	var rooms = WescontrolWeb.store.find(WescontrolWeb.Room);
+	WescontrolWeb.roomController.set('content', rooms);
 } ;
 
 function main() { WescontrolWeb.main(); }

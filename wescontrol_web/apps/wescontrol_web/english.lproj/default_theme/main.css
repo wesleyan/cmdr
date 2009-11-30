@@ -3,3 +3,44 @@
 	background-repeat: no-repeat;
 	background-position: 98% 50%;
 }
+
+
+/* TABS */
+a.tabButton {
+	border-radius: 0px;
+}
+
+.tabButton .sc-button-label {
+	font-family: Helvetica, Arial;
+	font-size: 2.8em;
+	font-weight: bold;
+	color: white;
+	line-height: 40px;
+}
+
+.tabButton.sel {
+	background-color: white;
+}
+
+.tabButton.sel.tan {
+	background-color: #EFEBE3;
+}
+
+.tabButton.sel label.sc-button-label {
+	color: black;
+	background: none;
+}
+
+/* Room List */
+.roomList label{
+	font-family: Helvetica, Arial;
+	font-weight: bold;
+	font-size: 13px;
+	text-align: right;
+	margin-right: 20px;
+}
+
+.sc-theme.focus .sc-collection-view.focus.roomList .sc-collection-item.sel {
+	background-color: white;
+	color: black;
+}
