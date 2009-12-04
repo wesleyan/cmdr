@@ -17,6 +17,13 @@ class NECProjector < Projector
 	INPUT_HASH = {"RGB1" => 1, "RGB2" => 2, "VIDEO" => 6, "SVIDEO" => 11}
 	
 	MODEL_MAP = {[10, 4, 9]=>"NP300", [3, 0, 6]=>"VT80", [12, 0, 8]=>"NP1150/NP2150/NP3150", [11, 1, 0]=>"NP62", [10, 1, 9]=>"NP500", [2, 2, 3]=>"LT240K/LT260K", [12, 2, 9]=>"VT800", [4, 0, 3]=>"GT5000", [4, 1, 1]=>"GT2150", [2, 1, 3]=>"LT220", [2, 0, 6]=>"LT380", [1, 2, 3]=>"MT1075", [10, 3, 9]=>"NP400", [8, 0, 7]=>"NP4000/NP4001", [6, 0, 5]=>"WT610/WT615", [3, 0, 4]=>"VT770", [11, 0, 0]=>"NP41/61", [10, 0, 9]=>"NP600", [5, 0, 3]=>"HT1000", [2, 0, 5]=>"LT245/LT265", [1, 0, 6]=>"NP1000/NP2000", [12, 1, 9]=>"NP901W", [4, 1, 3]=>"GT6000", [4, 0, 1]=>"GT1150", [1, 0, 1]=>"MT1060/MT1065", [10, 0, 8]=>"VT700", [2, 1, 6]=>"LT280", [12, 1, 8]=>"NP3151W", [10, 2, 9]=>"NP500", [6, 0, 3]=>"WT600", [5, 0, 4]=>"HT1100", [3, 0, 7]=>"VT90", [2, 0, 3]=>"LT240/LT260", [12, 0, 9]=>"NP905", [1, 1, 3]=>"MT860"}
+	
+	ERROR_STATUS = [
+		["Lamp cover error", "Temperature error", "", "", "Fan error", "Power error", "Lamp error", "Lamp has reached its end of life"],
+		["Lamp has been used beyond its limit", "Formatter error", "Lamp2 error"],
+		["", "FPGA error", "Temperature error", "Lamp housing error", "Lamp data error", "Mirror cover error", "Lamp2 has reached its end of life", "Lamp2 has been used beyond its limit"],
+		["Lamp2 housing error", "Lamp2 data error", "High temperature due to dust pile-up", "A foreign object sensor error", "Pump error"]
+	]
 
 	def initialize(name, bus, config)
 		puts "Initializing projector on port #{config['port']} with name #{name}"
@@ -107,6 +114,19 @@ class NECProjector < Projector
 					@volume = (data[7] + data[8] * 2**8) / 63.to_f
 					#puts "Volume should be [#{@min_volume}, #{@max_volume}]"
 				#end
+			}],
+			:error_status_request => [0, 0x88, nil, proc{|frame|
+				data = frame["data"]
+				@errors = []
+				data.each_index{|i|
+					8.times{|t|
+						if data[i] & 2 ** t != 0
+							@errors << ERROR_STATUS[i][t]
+							error(ERROR_STATUS[i][t])
+							puts ERROR_STATUS[i][t]
+						end
+					}
+				}
 			}]
 		}
 
@@ -130,6 +150,12 @@ class NECProjector < Projector
 				self.lamp_information
 				self.lamp_remaining
 				sleep(10)
+			end
+		}
+		Thread.new{
+			while true do
+				self.error_status_request
+				sleep(0.5)
 			end
 		}
 

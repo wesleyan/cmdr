@@ -3,7 +3,7 @@
 
 VolumeController::VolumeController()
 {
-    volume_device = new Volume("edu.wesleyan.WesControl", "/edu/wesleyan/WesControl/projector",
+    volume_device = new Volume("edu.wesleyan.WesControl", "/edu/wesleyan/WesControl/extron",
                        QDBusConnection::systemBus(), this);
 
     connect(volume_device, SIGNAL(volume_changed(double)), this, SIGNAL(volumeChanged(double)));

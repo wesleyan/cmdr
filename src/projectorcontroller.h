@@ -27,6 +27,8 @@ Q_OBJECT
         void video_mute_on();
         void video_mute_off();
 
+        void sendMessage(QString message, int time);
+
     public slots:
         void setPower(bool on);
         void setVideoMute(bool on);
@@ -36,6 +38,7 @@ Q_OBJECT
         void warming_changed(bool on);
         void power_changed(bool on);
         void video_mute_changed(bool on);
+        void projector_error(QString message);
 
     private:
         QStateMachine stateMachine;

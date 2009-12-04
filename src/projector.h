@@ -123,6 +123,7 @@ Q_SIGNALS: // SIGNALS
     void power_changed(bool powered);
     void video_mute_changed(bool on);
     void warming_changed(bool on);
+    void error(const QString &message);
 
 };
 

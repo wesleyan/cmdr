@@ -64,6 +64,7 @@ class Projector < RS232Device
 		dbus_signal :input_changed, "input:s"
 		dbus_signal :cooling_changed, "on:b"
 		dbus_signal :warming_changed,"on:b"
+		dbus_signal :error, "message:s"
 	end
 	@api = [
 		#format: 

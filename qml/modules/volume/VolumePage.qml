@@ -78,11 +78,29 @@ Item {
 
         }
         Timer {
-            interval: 1000
-            onTriggered: if(sliderMouseRegion.state != "dragging")sliderImage.y = 433 * (0.975 - volumecontroller.volume);
+            Script
+            {
+                function syncVolume()
+                {
+                    if(sliderMouseRegion.state != "dragging" && !sliderMouseRegion.hasDragged)
+                    {
+                        sliderImage.y = 433 * (0.975 - volumecontroller.volume);
+                    }
+                    else
+                    {
+                        volumecontroller.volume = sliderImage.level
+                        sliderMouseRegion.hasDragged = false
+                    }
+                }
+            }
+            interval: 200
+            running: true
+            repeat: true
+            onTriggered: syncVolume()
         }
-        Binding { target: volumecontroller; property: "volume"; value: sliderImage.level }
+        //Binding { target: volumecontroller; property: "volume"; value: {(100-Math.round(sliderImage.y/(433) * 100 + 2.5))/100} }
         MouseRegion {
+            property bool hasDragged
             id: sliderMouseRegion
             width: 64
             anchors.horizontalCenter: parent.horizontalCenter
@@ -92,11 +110,13 @@ Item {
             drag.axis: "YAxis"
             drag.minimumY: -sliderImage.height/2 + 14
             drag.maximumY: parent.height - sliderImage.height/2 - 17
+            hasDragged: false
             onPressed: {
                 sliderMouseRegion.state = "dragging"
             }
             onReleased: {
                 sliderMouseRegion.state = ""
+                hasDragged = true
             }
             states: [
                 State {

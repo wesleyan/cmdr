@@ -99,7 +99,7 @@ void WesControl::openQml(const QString& fileName)
     SourceController *sourcecontroller = new SourceController();
     VolumeController *volumecontroller = new VolumeController();
     IREmitter *iremitter = new IREmitter;
-    //connect(projector, SIGNAL(sendMessage(QString,int)), messages, SLOT(addMessage(QString,int)));
+    connect(projectorcontroller, SIGNAL(sendMessage(QString,int)), messages, SLOT(addMessage(QString,int)));
 
     QmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("projectorcontroller", projectorcontroller);

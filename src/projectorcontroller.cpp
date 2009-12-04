@@ -10,6 +10,7 @@ ProjectorController::ProjectorController()
     connect(projector, SIGNAL(cooling_changed(bool)), this, SLOT(cooling_changed(bool)));
     connect(projector, SIGNAL(video_mute_changed(bool)), this, SLOT(video_mute_changed(bool)));
     connect(projector, SIGNAL(warming_changed(bool)), this, SLOT(warming_changed(bool)));
+    connect(projector, SIGNAL(error(QString)), this, SLOT(projector_error(QString)));
 
     QState *offState = new QState();
     QState *onState = new QState();
@@ -22,6 +23,7 @@ ProjectorController::ProjectorController()
     //warmingState->addTransition(this, SIGNAL(power_on()), onState);
     onState->addTransition(this, SIGNAL(video_mute_on()), muteState);
     onState->addTransition(this, SIGNAL(cooling_on()), coolingState);
+    onState->addTransition(this, SIGNAL(power_off()), offState);
     muteState->addTransition(this, SIGNAL(cooling_on()), coolingState);
     muteState->addTransition(this, SIGNAL(video_mute_off()), onState);
     coolingState->addTransition(this, SIGNAL(power_off()), offState);
@@ -104,6 +106,13 @@ void ProjectorController::cooling_changed(bool on)
 
 void ProjectorController::power_changed(bool on)
 {
+    qDebug() << "Power changed " << on;
     if(on) emit power_on();
     else emit power_off();
+}
+
+void ProjectorController::projector_error(QString message)
+{
+    qDebug() << "Error: " << message;
+    emit sendMessage(message, 1000);
 }
