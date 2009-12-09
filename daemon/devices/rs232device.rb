@@ -4,7 +4,7 @@ require 'serialport'
 require 'bitpack'
 
 class RS232Device < Device
-	attr_reader :port, :serial_port
+	attr_accessor :port, :serial_port
 		
 	#def baud
 	#	return @serial_port.baud
