@@ -5,6 +5,58 @@ class Projector < RS232Device
 	def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
 		super(port, baud_rate, data_bits, stop_bits, name, bus)	
 	end
+	
+	def Projector.state_variables
+		return [
+			{
+				'name' => 'power',
+				'kind' => 'boolean'
+			},
+			{
+				'name' => 'video_mute',
+				'kind' => 'boolean'
+			},
+			{
+				'name' => 'input',
+				'kind' => 'option',
+				'options' => [
+					'RGB1',
+					'RGB2',
+					'VIDEO',
+					'SVIDEO'
+				]
+			},
+			{
+				'name' => 'brightness',
+				'kind' => 'percentage'
+			},
+			{
+				'name' => 'cooling',
+				'kind' => 'boolean',
+				'editable' => false
+			},
+			{
+				'name' => 'warming',
+				'kind' => 'boolean',
+				'editable' => false
+			},
+			{
+				'name' => 'model',
+				'kind' => 'string',
+				'editable' => false
+			},
+			{
+				'name' => 'lamp_hours',
+				'kind' => 'number',
+				'editable' => false
+			},
+			{
+				'name' => 'percent_lamp_used',
+				'kind' => 'percentage',
+				'editable' => false
+			}
+		]
+	end
 
 	def kind
 		return "Projector"

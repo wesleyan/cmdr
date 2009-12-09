@@ -34,11 +34,17 @@
 			</sources>
 		</configuration>
 	</page>
-        <page>
+		<page>
 			<name>Remote</name>
 			<buttonItemURL>modules/remote/RemoteButton.qml</buttonItemURL>
 			<pageItemURL>modules/remote/RemotePage.qml</pageItemURL>
-        </page>
+			<configuration>
+				<buttons>
+					<button name="eject" command="eject" />
+					<button name="play" command="play" />
+				</buttons>
+			</configuratoin
+		</page>
 	<page>
 		<name>Volume</name>
 		<buttonItemURL>modules/volume/VolumeButton.qml</buttonItemURL>

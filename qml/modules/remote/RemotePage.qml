@@ -36,6 +36,17 @@ Item {
                 anchors.left: vcrButton.right
                 anchors.leftMargin: 20
                 anchors.verticalCenter: parent.verticalCenter
+                MouseRegion {
+                    anchors.fill: parent
+                    maskPath: "qml/modules/remote/images/Eject_button.png"
+                    onPressed: {
+                        parent.opacity = 0.6
+                        iremitter.pulse_command("eject");
+                    }
+                    onReleased: {
+                        parent.opacity = 1
+                    }
+                }
             }
         }
         Item {

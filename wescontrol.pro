@@ -3,8 +3,7 @@ SOURCES = src/wescontrol.cpp \
     src/messagemodel.cpp \
     src/videoswitcher.cpp \
     src/sourcecontroller.cpp \
-    src/volume.cpp \
-    #qml/modules/remote/inpolygondetector.cpp \
+    src/volume.cpp \ # qml/modules/remote/inpolygondetector.cpp \
     src/iremitter.cpp \
     src/projectorcontroller.cpp \
     src/volumecontroller.cpp
@@ -61,8 +60,7 @@ HEADERS += src/wescontrol.h \
     src/messagemodel.h \
     src/videoswitcher.h \
     src/sourcecontroller.h \
-    src/volume.h \
-    #qml/modules/remote/inpolygondetector.h \
+    src/volume.h \ # qml/modules/remote/inpolygondetector.h \
     src/iremitter.h \
     src/projectorcontroller.h \
     src/volumecontroller.h
@@ -83,7 +81,8 @@ OTHER_FILES += qml/LoginScreen.qml \
     qml/modules/volume/VolumeButton.qml \
     qml/modules/remote/RemotePage.qml \
     qml/modules/remote/RemoteButton.qml \
-    qml/modules/remote/PolygonalMouseRegion.qml
+    qml/modules/remote/PolygonalMouseRegion.qml \
+    pages.xml
 builddir = build/
 OBJECTS_DIR = $$builddir
 MOC_DIR = $$builddir

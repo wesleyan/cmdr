@@ -10,6 +10,10 @@ class NECProjector < Projector
 		:projector_model, :projector_id, :projector_name, :lamp_hours, :percent_lamp_used, 
 		:filter_hours, :projector_usage, :warming, :volume, :mute
 	
+	state_vars :power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
+		:projector_model, :projector_id, :projector_name, :lamp_hours, :percent_lamp_used, 
+		:filter_hours, :projector_usage, :warming, :volume, :mute
+	
 	RGB1   = 1
 	RGB2   = 2
 	VIDEO  = 6
@@ -52,13 +56,13 @@ class NECProjector < Projector
 			:volume=			 => [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
 			:mute=				 => [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
 			:running_sense       => [0, 0x81, nil, proc {|frame|
-				@power       = frame["data"][0] & 2**1 != 0
+				self.power       = frame["data"][0] & 2**1 != 0
 				@cooling_maybe   = frame["data"][0] & 2**5 != 0
 				if @cooling_maybe != @cooling
 					Thread.new{
 						cooling_maybe_was = @cooling_maybe
 						sleep(4)
-						@cooling = @cooling_maybe if @cooling_maybe == cooling_maybe_was
+						self.cooling = @cooling_maybe if @cooling_maybe == cooling_maybe_was
 					}
 				end
 				#projector is warming if it is doing power processing (bit 7) and not cooling
@@ -68,7 +72,7 @@ class NECProjector < Projector
 					Thread.new{
 						warming_maybe_was = @warming_maybe
 						sleep(4)
-						@warming = @warming_maybe if @warming_maybe == warming_maybe_was
+						self.warming = @warming_maybe if @warming_maybe == warming_maybe_was
 					}
 				end
 			}],
@@ -83,27 +87,27 @@ class NECProjector < Projector
 					when [1, 2] then @input = "VIDEO"
 					when [1, 3] then @input = "SVIDEO"
 				end
-				@video_mute = data[28] == 1
-				@mute = data[29] == 1
-				@projector_model = MODEL_MAP[[data[0], data[69], data[70]]]
-				@has_signal = data[84] != 1
-				@picture_displaying = data[84] == 0
+				self.video_mute = data[28] == 1
+				self.mute = data[29] == 1
+				self.projector_model = MODEL_MAP[[data[0], data[69], data[70]]]
+				self.has_signal = data[84] != 1
+				self.picture_displaying = data[84] == 0
 			}],
 			:lamp_information => [3, 0x8A, nil, proc {|frame|
 				data = frame["data"]
 				#projector_name is a null-terminated string taking up at most bytes 0..48
-				@projector_name = data[0..[48, data.index(0)].min].pack("c*")
+				self.projector_name = data[0..[48, data.index(0)].min].pack("c*")
 				#they use a bizarre method of encoding for these, which is essentially bytes 82..85 
 				#contatenated in hex in inverse order. Also, despite the name, values are in seconds.
 				def get_hours(array)
 					return (array.reverse.collect{|hex| hex.to_s(16)}.join.to_i(16)/3600.0).round()
 				end
-				@lamp_hours      = get_hours(data[82..85])
-				@filter_hours    = get_hours(data[86..89])
-				@projector_usage = get_hours(data[94..97])
+				self.lamp_hours      = get_hours(data[82..85])
+				self.filter_hours    = get_hours(data[86..89])
+				self.projector_usage = get_hours(data[94..97])
 			}],
 			:lamp_remaining => [3, 0x94, nil, proc {|frame|
-				@percent_lamp_used = 100-frame['data'][4] #percent remaining is what's returned
+				self.percent_lamp_used = 100-frame['data'][4] #percent remaining is what's returned
 			}],
 			:volume_request => [3, 4, [5, 0].pack("cc"), proc {|frame|
 				#potentially interesting note: you can detect whether you can change gain with DATA01
@@ -111,7 +115,7 @@ class NECProjector < Projector
 				#if data[0] != 0 #if it's 0, "display [gain] impossible"
 					#@max_volume = data[1] + data[2] * 2**8
 					#@min_volume = data[3] + data[4] * 2**8
-					@volume = (data[7] + data[8] * 2**8) / 63.to_f
+					self.volume = (data[7] + data[8] * 2**8) / 63.to_f
 					#puts "Volume should be [#{@min_volume}, #{@max_volume}]"
 				#end
 			}],

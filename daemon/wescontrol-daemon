@@ -4,12 +4,15 @@ require 'dbus'
 #require '/usr/local/wescontrol/daemon/dbus_fix.rb'
 require 'yaml'
 require 'drb/drb'
+require 'couchrest'
 
 require '/usr/local/wescontrol/daemon/devices/device'
 require '/usr/local/wescontrol/daemon/devices/Projector'
 require '/usr/local/wescontrol/daemon/devices/VideoSwitcher'
 
 URI = "druby://localhost:8787"
+
+couch = CouchRest.new("localhost:5984")
 
 class RControl < DBus::Object
 	@room_name
@@ -25,12 +28,16 @@ class RControl < DBus::Object
 	end
 end
 
-config = {}
+
+doc_id = `ifconfig | grep HWaddr`.split("\n")[0].match(/([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])/).to_s.downcase.gsub(":", "-")
+
+@config = nil
 begin
-	config = YAML.load_file(ARGV[0])
+	db = couch.database('rooms')
+	@config = db.get(doc_id)
 	#TODO: actually check whether the config file is valid
 rescue
-	raise "Please pass a valid configuration file as an argument"
+	raise "The room has not been added the database"
 end
 
 @devices = {}
@@ -40,7 +47,7 @@ service      = bus.request_service("edu.wesleyan.WesControl")
 rcontrol     = RControl.new(config['room_name'])
 service.export(rcontrol)
 
-config['devices'].each{|device|
+@config['devices'].each{|device|
 	require "/usr/local/wescontrol/daemon/devices/#{device['class']}"
 	device = Object.const_get(device['class']).new(device['name'], bus, device)
 	@devices[device.name] = device
