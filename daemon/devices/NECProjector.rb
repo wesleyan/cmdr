@@ -6,13 +6,13 @@ require '/usr/local/wescontrol/daemon/devices/Projector'
 
 class NECProjector < Projector
 	
-	attr_reader :power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
-		:projector_model, :projector_id, :projector_name, :lamp_hours, :percent_lamp_used, 
-		:filter_hours, :projector_usage, :warming, :volume, :mute
-	
-	state_vars :power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
-		:projector_model, :projector_id, :projector_name, :lamp_hours, :percent_lamp_used, 
-		:filter_hours, :projector_usage, :warming, :volume, :mute
+	state_var :projector_name, 	:kind => 'string', 		:editable => false
+	state_var :projector_id,	:kind => 'string', 		:editable => false
+	state_var :projector_usage,	:kind => 'number', 		:editable => false
+	state_var :has_signal,		:kind => 'boolean', 	:editable => false
+	state_var :picture_displaying, :kind => 'boolean',	:editable => false
+	state_var :volume,			:kind => 'percentage'
+	state_var :mute,			:kind => 'boolean'
 	
 	RGB1   = 1
 	RGB2   = 2
