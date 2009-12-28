@@ -2,6 +2,10 @@ require '/usr/local/wescontrol/daemon/devices/rs232device'
 
 class VideoSwitcher < RS232Device
 
+	state_var :input, :kind => 'number'
+	state_var :volume, :kind => 'percentage'
+	state_var :mute, :kind => 'boolean'
+	
 	def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
 		super(port, baud_rate, data_bits, stop_bits, name, bus)	
 	end

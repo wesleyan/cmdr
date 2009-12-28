@@ -40,7 +40,7 @@ WescontrolWeb.mainPage = SC.Page.design({
 					displayTitle: 'Monitor',
 					layout: {bottom: 0, left:140, width:140, height: 40},
 					action: "function(){SC.RunLoop.begin(); WescontrolWeb.appController.set('currentTab', 'monitor'); SC.RunLoop.end();}",
-					isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.appController.currentTab").isEqualTo("monitor"),
+					isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.appController.currentTab").isEqualTo("monitor")
 				}),
 				
 				configureButton: WescontrolWeb.TabButton.design({
@@ -60,7 +60,7 @@ WescontrolWeb.mainPage = SC.Page.design({
 			scenes: SC.SceneView.design({
 				layout: {left: 0, top: 0, bottom:0, right: 0},
 				scenes: 'control monitor configure'.w(),
-				nowShowingBinding: "WescontrolWeb.appController.currentTab",
+				nowShowingBinding: "WescontrolWeb.appController.currentTab"
 			})
 			
 						

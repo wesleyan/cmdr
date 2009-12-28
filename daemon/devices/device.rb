@@ -20,7 +20,6 @@ end
 
 class Device < DBus::Object
 	include CouchObject::Persistable
-	#include DeviceModule
 	database "http://localhost:5984/rooms"
 	attr_accessor :name, :module
 	
@@ -29,16 +28,17 @@ class Device < DBus::Object
 	#this is kind of crazy meta-programming stuff, which
 	#I barely even understand. It took me three hours to write
 	#these twenty lines. Basically, it lets you say in a class
-	#that mixes-in DeviceModule:
+	#that subclasses Device
 	#		state_var :name, :kind => 'string'
 	#which is used elsewhere
-	@@state_vars = {}
+	@state_vars = {}
 	def state_vars; {}; end
 	def self.state_var(name, options)
-		sym = name.to_sym
-		@state_vars ||= {}
-		@state_vars[sym] = options
-		@@state_vars = @state_vars
+		sym = name
+		self.class_eval do
+			@state_vars ||= {}
+			@state_vars[sym] = options
+		end
 		self.instance_eval do
 			all_state_vars = @state_vars
 			define_method("state_vars") do
@@ -59,8 +59,10 @@ class Device < DBus::Object
 	#we need to do this because otherwise subclasses don't get a parent
 	#class's state_vars
 	def self.inherited(subclass)
-		@@state_vars.each{|name, options|
-			subclass.state_var(name, options)
+		self.instance_variable_get(:@state_vars).each{|name, options|
+			subclass.class_eval do
+				state_var(name, options)
+			end
 		}
 	end
 	
@@ -74,8 +76,11 @@ class Device < DBus::Object
 	end
 	
 	def to_couch
-		@@state_vars.collect{|var, options|
-			options["state"] = self.send(var)
+		hash = {}
+		self.state_vars.each{|var, options|
+			options["state"] = eval("@#{var}")
+			hash[var] = options
 		}
+		return hash
 	end
 end

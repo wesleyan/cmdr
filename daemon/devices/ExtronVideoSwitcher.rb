@@ -1,7 +1,10 @@
 require '/usr/local/wescontrol/daemon/devices/VideoSwitcher'
 
 class ExtronVideoSwitcher < VideoSwitcher
-	attr_reader :input, :volume, :mute, :model, :firmware_version, :part_number, :clipping
+	state_var :model, :kind => 'string', :editable => false
+	state_var :firmware_version, :kind => 'string', :editable => false
+	state_var :part_number, :kind => 'string', :editable => false
+	state_var :clipping, :kind => 'boolean', :editable => false
 
 	def initialize(name, bus, config)
 		puts "Initializing Extron on port #{config['port']} with name #{name}"

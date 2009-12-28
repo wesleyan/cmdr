@@ -32,15 +32,80 @@ a.tabButton {
 }
 
 /* Room List */
+.sc-theme .sc-list-view.roomList {
+	background: none;
+}
+
+.roomList .has-disclosure label {
+	font-size: 18px;
+	text-align: left;
+	margin-left: 10px;
+	margin-right: inherit;
+}
 .roomList label{
 	font-family: Helvetica, Arial;
 	font-weight: bold;
-	font-size: 13px;
-	text-align: right;
-	margin-right: 20px;
+	font-size: 15px;
+	text-align: left;
+	margin-right: 60px;
+	margin-left: 100px;
 }
 
+.device-list-item-view {
+	border-bottom: 1px solid #DDD;
+}
+
+.device-name {
+	font-size: 30px;
+	font-family: 'Helvetica';
+	width: 100px;
+	position: absolute;
+	left: 10px;
+	line-height: 80px;
+}
+.device-statevars {
+	left: 150px;
+	position: relative;
+	font-size: 15px;
+	height: 80px;
+}
+.sc-view td.var-name, .sc-view td.var-state {
+	font-family: 'Helvetica';
+	text-align: right;
+	border: 0;
+	padding: 0;
+	text-transform:capitalize;
+}
+.sc-view td.var-state {
+	color: gray;
+	text-align: left;
+	padding-left: 5px;
+	text-transform:none;
+}
+.device-view-item.selected {
+	background-color: #5498FF;
+}
+.device-view-item.selected .device-name, 
+.sc-view .device-view-item.selected td.var-name {
+	color: white;
+}
+.sc-view .device-view-item.selected td.var-state {
+	color: #DDD;
+}
+.sc-theme .sc-collection-view.roomList .sc-collection-item.sel {
+	background-color: white;
+	color: black;
+}
 .sc-theme.focus .sc-collection-view.focus.roomList .sc-collection-item.sel {
 	background-color: white;
 	color: black;
+}
+
+.sc-label-view.sc-regular-size.backgroundText {
+	font-family: Helvetica, Arial;
+	font-size: 87px;
+	color: black;
+	opacity: 0.08;
+	line-height: 80px;
+	text-align: center;
 }

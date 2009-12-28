@@ -21,7 +21,8 @@ WescontrolWeb.Room.FIXTURES = [
 	{
 		guid: 3,
 		name: "121",
-		building: 1
+		building: 1,
+		devices: [1, 2]
 	},
 	{
 		guid: 4,

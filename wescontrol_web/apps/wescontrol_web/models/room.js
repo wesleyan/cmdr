@@ -20,11 +20,15 @@ WescontrolWeb.Room = SC.Record.extend(
 	}),
 	
 	buildingName: function(){
-		return this.getPath('building.name')
+		return this.getPath('building.name');
 	}.property('building').cacheable(),
 	
 	fullName: function(){
 		return this.getEach('buildingName', 'name').compact().join(' ');
-	}.property('building', 'name').cacheable()
+	}.property('building', 'name').cacheable(),
+	
+	devices: SC.Record.toMany("WescontrolWeb.Device", {
+		inverse: "room", isMaster: YES
+	})
 	
 }) ;

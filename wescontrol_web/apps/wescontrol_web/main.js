@@ -24,8 +24,7 @@ WescontrolWeb.main = function main() {
 
 	// TODO: Set the content property on your primary controller
 	// ex: WescontrolWeb.contactsController.set('content',WescontrolWeb.contacts);
-	var rooms = WescontrolWeb.store.find(WescontrolWeb.Room);
-	WescontrolWeb.roomController.set('content', rooms);
+	WescontrolWeb.buildingController.refreshSources();
 } ;
 
 function main() { WescontrolWeb.main(); }

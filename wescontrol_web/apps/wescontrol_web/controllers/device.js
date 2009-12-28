@@ -1,5 +1,5 @@
 // ==========================================================================
-// Project:   WescontrolWeb.roomController
+// Project:   WescontrolWeb.deviceController
 // Copyright: ©2009 My Company, Inc.
 // ==========================================================================
 /*globals WescontrolWeb */
@@ -10,9 +10,8 @@
 
   @extends SC.Object
 */
-WescontrolWeb.roomController = SC.ArrayController.create(
-/** @scope WescontrolWeb.roomController.prototype */ {
-	
-	contentBinding: 'WescontrolWeb.roomListController.devices'
-	
+WescontrolWeb.deviceController = SC.ObjectController.create(
+/** @scope WescontrolWeb.deviceController.prototype */ {
+
+
 }) ;
