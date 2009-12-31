@@ -1,3 +1,0 @@
-class IRDevice < Device
-	
-end

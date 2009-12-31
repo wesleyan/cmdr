@@ -5,7 +5,10 @@
 }
 
 
-/* TABS */
+/*------------------------*\
+|*        Tabs CSS        *|
+\*------------------------*/
+
 a.tabButton {
 	border-radius: 0px;
 }
@@ -31,7 +34,9 @@ a.tabButton {
 	background: none;
 }
 
-/* Room List */
+/*------------------------*\
+|*     Room List CSS      *|
+\*------------------------*/
 .sc-theme .sc-list-view.roomList {
 	background: none;
 }
@@ -55,22 +60,22 @@ a.tabButton {
 	border-bottom: 1px solid #DDD;
 }
 
-.device-name {
+.device-view-item .device-name {
 	font-size: 30px;
-	font-family: 'Helvetica';
+	font-family: Helvetica, Arial;
 	width: 100px;
 	position: absolute;
 	left: 10px;
 	line-height: 80px;
 }
-.device-statevars {
+.device-view-item .device-statevars {
 	left: 150px;
 	position: relative;
 	font-size: 15px;
 	height: 80px;
 }
 .sc-view td.var-name, .sc-view td.var-state {
-	font-family: 'Helvetica';
+	font-family: Helvetica, Arial;
 	text-align: right;
 	border: 0;
 	padding: 0;
@@ -108,4 +113,42 @@ a.tabButton {
 	opacity: 0.08;
 	line-height: 80px;
 	text-align: center;
+}
+
+/*------------------------*\
+|*   Device Control CSS   *|
+\*------------------------*/
+
+.sc-view.device-control-view
+{
+	position: static;
+}
+.sc-view.device-control-view .sc-view.sc-label-view {
+	font-family: Helvetica, Arial;
+	color: black;
+	position: static;
+	padding-top: 10px;
+}
+
+.sc-view.device-control-view .sc-view.sc-label-view.device-name {
+	font-size: 40px;
+	text-align: center;
+	padding-top:10px;
+	line-height: 45px;
+}
+
+.sc-view.device-control-view .sc-view.sc-label-view.var-name {
+	font-size: 20px;
+	font-weight: bold;
+	line-height: 22px;
+	margin-left: 10px;
+	text-transform: capitalize;
+}
+
+.sc-view.device-control-view .sc-view.device-control-button-holder,
+.sc-view.device-control-view .sc-view.sc-slider-view,
+.sc-view.device-control-view .sc-view.select-button {
+	position: relative;
+} {
+	position: relative;
 }

@@ -18,15 +18,28 @@ WescontrolWeb.Device = SC.Record.extend(
 		inverse: "devices", isMaster: NO
 	}),
 	
+	deviceVars: SC.Record.toMany("WescontrolWeb.DeviceVar", {
+		inverse: "device", isMaster: YES
+	}),
+	
+	editable: SC.Record.attr(Boolean, {defaultValue: YES}),
+	
 	vars_obj: function() {
 		var vars_array = [];
 		for(var key in this.get('state_vars'))
 		{
 			var obj = this.get('state_vars')[key];
 			obj.name = key;
+			obj.name = obj.name.replace("_", " ");
 			vars_array.pushObject(obj);
 		}
 		return vars_array;
-	}.property('state_vars').cacheable()
+	}.property('state_vars').cacheable(),
+	
+	controllable_vars: function() {
+		return this.get('vars_obj').filter(function(item){
+			return item.editable;
+		}).sortProperty('displayOrder');
+	}.property('vars_obj').cacheable()
 
 }) ;

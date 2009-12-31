@@ -1,4 +1,3 @@
-require '/usr/local/wescontrol/daemon/devices/device'
 require 'socket'
 
 class IREmitter < Device

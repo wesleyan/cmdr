@@ -13,5 +13,9 @@
 WescontrolWeb.deviceController = SC.ObjectController.create(
 /** @scope WescontrolWeb.deviceController.prototype */ {
 
+	contentBinding: SC.Binding.single('WescontrolWeb.roomController.selection')
+	
+	
+	
 
 }) ;

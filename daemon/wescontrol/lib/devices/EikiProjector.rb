@@ -2,7 +2,7 @@ require 'rubygems'
 require 'serialport'
 require 'bitpack'
 
-require 'devices/Projector'
+#require "#{File.dirname(__FILE__)}/wescontrol/devices/Projector"
 
 class EikiProjector < Projector
 	

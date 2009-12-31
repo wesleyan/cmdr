@@ -2,8 +2,6 @@ require 'rubygems'
 require 'serialport'
 require 'bitpack'
 
-require '/usr/local/wescontrol/daemon/devices/Projector'
-
 class NECProjector < Projector
 	
 	state_var :projector_name, 	:kind => 'string', 		:editable => false

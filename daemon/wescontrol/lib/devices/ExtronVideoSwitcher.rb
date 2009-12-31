@@ -1,4 +1,4 @@
-require '/usr/local/wescontrol/daemon/devices/VideoSwitcher'
+#require "#{File.dirname(__FILE__)}/wescontrol/devices/VideoSwitcher"
 
 class ExtronVideoSwitcher < VideoSwitcher
 	state_var :model, :kind => 'string', :editable => false

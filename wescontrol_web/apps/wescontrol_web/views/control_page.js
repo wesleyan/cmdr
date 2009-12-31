@@ -44,16 +44,6 @@ WescontrolWeb.ControlPage = SC.View.extend(
 		}).classNames('backgroundText')
 	}),
 	
-	rightBar: SC.ScrollView.design({
-		layout: {right: 0, top:0, bottom:0, width: 300},
-		backgroundColor: "#EFEBE3",
-		broderStyle: SC.BORDER_NONE,
-		hasHorizontalScroller: NO,
-		contentView: WescontrolWeb.DeviceControlView.design({
-			contentBinding: "WescontrolWeb.deviceController"
-		})
-	}),
-	
 	center: SC.ScrollView.design({
 		layout: {right: 300, top:0, bottom:0, left: 300},
 		borderStyle: SC.BORDER_NONE,
@@ -61,9 +51,20 @@ WescontrolWeb.ControlPage = SC.View.extend(
 		contentView: SC.ListView.design({
 			contentBinding: "WescontrolWeb.roomController",
 			exampleView: WescontrolWeb.DeviceView,
-			rowHeight: 80
+			rowHeight: 80,
+			selectionBinding: 'WescontrolWeb.roomController.selection',
+			actsOnSelect: YES
 		})
-		
+	}),
+	
+	rightBar: SC.ScrollView.design({
+		layout: {right: 0, top:0, bottom:0, width: 300},
+		backgroundColor: "#EFEBE3",
+		borderStyle: SC.BORDER_NONE,
+		hasHorizontalScroller: NO,
+		contentView: WescontrolWeb.DeviceControlView.design({
+			contentBinding: "WescontrolWeb.deviceController"
+		})
 	})
 
 });

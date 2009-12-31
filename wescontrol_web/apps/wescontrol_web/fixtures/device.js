@@ -37,30 +37,31 @@ WescontrolWeb.Device.FIXTURES = [
 				state: 0.8,
 				displayOrder: 3
 			},
-			videoMute: {
+			video_mute: {
 				type: 'boolean',
 				editable: true,
 				state: false,
 				displayOrder: 4
 			},
-			lampRemaining: {
+			lamp_remaining: {
 				type: 'string',
 				editable: false,
 				state: "300 hours",
 				displayOrder: 6
 			},
-			onTime: {
+			on_time: {
 				type: 'string',
 				editable: false,
 				state: "5 hours",
 				displayOrder: 5
 			},
-			totalUsage: {
+			total_usage: {
 				type: 'string',
 				editable: false,
 				state: "1001 hours"
 			}
-		}
+		},
+		deviceVars: [1, 2, 3, 4, 5, 6, 7]
 	},
 	{
 		guid: 2,
@@ -91,7 +92,8 @@ WescontrolWeb.Device.FIXTURES = [
 				state: false,
 				displayOrder: 3
 			}
-		}
+		},
+		deviceVars: [8,9,10]
 	}
 
 ];
