@@ -1,6 +1,6 @@
 #require "#{File.dirname(__FILE__)}/wescontrol/RS232Device"
 
-class VideoSwitcher < RS232Device
+class VideoSwitcher < WesControl::RS232Device
 
 	state_var :input, :kind => 'number'
 	state_var :volume, :kind => 'percentage'

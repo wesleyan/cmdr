@@ -26,5 +26,4 @@ class PowerPointMac < PowerPoint
 		#[:current_slide, 		[], 			["number:u"]],
 		#[:current_notes, 		[], 			["true:b"]]
 		
-	def 
 end

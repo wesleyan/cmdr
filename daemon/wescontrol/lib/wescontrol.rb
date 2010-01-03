@@ -5,13 +5,13 @@ require 'yaml'
 require 'drb/drb'
 require 'macaddr'
 
-require 'bitpacker'
+require 'bitpack'
 require 'couch_object'
 
-require "#{File.dirname(__FILE__)}/wescontrol/device"
-require "#{File.dirname(__FILE__)}/wescontrol/RS232Device"
-require "#{File.dirname(__FILE__)}/wescontrol/devices/Projector"
-require "#{File.dirname(__FILE__)}/wescontrol/devices/VideoSwitcher"
+require "#{File.dirname(__FILE__)}/device"
+require "#{File.dirname(__FILE__)}/RS232Device"
+require "#{File.dirname(__FILE__)}/devices/Projector"
+require "#{File.dirname(__FILE__)}/devices/VideoSwitcher"
 
 
 #URI = "druby://localhost:8787"
@@ -19,10 +19,9 @@ module WesControl
 	class WesControl < DBus::Object
 		def initialize
 			super("/edu/wesleyan/WesControl/controller")
-			@couch = couch = CouchRest.new("localhost:5984")
+			@db = CouchObject::Database.open("http://localhost:5984/rooms")
 			begin
-				db = @couch.database('rooms')
-				@config = db.get(Mac.addr)
+				@config = @db.get(Mac.addr)
 			rescue
 				raise "The room has not been added the database"
 			end
@@ -35,7 +34,7 @@ module WesControl
 			service.export(rcontrol)
 
 			@config['devices'].each{|device|
-				require "#{File.dirname(__FILE__)}/wescontrol/devices/#{device['class']}"
+				require "#{File.dirname(__FILE__)}/devices/#{device['class']}"
 				device = Object.const_get(device['class']).new(device['name'], bus, device)					
 				@devices[device.name] = device
 				service.export(device)

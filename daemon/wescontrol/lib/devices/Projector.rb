@@ -1,6 +1,6 @@
 #require "#{File.dirname(__FILE__)}/wescontrol/RS232Device"
 
-class Projector < RS232Device
+class Projector < WesControl::RS232Device
 
 	def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
 		super(port, baud_rate, data_bits, stop_bits, name, bus)	

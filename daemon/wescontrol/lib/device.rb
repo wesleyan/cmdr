@@ -24,6 +24,7 @@ module WesControl
 				@state_vars ||= {}
 				@state_vars[sym] = options
 			end
+
 			self.instance_eval do
 				all_state_vars = @state_vars
 				define_method("state_vars") do
@@ -48,7 +49,7 @@ module WesControl
 				subclass.class_eval do
 					state_var(name, options)
 				end
-			}
+			} if self.instance_variable_get(:@state_vars)
 		end
 	
 		#protected
