@@ -1,4 +1,4 @@
-module WesControl
+module Wescontrol
 	class IRDevice < Device
 	
 	end

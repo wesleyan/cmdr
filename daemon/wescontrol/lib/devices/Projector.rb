@@ -1,11 +1,7 @@
 #require "#{File.dirname(__FILE__)}/wescontrol/RS232Device"
 
-class Projector < WesControl::RS232Device
+class Projector < Wescontrol::RS232Device
 
-	def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
-		super(port, baud_rate, data_bits, stop_bits, name, bus)	
-	end
-	
 	state_var :power, 		:kind => 'boolean'
 	state_var :video_mute, 	:kind => 'boolean'
 	state_var :input, 		:kind => 'option', :options => ['RGB1','RGB2','VIDEO','SVIDEO']

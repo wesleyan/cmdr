@@ -1,14 +1,10 @@
 #require "#{File.dirname(__FILE__)}/wescontrol/RS232Device"
 
-class VideoSwitcher < WesControl::RS232Device
+class VideoSwitcher < Wescontrol::RS232Device
 
 	state_var :input, :kind => 'number'
 	state_var :volume, :kind => 'percentage'
 	state_var :mute, :kind => 'boolean'
-	
-	def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
-		super(port, baud_rate, data_bits, stop_bits, name, bus)	
-	end
 	
 	@api = [
 		#format: 

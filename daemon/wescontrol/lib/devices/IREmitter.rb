@@ -1,6 +1,6 @@
 require 'socket'
 
-class IREmitter < WesControl::Device
+class IREmitter < Wescontrol::Device
 
 	def initialize(name, bus, config)
 		super(name, bus)

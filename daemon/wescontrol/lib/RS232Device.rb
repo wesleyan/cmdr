@@ -2,9 +2,12 @@ require 'rubygems'
 require 'serialport'
 require 'bitpack'
 
-module WesControl
+module Wescontrol
 	class RS232Device < Device
-		attr_accessor :port, :serial_port
+		config_var :baud
+		config_var :data_bits
+		config_var :stop_bits
+		config_var :port
 		
 		#def baud
 		#	return @serial_port.baud
@@ -27,14 +30,6 @@ module WesControl
 			@serial_port.stop_bits = stop
 		end
 
-		def queue_string(string)
-			@queue << string
-		end
-
-		def send_top_of_queue()
-			@serial_port.write(@queue.pop)
-		end
-
 		def send_string(string)
 			Thread.new{
 				@serial_port.write(string)
@@ -42,13 +37,14 @@ module WesControl
 		end
 	
 		protected
-		def initialize(port, baud_rate, data_bits, stop_bits, name, bus)
-			@port = port
-			@serial_port = SerialPort.new(port, {:baud_rate => baud_rate, :data_bits => data_bits, :stop_bits => stop_bits})
-			@queue = Queue.new
-			@messages = Queue.new
-			@response = Queue.new
-			super(name, bus)
+		def initialize(options)
+			options = options.symbolize_keys
+			@serial_port = SerialPort.new(options[:port], {:baud_rate => options[:baud_rate], :data_bits => options[:data_bits], :stop_bits => options[:stop_bits]})
+			@port = options[:port]
+			@baud_rate = options[:baud_rate]
+			@data_bits = options[:data_bits]
+			@stop_bits = options[:stop_bits]
+			super(options)
 		end
 	end
 end

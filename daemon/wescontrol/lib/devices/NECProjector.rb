@@ -27,11 +27,13 @@ class NECProjector < Projector
 		["Lamp2 housing error", "Lamp2 data error", "High temperature due to dust pile-up", "A foreign object sensor error", "Pump error"]
 	]
 
-	def initialize(name, bus, config)
-		puts "Initializing projector on port #{config['port']} with name #{name}"
+	def initialize(options)
+		puts options.inspect
+		options = options.symbolize_keys
+		puts "Initializing projector on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
 	
-		super(config['port'], 9600, 8, 1, name, bus)
+		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
 
 		#@frames stores an array of messages that are currently being sent, indexed by id2 (which seems to be unique for each command--honestly, I have no
 		#clue how id1 and id2 are supposed to work, despite several hours of trying to figure out. For the input command (id2=3) any id1 in the format
@@ -87,7 +89,7 @@ class NECProjector < Projector
 				end
 				self.video_mute = data[28] == 1
 				self.mute = data[29] == 1
-				self.projector_model = MODEL_MAP[[data[0], data[69], data[70]]]
+				self.model = MODEL_MAP[[data[0], data[69], data[70]]]
 				self.has_signal = data[84] != 1
 				self.picture_displaying = data[84] == 0
 			}],
@@ -305,7 +307,7 @@ class NECProjector < Projector
 	def check_status
 		Thread.new{
 			class_vars = [:power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
-						:projector_model, :projector_name, :lamp_hours, :percent_lamp_used, 
+						:model, :projector_name, :lamp_hours, :percent_lamp_used, 
 						:filter_hours, :projector_usage, :warming, :volume, :mute]
 			size = class_vars.collect{|var| var.to_s.size}.max
 			old_values = {}

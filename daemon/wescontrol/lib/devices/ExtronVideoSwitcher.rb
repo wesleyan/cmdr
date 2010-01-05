@@ -6,7 +6,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 	state_var :part_number, :kind => 'string', :editable => false
 	state_var :clipping, :kind => 'boolean', :editable => false
 
-	def initialize(name, bus, config)
+	def initialize(options)
 		puts "Initializing Extron on port #{config['port']} with name #{name}"
 		Thread.abort_on_exception = true
 
@@ -33,7 +33,8 @@ class ExtronVideoSwitcher < VideoSwitcher
 			"E13" => "Invalid value",
 			"E14" => "Invalid for this configuration"
 		}
-		super(config['port'], 9600, 8, 1, name, bus)
+		
+		super(:port => options['port'], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options['name'])
 		
 		Thread.new{ read() }
 		Thread.new{
