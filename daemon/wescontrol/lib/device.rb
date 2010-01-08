@@ -1,6 +1,6 @@
 module Wescontrol
 	class Device < DBus::Object
-		attr_accessor :_id, :_rev
+		attr_accessor :_id, :_rev, :belongs_to
 		@database = "http://localhost:5984/rooms"
 
 	
@@ -29,8 +29,10 @@ module Wescontrol
 			end
 			self.class_eval %{
 				def #{sym}= (val)
-					@#{sym} = val
-					self.save
+					if @#{sym} != val
+						@#{sym} = val
+						self.save
+					end
 				end
 				def #{sym}
 					@#{sym}
@@ -105,7 +107,9 @@ module Wescontrol
 			device = self.new(hash['attributes'])
 			device._id = hash['_id']
 			device._rev = hash['_rev']
+			device.belongs_to = hash['belongs_to']
 			state_vars = hash['attributes']['state_vars']
+			state_vars ||= {}
 			hash['attributes']['state_vars'] = nil
 			(hash['attributes'].merge(state_vars.each_key{|name| 
 				state_vars[name] = state_vars[name]['state']
@@ -120,7 +124,8 @@ module Wescontrol
 		end
 		
 		def save
-			doc = {'attributes' => self.to_couch}
+			hash = self.to_couch
+			doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to}
 			if @_id && @_rev
 				doc["_id"] = @_id
 				doc["_rev"] = @_rev
@@ -129,7 +134,7 @@ module Wescontrol
 		end
 		
 		def inspect
-			puts "<#{self.class.inspect}>"
+			"<#{self.class.inspect}:#{self.object_id}>"
 		end
 	end
 end
