@@ -125,7 +125,7 @@ module Wescontrol
 				doc["_id"] = @_id
 				doc["_rev"] = @_rev
 			end
-			@db.save_doc(doc)
+			@_rev = @db.save_doc(doc)['rev']
 		end
 		
 		def inspect
