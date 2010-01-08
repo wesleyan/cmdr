@@ -2,14 +2,15 @@ require 'socket'
 
 class IREmitter < Wescontrol::Device
 
-	def initialize(name, bus, config)
-		super(name, bus)
+	def initialize(options)
+		options = options.symbolize_keys
+		super(options)
 		begin
 			@socket = UNIXSocket.open("/dev/lircd")
 		rescue
 		end
 		@commands = {}
-		@remote = config["remote"]
+		@remote = options[:remote]
 		read()
 	end
 	
