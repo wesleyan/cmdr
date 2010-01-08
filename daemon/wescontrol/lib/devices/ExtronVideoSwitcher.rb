@@ -17,13 +17,13 @@ class ExtronVideoSwitcher < VideoSwitcher
 			#format is :name => [command, response_detector, callback]
 			#The response_detector is a block that, when passed the response string, returns true if
 			#the response was for that command
-			:input=			=> [proc {|input| "#{input}!"}, proc {|r| r[0..2] == "Chn"}, proc {|r| @input = r[-1..-1].to_i}],
-			:volume=		=> [proc {|volume| "#{(volume*100).to_i}V"}, proc {|r| r[0..2] == "Vol"}, proc {|r| @volume = r[3..-1].to_i/100.0}],
-			:mute=			=> [proc {|on| on ? "1Z" : "0Z"}, proc {|r| r[0..2] == "Amt"}, proc {|r| @audio_mute = r[-1..-1] == "1"}],
+			:input=			=> [proc {|input| "#{input}!"}, proc {|r| r[0..2] == "Chn"}, proc {|r| self.input = r[-1..-1].to_i}],
+			:volume=		=> [proc {|volume| "#{(volume*100).to_i}V"}, proc {|r| r[0..2] == "Vol"}, proc {|r| @self.volume = r[3..-1].to_i/100.0}],
+			:mute=			=> [proc {|on| on ? "1Z" : "0Z"}, proc {|r| r[0..2] == "Amt"}, proc {|r| self.audio_mute = r[-1..-1] == "1"}],
 			:get_status		=> ["I", proc {|r| r.scan(/Vid\d+ Aud\d+ Clp\d/).size > 0}, proc {|r|
 				input = r.scan(/Vid\d+/).join("")[3..-1].to_i
-				@input = input if input > 0
-				@clipping = r.scan(/Clp\d+/).join("")[3..-1] == "1"
+				self.input = input if input > 0
+				self.clipping = r.scan(/Clp\d+/).join("")[3..-1] == "1"
 			}],
 			:get_volume		=> ["V", nil, nil], #the response code for setting volume will handle these messages as well
 			:get_audio_mute	=> ["Z", nil, nil] #same with this
