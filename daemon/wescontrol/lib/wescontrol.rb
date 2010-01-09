@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 require 'rubygems'
 require 'dbus'
 require 'yaml'
@@ -23,9 +22,6 @@ Dir.glob("#{File.dirname(__FILE__)}/devices/*.rb").each{|device|
 	end
 }
 
-
-
-
 #URI = "druby://localhost:8787"
 module Wescontrol
 	class Wescontrol < DBus::Object
@@ -40,28 +36,21 @@ module Wescontrol
 			end
 
 			@bus = DBus::SystemBus.instance
-			@service = @bus.service("edu.wesleyan.WesControl")
+			@service = @bus.request_service("edu.wesleyan.WesControl")
 			@service.export(self)
 			puts "Ready to start finding devices"
 			device_hashes = Room.devices(@room["id"])
 			@devices = device_hashes.collect{|hash|
-				#begin
+				begin
 					Object.const_get(hash['value']['class']).from_couch(hash['value'])
-				#rescue
-				#	puts "Failed to create device: #{$!}"
-				#end
+				rescue
+					puts "Failed to create device: #{$!}"
+				end
 			}.compact
 			puts "Devices: #{@devices.inspect}"
 			@devices.each{|device|
-				#require "#{File.dirname(__FILE__)}/devices/#{device['class']}"
-				#device = Object.const_get(device['class']).new(device['name'], bus, device)					
-				#@devices[device.name] = device
 				@service.export(device)
 			}
-
-			#FRONT_OBJECT = @devices
-			#$SAFE = 1 # disable eval() and friends
-		
 		end
 	
 		def start
@@ -115,7 +104,7 @@ module Wescontrol
 		end
 		
 		def inspect
-			"<WesControl>"
+			"<WesControl:0x#{object_id.to_s(16)}>"
 		end
 	end
 

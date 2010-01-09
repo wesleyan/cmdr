@@ -12,8 +12,8 @@ module Wescontrol
 		#def baud
 		#	return @serial_port.baud
 		#end	
-		def baud=(baud_rate)
-			@serial_port.baud = baud_rate
+		def baud=(baud)
+			@serial_port.baud = baud
 		end
 	
 		def data_bits
@@ -39,9 +39,9 @@ module Wescontrol
 		protected
 		def initialize(options)
 			options = options.symbolize_keys
-			@serial_port = SerialPort.new(options[:port], {:baud_rate => options[:baud_rate], :data_bits => options[:data_bits], :stop_bits => options[:stop_bits]})
+			@serial_port = SerialPort.new(options[:port], {:baud => options[:baud], :data_bits => options[:data_bits], :stop_bits => options[:stop_bits]})
 			@port = options[:port]
-			@baud_rate = options[:baud_rate]
+			@baud = options[:baud]
 			@data_bits = options[:data_bits]
 			@stop_bits = options[:stop_bits]
 			super(options)

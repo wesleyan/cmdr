@@ -33,6 +33,7 @@ module Wescontrol
 						@#{sym} = val
 						self.save
 					end
+					val
 				end
 				def #{sym}
 					@#{sym}
