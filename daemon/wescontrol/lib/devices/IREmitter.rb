@@ -39,26 +39,4 @@ class IREmitter < Wescontrol::Device
 		end
 	end
 	
-	dbus_interface "edu.wesleyan.WesControl.irEmitter" do
-		dbus_method :pulse_command, "in button:s, out response:s" do |button|
-			command = "SEND_ONCE #{@remote} #{button}"
-			@commands[command] = nil
-			begin
-				@socket.write("#{command}\n", 0)
-			rescue
-				begin
-					@socket = UNIXSocket.open("/dev/lircd")
-					@socket.send("#{command}\n", 0)
-				rescue
-					return ["Failed to communicate with IR emitter"]
-				end
-			end
-
-			20.times {|t|
-				return [@commands[command]] if @commands[command]
-				sleep(0.1)
-			}
-			return ["Failed to communicate with IR emitter"]
-		end
-	end
 end

@@ -17,9 +17,9 @@ class ExtronVideoSwitcher < VideoSwitcher
 			#format is :name => [command, response_detector, callback]
 			#The response_detector is a block that, when passed the response string, returns true if
 			#the response was for that command
-			:input=			=> [proc {|input| "#{input}!"}, proc {|r| r[0..2] == "Chn"}, proc {|r| self.input = r[-1..-1].to_i}],
-			:volume=		=> [proc {|volume| "#{(volume*100).to_i}V"}, proc {|r| r[0..2] == "Vol"}, proc {|r| self.volume = r[3..-1].to_i/100.0}],
-			:mute=			=> [proc {|on| on ? "1Z" : "0Z"}, proc {|r| r[0..2] == "Amt"}, proc {|r| self.mute = r[-1..-1] == "1"}],
+			:set_input			=> [proc {|input| "#{input}!"}, proc {|r| r[0..2] == "Chn"}, proc {|r| self.input = r[-1..-1].to_i}],
+			:set_volume		=> [proc {|volume| "#{(volume*100).to_i}V"}, proc {|r| r[0..2] == "Vol"}, proc {|r| self.volume = r[3..-1].to_i/100.0}],
+			:set_mute			=> [proc {|on| on ? "1Z" : "0Z"}, proc {|r| r[0..2] == "Amt"}, proc {|r| self.mute = r[-1..-1] == "1"}],
 			:get_status		=> ["I", proc {|r| r.scan(/Vid\d+ Aud\d+ Clp\d/).size > 0}, proc {|r|
 				input = r.scan(/Vid\d+/).join("")[3..-1].to_i
 				self.input = input if input > 0
@@ -40,21 +40,21 @@ class ExtronVideoSwitcher < VideoSwitcher
 		Thread.new{ read() }
 		Thread.new{
 			while true do
-				self.get_status
+				#self.get_status
 				sleep(0.5)
 			end
 		}
 		Thread.new {
 			sleep(0.1) #these initial sleeps are to stagger the commands
 			while true do
-				self.get_volume
+				#self.get_volume
 				sleep(0.5)
 			end
 		}
 		Thread.new {
 			sleep(0.2)
 			while true do
-				self.get_audio_mute
+				#self.get_audio_mute
 				sleep(0.5)
 			end
 		}

@@ -1,5 +1,5 @@
 module Wescontrol
-	class Device < DBus::Object
+	class Device
 		attr_accessor :_id, :_rev, :belongs_to
 		@database = "http://localhost:5984/rooms"
 
@@ -88,7 +88,6 @@ module Wescontrol
 			@name = hash_s[:name]
 			#TODO: The database uri should not be hard-coded
 			@db = CouchRest.database("http://localhost:5984/rooms")
-			super("/edu/wesleyan/WesControl/#{hash_s[:name]}")
 		end
 	
 		def to_couch
@@ -135,7 +134,7 @@ module Wescontrol
 		end
 		
 		def inspect
-			"<#{self.class.inspect}:#{self.object_id}>"
+			"<#{self.class.inspect}:0x#{object_id.to_s(16)}>"
 		end
 	end
 end

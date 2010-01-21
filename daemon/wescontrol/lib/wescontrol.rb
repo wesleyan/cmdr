@@ -1,12 +1,9 @@
 require 'rubygems'
-require 'dbus'
-require 'yaml'
-require 'drb/drb'
 require 'macaddr'
-
-require 'bitpack'
 require 'couchrest'
 
+require "#{File.dirname(__FILE__)}/wescontrol_http"
+#require "#{File.dirname(__FILE__)}/wescontrol_dbus"
 require "#{File.dirname(__FILE__)}/device"
 require "#{File.dirname(__FILE__)}/RS232Device"
 require "#{File.dirname(__FILE__)}/devices/Projector"
@@ -22,11 +19,9 @@ Dir.glob("#{File.dirname(__FILE__)}/devices/*.rb").each{|device|
 	end
 }
 
-#URI = "druby://localhost:8787"
 module Wescontrol
-	class Wescontrol < DBus::Object
+	class Wescontrol
 		def initialize
-			super("/edu/wesleyan/WesControl/controller")
 			@db = CouchRest.database("http://localhost:5984/rooms")
 			begin
 				@room = Room.find_by_mac(Mac.addr)
@@ -35,9 +30,6 @@ module Wescontrol
 				raise "The room has not been added the database"
 			end
 
-			@bus = DBus::SystemBus.instance
-			@service = @bus.request_service("edu.wesleyan.WesControl")
-			@service.export(self)
 			puts "Ready to start finding devices"
 			device_hashes = Room.devices(@room["id"])
 			@devices = device_hashes.collect{|hash|
@@ -47,26 +39,21 @@ module Wescontrol
 					puts "Failed to create device: #{$!}"
 				end
 			}.compact
-			puts "Devices: #{@devices.inspect}"
+			
+			@method_table = {}
 			@devices.each{|device|
-				@service.export(device)
+				@method_table[device.name] = {:device => device, :methods => {}}
+				device.state_vars.each{|name, options|
+					@method_table[device.name][:methods][name] = options
+					#this gives us the default behavior of editability
+					if options['editable'] == nil || options['editable']
+						@method_table[device.name]["set_#{name}"] = options
+					end
+				}
 			}
+			WescontrolHTTP.instance_variable_set(:@method_table, @method_table)
 		end
-	
-		def start
-			#DRb.start_service(URI, FRONT_OBJECT)
-
-			while(true) do
-				#begin
-					main = DBus::Main.new
-					main << @bus
-					main.run
-				#rescue
-				#	puts "Error: #{$!}"
-				#end
-			end
-		end
-		
+			
 		def self.define_db_views(db_uri)
 			db = CouchRest.database(db_uri)
 
@@ -96,20 +83,21 @@ module Wescontrol
 			end
 			db.save_doc(doc)
 		end
-	
-		dbus_interface "edu.wesleyan.WesControl.controller" do
-			dbus_method :room_name, "out name:s" do
-				[self.name]
-			end
+			
+		def inspect
+			"<Wescontrol:0x#{object_id.to_s(16)}>"
 		end
 		
-		def inspect
-			"<WesControl:0x#{object_id.to_s(16)}>"
+		def start		
+			EventMachine::run {
+				EventMachine.epoll
+				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
+				puts "Starting WescontrolHTTP on 0.0.0.0:1412"
+			}
 		end
 	end
 
 	class Room
-
 		@database = "http://localhost:5984/rooms"
 		
 		def self.find_by_mac(mac, db_uri = @database)

@@ -49,13 +49,13 @@ class NECProjector < Projector
 		
 		@commands = {
 			#format is :name => [id1, id2, data, callback]
-			:power=              => [2, proc {|on| on ? 0 : 1}, nil, nil],
-			:video_mute=         => [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
-			:input=              => [2, 3, proc {|source| [1, INPUT_HASH[source]].pack("cc")}, nil],
-			:brightness=		 => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
-			:volume=			 => [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
-			:mute=				 => [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
-			:running_sense       => [0, 0x81, nil, proc {|frame|
+			:set_power			=> [2, proc {|on| on ? 0 : 1}, nil, nil],
+			:set_video_mute		=> [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
+			:set_input			=> [2, 3, proc {|source| [1, INPUT_HASH[source]].pack("cc")}, nil],
+			:set_brightness		=> [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
+			:set_volume			=> [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
+			:set_mute			=> [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
+			:running_sense		=> [0, 0x81, nil, proc {|frame|
 				self.power       = frame["data"][0] & 2**1 != 0
 				@cooling_maybe   = frame["data"][0] & 2**5 != 0
 				if @cooling_maybe != @cooling
