@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
 	s.name = 'wescontrol'
-	s.version = '0.1.1'
+	s.version = '0.1.2'
 	s.summary = "WesControl daemon"
 	s.description = %{WesControl daemon and related classes}
 	s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb']

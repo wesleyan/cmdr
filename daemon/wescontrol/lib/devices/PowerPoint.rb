@@ -1,5 +1,3 @@
-require '/usr/local/wescontrol/daemon/devices/device'
-
 class PowerPoint < Device
 
 	def initialize(name, bus)

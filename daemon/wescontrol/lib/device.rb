@@ -31,6 +31,10 @@ module Wescontrol
 				def #{sym}= (val)
 					if @#{sym} != val
 						@#{sym} = val
+						if @change_deferrable
+							@change_deferrable.set_deferred_status :succeeded, "#{sym}", val
+							@change_deferrable = nil
+						end
 						self.save
 					end
 					val
@@ -131,6 +135,11 @@ module Wescontrol
 				doc["_rev"] = @_rev
 			end
 			@_rev = @db.save_doc(doc)['rev']
+		end
+		
+		def register_for_changes
+			@change_deferrable ||= EM::DefaultDeferrable.new
+			@change_deferrable
 		end
 		
 		def inspect

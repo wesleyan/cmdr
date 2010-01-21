@@ -1,4 +1,4 @@
-require '/usr/local/wescontrol/daemon/devices/PowerPoint.rb'
+
 require 'net/ssh'
 
 class PowerPointMac < PowerPoint
