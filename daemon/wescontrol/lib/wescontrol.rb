@@ -3,7 +3,9 @@ require 'macaddr'
 require 'couchrest'
 
 require "#{File.dirname(__FILE__)}/wescontrol_http"
-#require "#{File.dirname(__FILE__)}/wescontrol_dbus"
+if RUBY_PLATFORM[/linux/]
+	require "#{File.dirname(__FILE__)}/wescontrol_dbus"
+end
 require "#{File.dirname(__FILE__)}/device"
 require "#{File.dirname(__FILE__)}/RS232Device"
 require "#{File.dirname(__FILE__)}/devices/Projector"
@@ -93,6 +95,13 @@ module Wescontrol
 				EventMachine.epoll
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				puts "Starting WescontrolHTTP on 0.0.0.0:1412"
+				
+				if defined? WescontrolDBus
+					Thread.abort_on_exception = true
+					Thread.new {
+						WescontrolDBus.new(@devices).start
+					}
+				end
 			}
 		end
 	end

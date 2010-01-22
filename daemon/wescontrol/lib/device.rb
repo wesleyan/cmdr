@@ -34,6 +34,12 @@ module Wescontrol
 						if @change_deferrable
 							@change_deferrable.set_deferred_status :succeeded, "#{sym}", val
 							@change_deferrable = nil
+							
+							if @auto_register
+								@auto_register.each{|block|
+									register_for_changes.callback(block)
+								}
+							end
 						end
 						self.save
 					end
@@ -140,6 +146,12 @@ module Wescontrol
 		def register_for_changes
 			@change_deferrable ||= EM::DefaultDeferrable.new
 			@change_deferrable
+		end
+		
+		def auto_register_for_changes(&block)
+			@auto_register ||= []
+			@auto_register << block
+			register_for_changes.callback(block)
 		end
 		
 		def inspect
