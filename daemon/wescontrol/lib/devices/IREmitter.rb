@@ -2,6 +2,8 @@ require 'socket'
 
 class IREmitter < Wescontrol::Device
 
+	@inteface = "IREmitter"
+
 	def initialize(options)
 		options = options.symbolize_keys
 		super(options)

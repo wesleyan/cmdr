@@ -2,6 +2,8 @@
 
 class Projector < Wescontrol::RS232Device
 
+	@interface = "Projector"
+
 	state_var :power, 		:kind => 'boolean'
 	state_var :video_mute, 	:kind => 'boolean'
 	state_var :input, 		:kind => 'option', :options => ['RGB1','RGB2','VIDEO','SVIDEO']

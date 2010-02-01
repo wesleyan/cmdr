@@ -28,7 +28,6 @@ class NECProjector < Projector
 	]
 
 	def initialize(options)
-		puts options.inspect
 		options = options.symbolize_keys
 		puts "Initializing projector on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true

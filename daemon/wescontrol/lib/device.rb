@@ -1,9 +1,19 @@
 module Wescontrol
 	class Device
 		attr_accessor :_id, :_rev, :belongs_to
+		
 		@database = "http://localhost:5984/rooms"
+		@interface = "device"
+		
+		def interface
+			klass = self.class
+			while !(iface = klass.instance_variable_get(:@interface))
+				klass = klass.superclass
+			end
 
-	
+			iface
+		end
+		
 		#this is kind of crazy meta-programming stuff, which
 		#I barely even understand. It took me three hours to write
 		#these twenty lines. Basically, it lets you say in a class
@@ -87,6 +97,7 @@ module Wescontrol
 					config_var(name)
 				end
 			} if self.instance_variable_get(:@config_vars)
+
 		end
 		
 		config_var :name
@@ -151,7 +162,7 @@ module Wescontrol
 		def auto_register_for_changes(&block)
 			@auto_register ||= []
 			@auto_register << block
-			register_for_changes.callback(block)
+			register_for_changes.callback(&block)
 		end
 		
 		def inspect
