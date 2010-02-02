@@ -47,7 +47,7 @@ module Wescontrol
 							
 							if @auto_register
 								@auto_register.each{|block|
-									register_for_changes.callback(block)
+									register_for_changes.callback(&block)
 								}
 							end
 						end
@@ -145,13 +145,21 @@ module Wescontrol
 		end
 		
 		def save
-			hash = self.to_couch
-			doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to}
-			if @_id && @_rev
-				doc["_id"] = @_id
-				doc["_rev"] = @_rev
+			retried = false
+			begin
+				hash = self.to_couch
+				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to}
+				if @_id && @_rev
+					doc["_id"] = @_id
+					doc["_rev"] = @_rev
+				end
+				@_rev = @db.save_doc(doc)['rev']
+			rescue
+				if !retried
+					retried = true
+					retry
+				end
 			end
-			@_rev = @db.save_doc(doc)['rev']
 		end
 		
 		def register_for_changes
@@ -166,7 +174,7 @@ module Wescontrol
 		end
 		
 		def inspect
-			"<#{self.class.inspect}:0x#{object_id.to_s(16)}>"
+			"<#{self.class.to_s}:0x#{object_id.to_s(16)}>"
 		end
 	end
 end
