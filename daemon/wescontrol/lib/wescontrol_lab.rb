@@ -58,8 +58,8 @@ module WesControl
 				:views => {
 					:by_mac => {
 						:map => "function(doc) {
-							if(doc.attributes && doc.attributes[\"controller_mac\"]){
-								emit(doc.attributes[\"controller_mac\"], doc);
+							if(doc.attributes && doc.attributes[\"mac\"]){
+								emit(doc.attributes[\"mac\"], doc);
 							}
 						}".gsub(/\s/, "")
 					},
