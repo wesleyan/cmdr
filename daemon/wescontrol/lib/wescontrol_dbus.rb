@@ -44,6 +44,7 @@ module Wescontrol
 						:string => 's',
 						:number => 'u',
 						:percentage => 'd',
+						:decimal => 'd',
 						:option => 's'
 					}
 					dbus_interface "edu.wesleyan.WesControl.#{device.interface}" do

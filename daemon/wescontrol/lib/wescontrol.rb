@@ -2,6 +2,9 @@ require 'rubygems'
 require 'macaddr'
 require 'couchrest'
 
+require "#{File.dirname(__FILE__)}/wescontrol_room"
+require "#{File.dirname(__FILE__)}/wescontrol_lab"
+
 require "#{File.dirname(__FILE__)}/wescontrol_http"
 if RUBY_PLATFORM[/linux/]
 	require "#{File.dirname(__FILE__)}/wescontrol_dbus"
@@ -23,17 +26,9 @@ Dir.glob("#{File.dirname(__FILE__)}/devices/*.rb").each{|device|
 
 module Wescontrol
 	class Wescontrol
-		def initialize
+		def initialize(device_hashes)
 			@db = CouchRest.database("http://localhost:5984/rooms")
-			begin
-				@room = Room.find_by_mac(Mac.addr)
-				throw "Room Does Not Exist" unless @room
-			rescue
-				raise "The room has not been added the database"
-			end
 
-			puts "Ready to start finding devices"
-			device_hashes = Room.devices(@room["id"])
 			@devices = device_hashes.collect{|hash|
 				begin
 					Object.const_get(hash['value']['class']).from_couch(hash['value'])
@@ -56,36 +51,6 @@ module Wescontrol
 			WescontrolHTTP.instance_variable_set(:@method_table, @method_table)
 		end
 			
-		def self.define_db_views(db_uri)
-			db = CouchRest.database(db_uri)
-
-			doc = {
-				"_id" => "_design/wescontrol",
-				:views => {
-					:by_mac => {
-						:map => "function(doc) {
-							if(doc.attributes && doc.attributes[\"mac\"]){
-								emit(doc.attributes[\"mac\"], doc);
-							}
-						}".gsub(/\s/, "")
-					},
-					:devices_for_room => {
-						:map => "function(doc) {
-							if(doc.belongs_to)
-							{
-								emit(doc.belongs_to, doc);
-							}
-						}".gsub(/\s/, "")
-					}
-				}
-			}
-			begin 
-				doc["_rev"] = db.get("_design/wescontrol").rev
-			rescue
-			end
-			db.save_doc(doc)
-		end
-			
 		def inspect
 			"<Wescontrol:0x#{object_id.to_s(16)}>"
 		end
@@ -103,44 +68,6 @@ module Wescontrol
 					}
 				end
 			}
-		end
-	end
-
-	class Room
-		@database = "http://localhost:5984/rooms"
-		
-		def self.find_by_mac(mac, db_uri = @database)
-			db = CouchRest.database(db_uri)
-			retried = false
-			begin
-				db.get("_design/wescontrol").view("by_mac", {:key => mac})['rows'][0]
-			rescue RestClient::ResourceNotFound
-				Wescontrol.define_db_views(db_uri)
-				if !retried #prevents infinite retry loop
-					retried = true
-					retry
-				end
-				nil
-			rescue
-				nil
-			end
-		end
-		
-		def self.devices(room, db_uri = @database)
-			db = CouchRest.database(db_uri)
-			retried = false
-			begin
-				db.get("_design/wescontrol").view("devices_for_room", {:key => room})['rows']
-			rescue RestClient::ResourceNotFound
-				Wescontrol.define_db_views(db_uri)
-				if !retried #prevents infinite retry loop
-					retried = true
-					retry
-				end
-				nil
-			rescue
-				nil
-			end
 		end
 	end
 end

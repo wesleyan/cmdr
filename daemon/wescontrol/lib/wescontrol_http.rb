@@ -12,6 +12,7 @@ module Wescontrol
 			:number => 		proc {|a, options| a.is_a? Numeric},
 			:string => 		proc {|a, options| a.is_a? String},
 			:percentage => 	proc {|a, options| a.is_a?(Float) && a >= 0 && a <= 1},
+			:decimal =>		proc {|a, options| a.is_a?(Float) },
 			:option => 		proc {|a, options| options[:options].include? a}
 		}
 		
