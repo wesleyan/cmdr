@@ -15,7 +15,4 @@ WescontrolWeb.deviceController = SC.ObjectController.create(
 
 	contentBinding: SC.Binding.single('WescontrolWeb.roomController.selection')
 	
-	
-	
-
 }) ;

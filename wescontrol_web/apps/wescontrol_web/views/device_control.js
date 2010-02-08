@@ -33,7 +33,7 @@ WescontrolWeb.DeviceControlView = SC.View.extend(SC.StaticLayout,
 			childViews.push(newThis.createChildView(SC.LabelView.design({
 				value: c_var.name
 			}).classNames('var-name')));
-			if(c_var.type == "boolean")
+			if(c_var.kind == "boolean")
 			{
 				childViews.push(newThis.createChildView(SC.View.design({
 					childViews: "onButton offButton".w(),
@@ -51,14 +51,14 @@ WescontrolWeb.DeviceControlView = SC.View.extend(SC.StaticLayout,
 					})
 				})));
 			}
-			else if(c_var.type == "percentage")
+			else if(c_var.kind == "percentage")
 			{
 				childViews.push(newThis.createChildView(SC.SliderView.design({
 					layout: {centerX: 0, width: 208, top: 10, height: 30},
 					step: 0.01
 				})));
 			}
-			else if(c_var.type == "option")
+			else if(c_var.kind == "option")
 			{
 				childViews.push(newThis.createChildView(SC.SelectButtonView.design({
 					objects: c_var.options,

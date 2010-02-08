@@ -82,6 +82,8 @@ module Wescontrol
 				end
 			}
 		end
+		def self.virtual_var(name, options)
+		end
 		#this is a hook that gets called when the class is subclassed.
 		#we need to do this because otherwise subclasses don't get a parent
 		#class's state_vars

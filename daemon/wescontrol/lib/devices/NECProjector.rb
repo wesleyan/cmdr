@@ -105,7 +105,7 @@ class NECProjector < Projector
 				self.filter_hours    = get_hours(data[86..89])
 				self.projector_usage = get_hours(data[94..97])
 			}],
-			:lamp_remaining => [3, 0x94, nil, proc {|frame|
+			:lamp_remaining_info => [3, 0x94, nil, proc {|frame|
 				self.percent_lamp_used = 100-frame['data'][4] #percent remaining is what's returned
 			}],
 			:volume_request => [3, 4, [5, 0].pack("cc"), proc {|frame|
@@ -151,7 +151,7 @@ class NECProjector < Projector
 		Thread.new{
 			while true do
 				self.lamp_information
-				self.lamp_remaining
+				self.lamp_remaining_info
 				sleep(10)
 			end
 		}
@@ -301,27 +301,7 @@ class NECProjector < Projector
 			return "The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
 		end
 	end
-	
-	
-	def check_status
-		Thread.new{
-			class_vars = [:power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
-						:model, :projector_name, :lamp_hours, :percent_lamp_used, 
-						:filter_hours, :projector_usage, :warming, :volume, :mute]
-			size = class_vars.collect{|var| var.to_s.size}.max
-			old_values = {}
-			while true do
-				class_vars.each{|var|
-					if old_values[var] != self.send(var)
-						printf("%-#{size}s = %s\n", var, self.send(var).to_s)
-						self.send("#{var.to_s}_changed".to_sym, self.send(var)) if self.respond_to?("#{var.to_s}_changed".to_sym)
-						old_values[var] = self.send(var)
-					end
-				}
-				sleep(0.1)
-			end
-		}
-	end
+
 end
 
 def projector_test
