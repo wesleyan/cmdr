@@ -1,5 +1,10 @@
-class Computer < Device
+class Computer < Wescontrol::Device
 	@interface = "Computer"
+	
+	def initialize(options)
+		@ip_address = options[:ip_address]
+		super(options)
+	end
 	
 	config_var :ip_address
 	

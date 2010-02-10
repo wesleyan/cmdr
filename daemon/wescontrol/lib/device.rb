@@ -1,6 +1,6 @@
 module Wescontrol
 	class Device
-		attr_accessor :_id, :_rev, :belongs_to
+		attr_accessor :_id, :_rev, :belongs_to, :controller
 		
 		@database = "http://localhost:5984/rooms"
 		@interface = "device"
@@ -131,6 +131,7 @@ module Wescontrol
 			device._id = hash['_id']
 			device._rev = hash['_rev']
 			device.belongs_to = hash['belongs_to']
+			device.controller = hash['controller']
 			state_vars = hash['attributes']['state_vars']
 			state_vars ||= {}
 			hash['attributes']['state_vars'] = nil
@@ -150,7 +151,7 @@ module Wescontrol
 			retried = false
 			begin
 				hash = self.to_couch
-				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to}
+				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller}
 				if @_id && @_rev
 					doc["_id"] = @_id
 					doc["_rev"] = @_rev

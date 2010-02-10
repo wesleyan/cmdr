@@ -1,8 +1,8 @@
-module WesControl
-	class WesControlRoom < WesControl
+module Wescontrol
+	class WescontrolRoom < Wescontrol
 		def initialize
 			begin
-				@room = Room.find_by_mac(Mac.addr)
+				@room = Room.find_by_mac(MAC.addr)
 				throw "Room Does Not Exist" unless @room
 			rescue
 				raise "The room has not been added the database"

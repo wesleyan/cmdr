@@ -6,9 +6,9 @@ class Projector < Wescontrol::RS232Device
 
 	state_var :power, 		:kind => 'boolean', :display_order => 1, :on_change => proc{|on|
 		if on
-			self.turned_on => Time.now
+			self.turned_on = Time.now
 		else
-			self.turned_off => Time.now
+			self.turned_off = Time.now
 		end
 	}
 	state_var :video_mute, 	:kind => 'boolean', :display_order => 4

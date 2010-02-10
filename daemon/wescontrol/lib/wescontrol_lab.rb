@@ -1,12 +1,13 @@
-module WesControl
-	class WesControlLab < WesControl
+module Wescontrol
+	class WescontrolLab < Wescontrol
 		def initialize
-			begin
-				controller = Controller.find_by_mac(Mac.addr)
-				throw "Controller Does Not Exist" unless controller
-			rescue
-				raise "The controller has not been added the database"
-			end
+			puts "Initializing lab controller"
+			#begin
+				controller = Controller.find_by_mac(MAC.addr)
+			#	throw "Controller Does Not Exist" unless controller
+			#rescue
+			#	raise "The controller has not been added the database"
+			#end
 
 			device_hashes = Controller.devices(controller["id"])
 			super(device_hashes)
@@ -22,7 +23,7 @@ module WesControl
 			begin
 				db.get("_design/controller").view("by_mac", {:key => mac})['rows'][0]
 			rescue RestClient::ResourceNotFound
-				Room.define_db_views(db_uri)
+				Controller.define_db_views(db_uri)
 				if !retried #prevents infinite retry loop
 					retried = true
 					retry
@@ -39,7 +40,7 @@ module WesControl
 			begin
 				db.get("_design/controller").view("devices_for_controller", {:key => controller})['rows']
 			rescue RestClient::ResourceNotFound
-				Room.define_db_views(db_uri)
+				Controller.define_db_views(db_uri)
 				if !retried #prevents infinite retry loop
 					retried = true
 					retry
@@ -54,7 +55,7 @@ module WesControl
 			db = CouchRest.database(db_uri)
 
 			doc = {
-				"_id" => "_design/wescontrol",
+				"_id" => "_design/controller",
 				:views => {
 					:by_mac => {
 						:map => "function(doc) {

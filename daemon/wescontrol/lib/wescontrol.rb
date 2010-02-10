@@ -1,9 +1,6 @@
 require 'rubygems'
-require 'macaddr'
 require 'couchrest'
-
-require "#{File.dirname(__FILE__)}/wescontrol_room"
-require "#{File.dirname(__FILE__)}/wescontrol_lab"
+require "#{File.dirname(__FILE__)}/MAC.rb"
 
 require "#{File.dirname(__FILE__)}/wescontrol_http"
 if RUBY_PLATFORM[/linux/]
@@ -71,3 +68,6 @@ module Wescontrol
 		end
 	end
 end
+
+require "#{File.dirname(__FILE__)}/wescontrol_room"
+require "#{File.dirname(__FILE__)}/wescontrol_lab"

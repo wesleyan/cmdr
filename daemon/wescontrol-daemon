@@ -3,6 +3,6 @@
 require 'rubygems'
 require 'wescontrol'
 
-Wescontrol::Wescontrol.new.start
+Wescontrol::WescontrolRoom.new.start
 
 #socat -,raw,echo=0,escape=0x0f /dev/ttyS0,raw,echo=0,crnl

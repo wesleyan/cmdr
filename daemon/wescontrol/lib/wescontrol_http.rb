@@ -118,7 +118,7 @@ module Wescontrol
 				device = @method_table[path[1]]
 				if !path[2]
 					updates.each{|k,v|
-						content.merge!(set_var device, k, v)
+						content.merge!(set_var(device), k, v)
 					}
 				else
 					content = set_var device, path[2].to_sym, updates
