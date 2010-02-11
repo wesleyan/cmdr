@@ -2,7 +2,7 @@
 // Project:   WescontrolWeb
 // Copyright: ©2009 My Company, Inc.
 // ==========================================================================
-/*globals WescontrolWeb */
+/*globals WescontrolWeb WC */
 
 /** @namespace
 

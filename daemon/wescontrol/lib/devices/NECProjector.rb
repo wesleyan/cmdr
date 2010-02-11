@@ -161,8 +161,6 @@ class NECProjector < Projector
 				sleep(0.5)
 			end
 		}
-
-		check_status()
 	end
 
 	

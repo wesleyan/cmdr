@@ -22,7 +22,7 @@ WescontrolWeb.DeviceView = SC.View.extend(SC.ContentDisplay,
 	render: function(context, firstTime) {
 		var content = this.get('content');
 		var name = content.get('name');
-		var vars = content.get('vars_obj').filterProperty('displayOrder').sortProperty('displayOrder');
+		var vars = content.get('vars_obj').filterProperty('display_order').sortProperty('display_order');
 		
 		var selected = this.get('isSelected');
 		var standard = !selected;

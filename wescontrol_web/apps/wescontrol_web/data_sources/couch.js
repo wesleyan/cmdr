@@ -12,6 +12,45 @@
 */
 WescontrolWeb.CouchDataSource = SC.DataSource.extend(
 /** @scope WescontrolWeb.CouchDataSource.prototype */ {
+	
+	init: function(){
+		sc_super();
+		this.comet = SC.Object.create({
+			doRequest: function(since){
+				console.log("Doing request: %d", since);
+				SC.Request.getUrl('/rooms/_changes?feed=longpoll&filter=wescontrol_web/device&since=' + since).json()
+					.notify(this, "requestFinished", since)
+					.send();
+			},
+			
+			requestFinished: function(response, since){
+				var body = response.get('body');
+				if(body.results){
+					body.results.forEach(function(doc){
+						SC.Request.getUrl('/rooms/' + doc['id']).json()
+							.notify(this, 'fetchedChangedRecord')
+							.send();
+					});
+					since = body.last_seq;
+				}
+				this.doRequest(since);
+			},
+			
+			fetchedChangedRecord: function(response){
+				var body = response.get('body');
+				if(body)
+				{
+					console.log("%s changed", body['_id']);
+					var device = WescontrolWeb.store.find(WescontrolWeb.Device, body._id);
+					device.set('state_vars', body.attributes.state_vars);
+				}
+			}
+		});
+		
+		WescontrolWeb.store.find(WescontrolWeb.Building);
+		
+		this.comet.doRequest(0);
+	},
 
 	// ..........................................................
 	// QUERY SUPPORT
@@ -28,13 +67,13 @@ WescontrolWeb.CouchDataSource = SC.DataSource.extend(
 				.send();
 			return YES;
 		}
-		else if(query.recordType == WescontrolWeb.Device)
+		/*else if(query.recordType == WescontrolWeb.Device)
 		{
 			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/device').json()
 				.notify(this, 'didFetchDevices', store, query)
 				.send();
 			return YES;
-		}
+		}*/
 
 		return NO ; // return YES if you handled the query
 	},

@@ -39,7 +39,7 @@ WescontrolWeb.Device = SC.Record.extend(
 	controllable_vars: function() {
 		return this.get('vars_obj').filter(function(item){
 			return (item.editable === undefined || item.editable);
-		}).sortProperty('displayOrder');
+		}).sortProperty('display_order');
 	}.property('vars_obj').cacheable()
 
 }) ;

@@ -41,6 +41,19 @@ module Wescontrol
 				def #{sym}= (val)
 					if @#{sym} != val
 						@#{sym} = val
+						state_vars = self.class.instance_variable_get(:@state_vars)
+						if callback = state_vars[:#{sym}][:on_change]
+							callback.call(val)
+						end
+						if virtuals = state_vars[:#{sym}][:affects]
+							virtuals.each{|var|
+								begin
+									self.send("\#{var}=", state_vars[var][:transformation].call)
+								rescue
+									puts "Transformation on \#{var} failed: \#{$!}"
+								end
+							}
+						end
 						if @change_deferrable
 							@change_deferrable.set_deferred_status :succeeded, "#{sym}", val
 							@change_deferrable = nil
@@ -83,6 +96,14 @@ module Wescontrol
 			}
 		end
 		def self.virtual_var(name, options)
+			options[:editable] = false
+			self.state_var(name, options)
+			options[:depends_on].each{|var|
+				@state_vars[var][:affects] ||= []
+				@state_vars[var][:affects] << name
+			}
+		end
+		def self.time_since_var(name, options)
 		end
 		#this is a hook that gets called when the class is subclassed.
 		#we need to do this because otherwise subclasses don't get a parent
@@ -151,7 +172,7 @@ module Wescontrol
 			retried = false
 			begin
 				hash = self.to_couch
-				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller}
+				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
 				if @_id && @_rev
 					doc["_id"] = @_id
 					doc["_rev"] = @_rev

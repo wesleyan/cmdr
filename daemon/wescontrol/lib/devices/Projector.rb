@@ -27,8 +27,9 @@ class Projector < Wescontrol::RS232Device
 		"#{((lamp_hours/percent_lamp_used - lamp_hours)/(60*60.0)).round(1)} hours"
 	}, :display_order => 6
 	
-	virtual_var :on_time, :kind => 'decimal', :depends_on => [:turned_on], :transformation => proc {
-		(Time.now-turned_on)/(60*60) #Time.- returns seconds; converted to hours
-	}
+	time_since_var :on_time, :since => :turned_on, :before => :turned_off
+	#virtual_var :on_time, :kind => 'decimal', :depends_on => [:turned_on], :transformation => proc {
+	#	(Time.now-turned_on)/(60*60) #Time.- returns seconds; converted to hours
+	#}
 
 end

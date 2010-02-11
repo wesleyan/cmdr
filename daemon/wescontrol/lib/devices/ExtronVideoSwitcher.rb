@@ -4,7 +4,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 	state_var :model, :kind => 'string', :editable => false
 	state_var :firmware_version, :kind => 'string', :editable => false
 	state_var :part_number, :kind => 'string', :editable => false
-	state_var :clipping, :kind => 'boolean', :editable => false
+	state_var :clipping, :kind => 'boolean', :editable => false, :display_order => 4
 
 	def initialize(options)
 		options = options.symbolize_keys
