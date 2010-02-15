@@ -14,5 +14,5 @@ WescontrolWeb.roomController = SC.ArrayController.create(
 /** @scope WescontrolWeb.roomController.prototype */ {
 	
 	contentBinding: 'WescontrolWeb.roomListController.devices'
-	
+		
 }) ;

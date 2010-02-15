@@ -16,24 +16,34 @@ WescontrolWeb.CouchDataSource = SC.DataSource.extend(
 	init: function(){
 		sc_super();
 		this.comet = SC.Object.create({
-			doRequest: function(since){
-				console.log("Doing request: %d", since);
-				SC.Request.getUrl('/rooms/_changes?feed=longpoll&filter=wescontrol_web/device&since=' + since).json()
-					.notify(this, "requestFinished", since)
+			start: function(){
+				if(this.running)return;
+				this.running = YES;
+				SC.Timer.schedule({
+					target: this,
+					action: "doRequest",
+					interval: 4000
+				});
+			},
+			
+			doRequest: function(){
+				SC.Request.getUrl('/rooms/_changes?feed=longpoll&filter=wescontrol_web/device&since=' + this.since).json()
+					.notify(this, "requestFinished")
 					.send();
 			},
 			
-			requestFinished: function(response, since){
+			requestFinished: function(response){
 				var body = response.get('body');
 				if(body.results){
+					var self = this;
 					body.results.forEach(function(doc){
 						SC.Request.getUrl('/rooms/' + doc['id']).json()
-							.notify(this, 'fetchedChangedRecord')
+							.notify(self, "fetchedChangedRecord")
 							.send();
 					});
-					since = body.last_seq;
+					this.since = body.last_seq;
 				}
-				this.doRequest(since);
+				this.doRequest();
 			},
 			
 			fetchedChangedRecord: function(response){
@@ -42,14 +52,28 @@ WescontrolWeb.CouchDataSource = SC.DataSource.extend(
 				{
 					console.log("%s changed", body['_id']);
 					var device = WescontrolWeb.store.find(WescontrolWeb.Device, body._id);
-					device.set('state_vars', body.attributes.state_vars);
+					console.log(device);
+					//device.set('state_vars', body.attributes.state_vars);
+					//device.set('name', device.get('name')+1);
+					var record = {
+						guid: body._id, 
+						name: body.attributes.name,
+						room: body.belongs_to,
+						state_vars: body.attributes.state_vars
+					};
+					SC.RunLoop.begin();
+					WescontrolWeb.store.loadRecords(WescontrolWeb.Device, [record]);
+					SC.RunLoop.end();
 				}
-			}
+			},
+			
+			running: NO,
+			
+			since: 0
 		});
 		
-		WescontrolWeb.store.find(WescontrolWeb.Building);
+		this.comet.start();
 		
-		this.comet.doRequest(0);
 	},
 
 	// ..........................................................
@@ -116,7 +140,7 @@ WescontrolWeb.CouchDataSource = SC.DataSource.extend(
 			store.loadRecords(WescontrolWeb.Room, rooms);
 			store.loadRecords(WescontrolWeb.Device, devices);
 			store.dataSourceDidFetchQuery(query);
-			WescontrolWeb.buildingController.refreshSources();
+			WescontrolWeb.buildingController.refreshSources();			
 		}
 		else {
 			store.dataSourceDidErrorQuery(query, response);

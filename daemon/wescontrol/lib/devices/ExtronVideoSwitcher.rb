@@ -17,7 +17,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 			#format is :name => [command, response_detector, callback]
 			#The response_detector is a block that, when passed the response string, returns true if
 			#the response was for that command
-			:set_input			=> [proc {|input| "#{input}!"}, proc {|r| r[0..2] == "Chn"}, proc {|r| self.input = r[-1..-1].to_i}],
+			:set_input			=> [proc {|input| "#{input}!"}, proc {|r| r[0..2] == "Chn"}, proc {|r| self.input = r[-1..-1].to_i.to_s}],
 			:set_volume		=> [proc {|volume| "#{(volume*100).to_i}V"}, proc {|r| r[0..2] == "Vol"}, proc {|r| self.volume = r[3..-1].to_i/100.0}],
 			:set_mute			=> [proc {|on| on ? "1Z" : "0Z"}, proc {|r| r[0..2] == "Amt"}, proc {|r| self.mute = r[-1..-1] == "1"}],
 			:get_status		=> ["I", proc {|r| r.scan(/Vid\d+ Aud\d+ Clp\d/).size > 0}, proc {|r|

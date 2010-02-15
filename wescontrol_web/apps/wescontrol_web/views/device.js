@@ -15,9 +15,8 @@ WescontrolWeb.DeviceView = SC.View.extend(SC.ContentDisplay,
 
 	classNames: ['device-list-item-view'],
 	
-	contentDisplayProperties: 'name'.w(),
-	
-	displayProperties: 'isSelected'.w(),
+	displayProperties: 'isSelected content'.w(),
+	contentDisplayProperties: 'name state_vars'.w(),
 	
 	render: function(context, firstTime) {
 		var content = this.get('content');
@@ -50,5 +49,6 @@ WescontrolWeb.DeviceView = SC.View.extend(SC.ContentDisplay,
 		context = context.end().end().end();
 		sc_super();
 	}
+	
 
 });

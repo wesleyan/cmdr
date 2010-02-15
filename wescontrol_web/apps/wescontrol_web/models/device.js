@@ -18,9 +18,7 @@ WescontrolWeb.Device = SC.Record.extend(
 		inverse: "devices", isMaster: NO
 	}),
 	
-	deviceVars: SC.Record.toMany("WescontrolWeb.DeviceVar", {
-		inverse: "device", isMaster: YES
-	}),
+	name: SC.Record.attr(String),
 	
 	editable: SC.Record.attr(Boolean, {defaultValue: YES}),
 	

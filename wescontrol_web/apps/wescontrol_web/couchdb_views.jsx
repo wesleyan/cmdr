@@ -24,3 +24,9 @@ function(doc) {
 		emit(doc._id, {name: doc.attributes["name"], guid: doc._id, room: doc.belongs_to, state_vars: doc.attributes["state_vars"]});
 	}
 }
+
+//device filter
+function(doc, req) {
+	if(doc.device)return true;
+	return false;
+}

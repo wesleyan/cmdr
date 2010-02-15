@@ -10,13 +10,14 @@
 
   @extends SC.View
 */
-WescontrolWeb.DeviceControlView = SC.View.extend(SC.StaticLayout,
+WescontrolWeb.DeviceControlView = SC.View.extend(SC.ContentDisplay, SC.StaticLayout,
 /** @scope WescontrolWeb.DeviceControlView.prototype */ {
 	
 	classNames: ['device-control-view'],
 	content: null,
 	
 	updateContent: function() {
+		console.log("Updating");
 		var childViews = [], view;
 		if(!WescontrolWeb.deviceController.get('hasContent'))return;
 		view = this.createChildView(
@@ -42,12 +43,14 @@ WescontrolWeb.DeviceControlView = SC.View.extend(SC.StaticLayout,
 					onButton: SC.ButtonView.design({
 						layout: {left: 0, width: 92, height:24, top: 5},
 						title: "OFF",
-						theme: "square"
+						theme: "square",
+						isSelected: !c_var.state
 					}),
 					offButton: SC.ButtonView.design({
 						layout: {left: 100, width: 92, height:24, top: 5},
 						title: "ON",
-						theme: "square"
+						theme: "square",
+						isSelected: c_var.state
 					})
 				})));
 			}
@@ -55,7 +58,8 @@ WescontrolWeb.DeviceControlView = SC.View.extend(SC.StaticLayout,
 			{
 				childViews.push(newThis.createChildView(SC.SliderView.design({
 					layout: {centerX: 0, width: 208, top: 10, height: 30},
-					step: 0.01
+					step: 0.01,
+					value: c_var.state
 				})));
 			}
 			else if(c_var.kind == "option")
@@ -63,11 +67,12 @@ WescontrolWeb.DeviceControlView = SC.View.extend(SC.StaticLayout,
 				childViews.push(newThis.createChildView(SC.SelectButtonView.design({
 					objects: c_var.options,
 					theme: 'square',
-					layout: {centerX: 0, width: 216, top: 5, height: 35}
+					layout: {centerX: 0, width: 216, top: 5, height: 35},
+					value: c_var.state
 				})));
 			}
 		});
 		this.replaceAllChildren(childViews);
-	}.observes('WescontrolWeb.deviceController.hasContent')
+	}.observes('WescontrolWeb.deviceController.hasContent', "WescontrolWeb.deviceController.content")
 
 });
