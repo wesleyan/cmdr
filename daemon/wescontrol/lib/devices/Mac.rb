@@ -1,10 +1,29 @@
 require 'chronic'
 require 'net/ssh'
-require 'ping'
+
 class Mac < Computer
 
 	config_var :username
 	config_var :password
+	
+	state_var :logged_in, 		:kind => :boolean, 	:editable => false
+	state_var :current_user, 	:kind => :string, 	:editable => false
+	state_var :current_app, 	:kind => :string, 	:editable => false
+	state_var :uptime, 			:kind => :integer, 	:editable => false
+	state_var :logged_in_time, 	:kind => :integer, 	:editable => false
+	state_var :idle_time,		:kind => :integer,	:editable => false
+	state_var :power,			:kind => :boolean
+	
+	#computer information
+	state_var :name,			:kind => :string, 	:editable => false
+	state_var :model,			:kind => :string,	:editable => false
+	state_var :os,				:kind => :string, 	:editable => false
+	state_var :cpu,				:kind => :string, 	:editable => false
+	state_var :cpu_speed,		:kind => :decimal, 	:editable => false
+	state_var :cpu_number,		:kind => :integer,	:editable => false
+	state_var :hdd_size,		:kind => :decimal, 	:editable => false
+	state_var :memory_size,		:kind => :integer, 	:editable => false
+	state_var :mac_addr,		:kind => :string,	:editable => false
 	
 	def initialize(options)
 		puts "Initializing Mac on #{self.ip_address}"
@@ -73,12 +92,6 @@ class Mac < Computer
 			end
 		}
 		
-		Thread.new {
-			while true
-				self.reachable = Ping.pingecho(self.ip_address)
-				sleep 5
-			end
-		}
 	end
 	
 	def process(call, ssh, source = @tasks)
