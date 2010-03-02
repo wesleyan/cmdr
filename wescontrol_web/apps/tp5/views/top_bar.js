@@ -25,7 +25,7 @@ Tp5.TopBar = SC.View.extend(
 	}).classNames('roomLabel'),
 	
 	timeLabel: SC.LabelView.design({
-		layout: {right: 20, centerY: 0, height: 45, width: 60},
+		layout: {right: 20, centerY: 0, height: 45, width: 70},
 		valueBinding: "Tp5.appController.clock",
 		textAlign: "center"
 	}).classNames('timeLabel')

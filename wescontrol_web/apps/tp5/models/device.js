@@ -38,6 +38,27 @@ Tp5.Device = SC.Record.extend(
 		return this.get('vars_obj').filter(function(item){
 			return (item.editable === undefined || item.editable);
 		}).sortProperty('display_order');
-	}.property('vars_obj').cacheable()
-
+	}.property('vars_obj').cacheable(),
+	
+	set_var: function(cvar, state) {
+		var json = {};
+		json[cvar] = state;
+		SC.Request.postUrl('/devices/' + this.name, json).json()
+			.notify(this, "set_var_request_finished", cvar, state)
+			.send();
+	},
+	
+	set_var_request_finished: function(response, cvar, state) {
+		var body = response.get('body');
+		if(body.error){
+			console.error("Failed to set %s to %s: %s", cvar, state, response.error);
+		}
+		else if(body[cvar]){
+			console.log("Attempted to set %s to %s, got %s", cvar, state, body[cvar]);
+		}
+	}
 }) ;
+
+//extron = Tp5.Device.create({name: "extron"})
+//extron.state_vars = {input: {type: 'option', editable: true, state: "3"}}
+//extron.set_var("input", "2")
