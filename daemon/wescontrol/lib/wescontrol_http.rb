@@ -27,8 +27,8 @@ module Wescontrol
 				watch resp
 			else
 				resp.status = 404
-				content = {"error" => "resource_not_found"}
-				#resp.send_response
+				resp.content = {"error" => "resource_not_found"}
+				resp.send_response
 			end
 			# once download is complete, send it to client
 			#http.callback do |r|

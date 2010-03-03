@@ -24,9 +24,11 @@ Tp5.main = function main() {
 
 	// TODO: Set the content property on your primary controller
 	// ex: Tp5.contactsController.set('content',Tp5.contacts);
-	var query = SC.Query.local(Tp5.Room, 'mac = {mac_addr}', {mac_addr: '00:30:1b:82:ac:39'});
-	Tp5.roomController.set('content', Tp5.store.find(query));
-
+	Tp5.store.find(Tp5.Building);
+	Tp5.deviceController.set('content', Tp5.store.find(Tp5.Device));
+	//Tp5.sourceController.set('content')
+	//var query = SC.Query.local(Tp5.Room, 'mac = {mac_addr}', {mac_addr: '00:30:1b:82:ac:39'});
+	//Tp5.roomController.set('content', Tp5.store.find(query));
 } ;
 
 function main() { Tp5.main(); }

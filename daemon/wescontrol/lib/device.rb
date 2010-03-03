@@ -47,11 +47,14 @@ module Wescontrol
 						end
 						if virtuals = state_vars[:#{sym}][:affects]
 							virtuals.each{|var|
-								begin
-									self.send("\#{var}=", state_vars[var][:transformation].call)
-								rescue
-									puts "Transformation on \#{var} failed: \#{$!}"
-								end
+								#begin
+									puts "Doing transformation"
+									transformation = self.instance_eval &state_vars[var][:transformation]
+									puts "Setting \#{var} to \#{transformation}"
+									self.send("\#{var}=", transformation)
+								#rescue
+								#	puts "Transformation on \#{var} failed: \#{$!}"
+								#end
 							}
 						end
 						if @change_deferrable
