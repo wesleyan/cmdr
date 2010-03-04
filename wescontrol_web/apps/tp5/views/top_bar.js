@@ -33,7 +33,7 @@ Tp5.TopBar = SC.View.extend(
 	}).classNames('time-label'),
 	
 	projectorButton: Tp5.ProjectorButtonView.design({
-		layout: {left: 160, centerY: 0, height: 55, width: 113}
+		layout: {left: 160, top: 5, height: 55, width: 113}
 	})
 
 });

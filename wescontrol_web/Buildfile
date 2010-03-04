@@ -4,7 +4,7 @@
 # ===========================================================================
 
 # Add initial buildfile information here
-config :all, :required => :sproutcore
+config :all, :required => [:sproutcore, :"sproutcore/animation"]
 
 proxy "/rooms", :to => "129.133.92.201:5984"
 

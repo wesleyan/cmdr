@@ -1,5 +1,6 @@
 .top-bar
 	background: -webkit-gradient(linear, 0% 0%, 0% 59%, from(#6D6D6D), to(#000000))
+	overflow: visible
 	
 	.sc-label-view
 		color: #A1A1A1
@@ -12,20 +13,30 @@
 	.time-label
 		font-size: 24px
 		line-height: 22px
-		
+
 .sc-view.status-button
 	background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#808285), to(black))
 	border: 1px solid #303030
 	//outline: 1px solid #303030
 	//-webkit-outline-radius: 5px
 	-webkit-border-radius: 5px
+	overflow: visible
+	z-index: 49
+	-webkit-box-shadow: 0 0 5px #000
 	
 	&:active
 		background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#424345), to(black))
-		padding-top: 2px
-		padding-right: 2px
+		padding-top: -2px
+		padding-right: -2px
 		width: -2px
 		height: -2px
+		
+		img
+			opacity: 0.5
+	img
+		z-index: 50
+	
+	.control_button
 
 .main-body
 	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#D1D3D4), to(#9D9FA2))
