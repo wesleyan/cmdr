@@ -35,6 +35,8 @@ Tp5.ProjectorButtonView = SC.View.extend(SC.Animatable,
 				warming: sc_static('warming.png')
 			};
 			
+			console.log("Setting to %s", Tp5.deviceController.get('devices').projector.get('state_vars').state.state);
+			
 			return buttonImages[Tp5.deviceController.get('devices').projector.get('state_vars').state.state];
 		}).from("Tp5.deviceController.devices.projector.state_vars")
 		

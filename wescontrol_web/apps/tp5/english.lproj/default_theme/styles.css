@@ -3,7 +3,7 @@
   overflow: visible; }
   .top-bar .sc-label-view {
     color: #A1A1A1;
-    font-family: "Gotham Black"; }
+    font-family: "Gotham Black", "GothamHTF"; }
   .top-bar .room-label {
     line-height: 24px;
     font-size: 28px; }
@@ -31,3 +31,19 @@
 
 .main-body {
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#D1D3D4), to(#9D9FA2)); }
+  .main-body .action-list-view {
+    -webkit-box-shadow: 7px 0px 5px #333333;
+    overflow: inherit; }
+    .main-body .action-list-view .title-view {
+      background: -webkit-gradient(linear, 0% 0%, 0% 91%, from(#96B1CF), to(#5A6A7C), color-stop(.5,#5A6A7C));
+      -webkit-box-shadow: 0px 4px 6px #333333;
+      z-index: 49; }
+      .main-body .action-list-view .title-view .sc-view.sc-label-view.sc-regular-size.title-text {
+        font-size: 32px;
+        line-height: 30px;
+        color: white;
+        text-shadow: 0px 1px 0px #333333;
+        font-family: "Myriad Pro"; }
+    .main-body .action-list-view .action-list {
+      background: #EAEAEA;
+      -webkit-box-shadow: 0 0 10px 10px #B5B5B5 inset; }

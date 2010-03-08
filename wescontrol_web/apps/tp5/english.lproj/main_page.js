@@ -6,6 +6,7 @@
 
 sc_require('views/top_bar');
 sc_require('views/main');
+sc_require('views/action_list');
 
 // This page describes the main user interface for your application.  
 Tp5.mainPage = SC.Page.design({
@@ -21,7 +22,13 @@ Tp5.mainPage = SC.Page.design({
 		}),
 		
 		mainView: Tp5.MainView.design({
-			layout: {left:0, right: 0, top: 64, bottom: 0}
+			layout: {left:0, right: 0, top: 64, bottom: 0},
+			
+			childViews: 'actionList'.w(),
+			
+			actionList: Tp5.ActionListView.design({
+				layout: {left: 0, width: 400, bottom: 0, top:0}
+			})
 		})
 	})
 
