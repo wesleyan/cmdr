@@ -54,7 +54,7 @@ class NECProjector < Projector
 			:set_brightness		=> [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
 			:set_volume			=> [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
 			:set_mute			=> [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
-			:running_sense		=> [0, 0x81, nil, proc {|frame|
+	 		:running_sense		=> [0, 0x81, nil, proc {|frame|
 				self.power       = frame["data"][0] & 2**1 != 0
 				@cooling_maybe   = frame["data"][0] & 2**5 != 0
 				if @cooling_maybe != @cooling
@@ -126,7 +126,7 @@ class NECProjector < Projector
 						if data[i] & 2 ** t != 0
 							@errors << ERROR_STATUS[i][t]
 							error(ERROR_STATUS[i][t])
-							puts ERROR_STATUS[i][t]
+							puts "Projector Error: #{ERROR_STATUS[i][t]}"
 						end
 					}
 				}

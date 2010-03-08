@@ -4,13 +4,13 @@ class Projector < Wescontrol::RS232Device
 
 	@interface = "Projector"
 
-	state_var :power, 		:kind => 'boolean', :display_order => 1, :on_change => proc{|on|
-		if on
-			self.turned_on = Time.now
-		else
-			self.turned_off = Time.now
-		end
-	}
+	state_var :power, 		:kind => 'boolean', :display_order => 1#, :on_change => proc{|on|
+	#	if on
+	#		turned_on = Time.now
+	#	else
+	#		turned_off = Time.now
+	#	end
+	#}
 	state_var :video_mute, 	:kind => 'boolean', :display_order => 4
 	state_var :input, 		:kind => 'option', :options => ['RGB1','RGB2','VIDEO','SVIDEO'], :display_order => 2
 	state_var :brightness,	:kind => 'percentage', :display_order => 3
@@ -30,7 +30,7 @@ class Projector < Wescontrol::RS232Device
 	virtual_var :state, :kind => 'string', :depends_on => [:power, :warming, :cooling, :video_mute], :transformation => proc {
 		warming ? "warming" :
 			cooling ? "cooling" :
-				power ? "off" :
+				!power ? "off" :
 					video_mute ? "muted" : "on"	    
 	}
 	

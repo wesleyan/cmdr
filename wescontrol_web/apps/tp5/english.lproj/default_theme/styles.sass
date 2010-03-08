@@ -1,40 +1,88 @@
+//MIXINS
+=text-inset(!color=#FFFFFF)
+	text-shadow = 0px 1px 0px !color
+	
+=fill-parent
+	top: 0
+	bottom: 0
+	left: 0
+	right: 0
+	position: absolute
+	
+=button(!topcolor=#F6F6F6)
+	-webkit-border-radius: 5px
+	border: 1px solid #FFF
+	-webkit-box-shadow: 0 0 3px #000
+	background = -webkit-gradient("linear", 0% 25%, 0% 100%, from(!topcolor), to(!topcolor*0.8))
+	
+	&:active
+		background = -webkit-gradient("linear", 0% 25%, 0% 100%, from(!topcolor*0.8), to(!topcolor*0.7))
+		-webkit-box-shadow: 0 0 3px #000 inset
+	&.disabled
+		opacity: 0.6
+		-webkit-box-shadow: 0 0 3px #000
+		background = -webkit-gradient("linear", 0% 25%, 0% 100%, from(!topcolor), to(!topcolor*0.8))
+
+.overflow
+	overflow: visible
+
 .top-bar
 	background: -webkit-gradient(linear, 0% 0%, 0% 59%, from(#6D6D6D), to(#000000))
 	overflow: visible
 	
 	.sc-label-view
 		color: #A1A1A1
-		font-family: "Gotham Black", "GothamHTF"
+		font-family: "Gotham Black"
 		
 	.room-label
-		line-height: 24px
+		line-height: 26px
 		font-size: 28px
 
 	.time-label
 		font-size: 24px
 		line-height: 22px
 
-.sc-view.status-button
-	background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#808285), to(black))
-	border: 1px solid #303030
-	//outline: 1px solid #303030
-	//-webkit-outline-radius: 5px
-	-webkit-border-radius: 5px
+.sc-view.status-button	
 	overflow: visible
 	z-index: 49
-	-webkit-box-shadow: 0 0 5px #000
 	
-	&:active
-		background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#424345), to(black))
-		padding-top: -2px
-		padding-right: -2px
-		width: -2px
-		height: -2px
-		
-		img
-			opacity: 0.5
-	img
+	.button
+		background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#808285), to(black))
+		border: 1px solid #303030
+		-webkit-border-radius: 5px
+		-webkit-box-shadow: 0 0 5px #000
 		z-index: 50
+		overflow: visible
+		
+		&:active
+			//background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#424345), to(black))
+			-webkit-box-shadow: rgba(0, 0, 0, 0.398438) 0px -5px 12px inset, black 0px 1px 3px inset, rgba(255, 255, 255, 0.398438) 0px 1px
+	
+	img
+		z-index: 51
+		pointer-events: none
+			
+		
+	.control-drawer
+		background: -webkit-gradient(linear, 0% 25%, 0% 100%, from(#F8D5A9), to(#F9A031))
+		z-index: 49
+		-webkit-border-radius: 5px
+		-webkit-box-shadow: 0 2px 4px #333
+		
+		.control-button
+			+fill-parent
+			+button(#D8D8D8)
+			border-color: #D3D3D3
+			
+			.label
+				+fill-parent
+				+text-inset
+				font-size: 30px
+				font-family: "Myriad Pro"
+				font-weight: 700
+				color: #333
+				line-height: 34px
+				text-align: center				
 
 .main-body
 	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#D1D3D4), to(#9D9FA2))
@@ -46,12 +94,12 @@
 		.title-view
 			background: -webkit-gradient(linear, 0% 0%, 0% 91%, from(#96B1CF), to(#5A6A7C), color-stop(.5,#5A6A7C))
 			-webkit-box-shadow: 0px 4px 6px #333333
-			z-index: 49
+			z-index: 48
 			.sc-view.sc-label-view.sc-regular-size.title-text
+				+text-inset(#333333)
 				font-size: 32px
 				line-height: 30px
 				color: white
-				text-shadow: 0px 1px 0px #333333
 				font-family: "Myriad Pro"
 		
 		.action-list

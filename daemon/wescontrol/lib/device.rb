@@ -47,14 +47,14 @@ module Wescontrol
 						end
 						if virtuals = state_vars[:#{sym}][:affects]
 							virtuals.each{|var|
-								#begin
+								begin
 									puts "Doing transformation"
 									transformation = self.instance_eval &state_vars[var][:transformation]
 									puts "Setting \#{var} to \#{transformation}"
 									self.send("\#{var}=", transformation)
-								#rescue
-								#	puts "Transformation on \#{var} failed: \#{$!}"
-								#end
+								rescue
+									puts "Transformation on \#{var} failed: \#{$!}"
+								end
 							}
 						end
 						if @change_deferrable
@@ -102,8 +102,10 @@ module Wescontrol
 			options[:editable] = false
 			self.state_var(name, options)
 			options[:depends_on].each{|var|
-				@state_vars[var][:affects] ||= []
-				@state_vars[var][:affects] << name
+				if @state_vars[var]
+					@state_vars[var][:affects] ||= []
+					@state_vars[var][:affects] << name
+				end
 			}
 		end
 		def self.time_since_var(name, options)

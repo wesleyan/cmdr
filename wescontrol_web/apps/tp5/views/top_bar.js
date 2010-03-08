@@ -20,7 +20,7 @@ Tp5.TopBar = SC.View.extend(
 	childViews: "roomLabel timeLabel projectorButton".w(),
 	
 	roomLabel: SC.LabelView.design({
-		layout: {left: 20, centerY: 0, height: 45, width:100},
+		layout: {left: 20, centerY: 0, height: 50, width:100},
 		//contentBinding: "Tp5.roomController.name"
 		value: "Exley 509A",
 		textAlign: "center"
