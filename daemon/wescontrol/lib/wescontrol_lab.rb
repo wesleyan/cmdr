@@ -66,7 +66,7 @@ module Wescontrol
 					},
 					:devices_for_controller => {
 						:map => "function(doc) {
-							if(doc.controller)
+							if(doc.controller && doc.device)
 							{
 								emit(doc.controller, doc);
 							}

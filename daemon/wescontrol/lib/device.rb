@@ -41,6 +41,7 @@ module Wescontrol
 				def #{sym}= (val)
 					if @#{sym} != val
 						@#{sym} = val
+						printf("%-10s = %s\n", "#{sym}", val.to_s)
 						state_vars = self.class.instance_variable_get(:@state_vars)
 						if callback = state_vars[:#{sym}][:on_change]
 							callback.call(val)
@@ -48,9 +49,7 @@ module Wescontrol
 						if virtuals = state_vars[:#{sym}][:affects]
 							virtuals.each{|var|
 								begin
-									puts "Doing transformation"
 									transformation = self.instance_eval &state_vars[var][:transformation]
-									puts "Setting \#{var} to \#{transformation}"
 									self.send("\#{var}=", transformation)
 								rescue
 									puts "Transformation on \#{var} failed: \#{$!}"

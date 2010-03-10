@@ -17,37 +17,61 @@ Tp5.sourceController = SC.ArrayController.create(
 
 	projector: null,
 	switcher: null,
-		
+	
+	attempts: 0,
+	attempt_source: null,
+	
+	setSource: function(name){
+		var source = this.get('states')[name];
+		if(source)this.set('source', source);
+		else return NO;
+	},
+	
 	sourceChanged: function(){
-		this.set("state", this.states[this.get("source")]);
-		if(this.projector)this.projector.set_var("input", this.state.projector);
-		if(this.switcher)this.switcher.set_var("input", this.state.switcher);
+		//this code is to make sure that we don't just keep trying in vain to set the source,
+		//as our feedback may not be working properly
+		if(this.get('projector') && this.attempts < 3 || !this.attempt_source || this.attempt_source != this.get('source').name)
+		{
+			this.projector.set_var("input", this.get('source').projector);
+			this.set('attempts', this.attempts+1);
+			if(this.attempts_source != this.get('source').name)this.set('attempts', 0);
+			this.set('attempt_source', this.get('source').name);
+		}
+
+		if(this.get('switcher'))this.switcher.set_var("input", this.get('source').switcher);
 	}.observes("source"),
 	
 	switcherChanged: function(){
-		this.set("source", this.states[this.switcher_map[this.switcher.get("input")]]);
-	}.observes("switcher.input"),
+		if(this.get('content').get('length') === 0)return;
+		this.set("source", this.get('states')[this.switcher_map[this.switcher.get('states').input]]);
+	}.observes("switcher", "states", ".switcher.states"),
 	
 	projectorPowerChanged: function(){
-		if(this.projector.get("power") == YES)
+		if(this.get('content').get('length') === 0)return;
+		if(this.projector.get('states').power == YES && this.get('source'))
 		{
-			this.projector.set_var("input", this.state.projector);
+			var input = this.get('source').projector;
+			if(input && this.projector.get('states').input != input)
+			{
+				this.projector.set_var("input", input);
+			}
 		}
-	}.observes("projector.power"),
+	}.observes("projector", "states", ".projector.states"),
 	
 	contentChanged: function() {
-		
-		this.states = {};
-		this.switcher_map = {};
+		var states = {};
+		var switcher_map = {};
 		this.get('content').forEach(function(source){
-			this.states[source.name] = {
-				projector: source.input.projector,
-				switcher: source.input.switcher,
-				image: source.image
+			states[source.get('name')] = {
+				name: source.get('name'),
+				projector: source.get('input').projector,
+				switcher: source.get('input').switcher,
+				image: source.get('icon')
 			};
-			this.switcher_map[source.input.switcher] = source.name;
+			switcher_map[source.get('input').switcher] = source.get('name');
 		});
-		
+		this.set('switcher_map', switcher_map);
+		this.set('states', states);
 	}.observes("content")
 
 }) ;

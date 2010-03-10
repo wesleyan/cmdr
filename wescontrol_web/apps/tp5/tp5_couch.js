@@ -18,5 +18,9 @@ Tp5.CouchDataSource = CouchDataSource.extend({
 	
 	fetchedBuildingsCallback: function(response){
 		Tp5.deviceController.refreshContent();
+	},
+	
+	fetchedSourcesCallback: function(response){
+		Tp5.sourceController.contentChanged();
 	}
 });

@@ -124,12 +124,10 @@ class ExtronVideoSwitcher < VideoSwitcher
 	def check_status
 		Thread.new{
 			class_vars = [:input, :volume, :mute, :model, :firmware_version, :part_number, :clipping]
-			size = class_vars.collect{|var| var.to_s.size}.max
 			old_values = {}
 			while true do
 				class_vars.each{|var|
 					if old_values[var] != self.send(var)
-						printf("%-#{size}s = %s\n", var, self.send(var).to_s)
 						self.send("#{var.to_s}_changed".to_sym, self.send(var)) if self.respond_to?("#{var.to_s}_changed".to_sym)
 						old_values[var] = self.send(var)
 					end

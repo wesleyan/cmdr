@@ -65,7 +65,7 @@ module Wescontrol
 					},
 					:devices_for_room => {
 						:map => "function(doc) {
-							if(doc.belongs_to)
+							if(doc.belongs_to && doc.device)
 							{
 								emit(doc.belongs_to, doc);
 							}

@@ -3,9 +3,9 @@ require 'couchrest'
 require "#{File.dirname(__FILE__)}/MAC.rb"
 
 require "#{File.dirname(__FILE__)}/wescontrol_http"
-if RUBY_PLATFORM[/linux/]
-	require "#{File.dirname(__FILE__)}/wescontrol_dbus"
-end
+#if RUBY_PLATFORM[/linux/]
+#	require "#{File.dirname(__FILE__)}/wescontrol_dbus"
+#end
 require "#{File.dirname(__FILE__)}/device"
 require "#{File.dirname(__FILE__)}/RS232Device"
 require "#{File.dirname(__FILE__)}/devices/Projector"

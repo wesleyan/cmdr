@@ -79,12 +79,11 @@ class NECProjector < Projector
 				data = frame["data"]
 				#@power = data[3] == 1
 				#@cooling = data[4] == 1
-				#puts "DATA: #{data[6..7]}"
 				case data[6..7]
-					when [1, 1] then @input = "RGB1"
-					when [2, 1] then @input = "RGB2"
-					when [1, 2] then @input = "VIDEO"
-					when [1, 3] then @input = "SVIDEO"
+					when [1, 1] then self.input = "RGB1"
+					when [2, 1] then self.input = "RGB2"
+					when [1, 2] then self.input = "VIDEO"
+					when [1, 3] then self.input = "SVIDEO"
 				end
 				self.video_mute = data[28] == 1
 				self.mute = data[29] == 1
@@ -144,6 +143,7 @@ class NECProjector < Projector
 		Thread.new{
 			while true do
 				self.common_data_request
+				sleep(1)
 				self.volume_request
 				sleep(1)
 			end
@@ -151,6 +151,7 @@ class NECProjector < Projector
 		Thread.new{
 			while true do
 				self.lamp_information
+				sleep(2)
 				self.lamp_remaining_info
 				sleep(10)
 			end

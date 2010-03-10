@@ -4,7 +4,9 @@
 // ==========================================================================
 /*globals Tp5 */
 
+sc_require('views/volume_button');
 sc_require('views/projector_button');
+sc_require('views/source_button');
 
 /** @class
 
@@ -17,7 +19,7 @@ Tp5.TopBar = SC.View.extend(
 
 	classNames: ['top-bar'],
 	
-	childViews: "roomLabel timeLabel projectorButton".w(),
+	childViews: "roomLabel timeLabel sourceButton projectorButton volumeButton".w(),
 	
 	roomLabel: SC.LabelView.design({
 		layout: {left: 20, centerY: 0, height: 50, width:100},
@@ -32,8 +34,16 @@ Tp5.TopBar = SC.View.extend(
 		textAlign: "center"
 	}).classNames('time-label'),
 	
-	projectorButton: Tp5.ProjectorButtonView.design({
+	sourceButton: Tp5.SourceButtonView.design({
 		layout: {left: 160, top: 5, height: 55, width: 113}
+	}),
+	
+	projectorButton: Tp5.ProjectorButtonView.design({
+		layout: {left: 300, top: 5, height: 55, width: 113}
+	}),
+	
+	volumeButton: Tp5.VolumeButtonView.design({
+		layout: {left: 440, top: 5, height: 55, width: 113}
 	})
 
 });

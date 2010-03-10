@@ -12,40 +12,6 @@
 */
 
 sc_require('views/status_button');
-sc_require('mouse_handling');
-
-Tp5.ControlButtonView = SC.View.extend(Tp5.MouseHandlingFix, {
-	
-	classNames: ["overflow"],
-	
-	mouseClicked: function(){
-		if(this.disableStates.indexOf(this.state) == -1)
-		{
-			this.action();
-			Tp5.mainPage.mainPane.topBar.projectorButton.button.mouseUp(null);
-		}
-	},
-		
-	action: function(){
-		//override this to do something
-	},
-	
-	//add states to this to disable the button on those states
-	disableStates: [],
-	
-	statesChanged: function(){
-		this.set('state', Tp5.deviceController.get('devices').projector.get('state_vars').state.state);
-	}.observes("Tp5.deviceController.devices.projector.state_vars"),
-	
-	displayProperties: 'state value'.w(),
-	
-	render: function(context, firstTime) {
-		context = context.begin('div').addClass('control-button');
-		if(this.disableStates.indexOf(this.state) != -1)context.addClass('disabled');
-		context = context.begin('div').addClass('label').push(this.value).end().end();
-	}
-	
-});
 
 Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 /** @scope Tp5.ProjectorButtonView.prototype */ {
@@ -64,13 +30,16 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 				cooling: sc_static('cooling.png'),
 				warming: sc_static('warming.png')
 			};
-			var image = buttonImages[Tp5.deviceController.get('devices').projector.get('state_vars').state.state];
+			var image = buttonImages[Tp5.deviceController.get('devices').projector.get('states').state];
+			console.log("image");
 			return image? image : buttonImages.off;
 		}).from("Tp5.deviceController.devices.projector.state_vars")
 	}),
 	
 	controlDrawer: SC.View.design(SC.Animatable, {
 		classNames: ['control-drawer'],
+		
+		extendedHeight: 180,
 		
 		childViews: "onoffButton muteButton".w(),
 		
@@ -84,12 +53,13 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 			layout: {left: 5, right: 5, bottom: 65, height: 35},
 			
 			action: function(){
-				var state = Tp5.deviceController.get('devices').projector.get('state_vars').state.state;
+				var state = Tp5.deviceController.get('devices').projector.get("states").state;
 				Tp5.deviceController.devices.projector.set_var("power", state == "off");
+				Tp5.mainPage.mainPane.topBar.projectorButton.button.mouseClicked();
 			},
 			
 			valueBinding: SC.Binding.transform(function(value, binding){
-				var state = Tp5.deviceController.get('devices').projector.get('state_vars').state.state;
+				var state = Tp5.deviceController.get('devices').projector.get('states').state;
 				if(["on", "muted", "warming"].indexOf(state) != -1)return "off";
 				else return "on";
 			}).from("Tp5.deviceController.devices.projector.state_vars"),
@@ -102,8 +72,9 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 			layout: {left: 5, right: 5, bottom: 15, height: 35},
 			
 			action: function(){
-				var state = Tp5.deviceController.get('devices').projector.get('state_vars').state.state;
+				var state = Tp5.deviceController.get('devices').projector.get('states').state;
 				Tp5.deviceController.devices.projector.set_var("video_mute", state != "muted");
+				Tp5.mainPage.mainPane.topBar.projectorButton.button.mouseClicked();
 			},
 			
 			valueBinding: SC.Binding.transform(function(value, binding){

@@ -26,7 +26,7 @@ Tp5.main = function main() {
 	// ex: Tp5.contactsController.set('content',Tp5.contacts);
 	Tp5.store.find(Tp5.Building);
 	Tp5.deviceController.set('content', Tp5.store.find(Tp5.Device));
-	//Tp5.sourceController.set('content')
+	Tp5.sourceController.set('content', Tp5.store.find(Tp5.Source));
 	//var query = SC.Query.local(Tp5.Room, 'mac = {mac_addr}', {mac_addr: '00:30:1b:82:ac:39'});
 	//Tp5.roomController.set('content', Tp5.store.find(query));
 } ;

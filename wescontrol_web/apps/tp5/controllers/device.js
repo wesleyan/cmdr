@@ -20,6 +20,10 @@ Tp5.deviceController = SC.ArrayController.create(
 		this.get('content').forEach(function(device){
 			console.log("Adding %s", device.get('name'));
 			devices[device.get('name')] = device;
+			
+			//TODO: This is definitely not the best way to do this.
+			if(device.get('name') == "projector")Tp5.sourceController.set('projector', device);
+			if(device.get('name') == "extron")Tp5.sourceController.set('switcher', device);
 		});
 		
 		this.devices = devices;

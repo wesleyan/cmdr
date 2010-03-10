@@ -22,6 +22,16 @@ Tp5.Device = SC.Record.extend(
 	
 	editable: SC.Record.attr(Boolean, {defaultValue: YES}),
 	
+	states: function() {
+		var map = {};
+		for(var key in this.get('state_vars'))
+		{
+			var state = this.get('state_vars')[key].state;
+			if(state !== undefined)map[key] = state;
+		}
+		return map;
+	}.property('state_vars').cacheable(),
+	
 	vars_obj: function() {
 		var vars_array = [];
 		for(var key in this.get('state_vars'))

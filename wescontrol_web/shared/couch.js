@@ -50,6 +50,7 @@ CouchDataSource = SC.DataSource.extend(
 					});
 					this.since = body.last_seq;
 				}
+
 				if (this.timer) this.timer.invalidate();
 				this.timer = SC.Timer.schedule({
 					interval: 1000,
@@ -97,10 +98,16 @@ CouchDataSource = SC.DataSource.extend(
 
 		// TODO: Add handlers to fetch data for specific queries.	 
 		// call store.dataSourceDidFetchQuery(query) when done.
-		console.log("Calling for " + query.recordType);
 		if(query.recordType == this.appObject.Building) {
 			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/building').json()
 				.notify(this, 'didFetchBuildings', store, query)
+				.send();
+			return YES;
+		}
+		else if(query.recordType == this.appObject.Source){
+			console.log("Fetching sources");
+			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/sources').json()
+				.notify(this, 'didFetchSources', store, query)
 				.send();
 			return YES;
 		}
@@ -159,10 +166,36 @@ CouchDataSource = SC.DataSource.extend(
 			store.dataSourceDidErrorQuery(query, response);
 		}
 	},
+	didFetchSources: function(response, store, query){
+		if (SC.ok(response)) {
+			var sources = [];
+			response.get('body').rows.forEach(function(row){
+				var icon_name = "";
+				for(var prop in row.value._attachments)icon_name = prop;
+				var source = {
+					guid: row.id,
+					name: row.value.name,
+					input: row.value.input,
+					icon: "/rooms/" + row.id + "/" + icon_name
+				};
+				sources.push(source);
+			});
+			store.loadRecords(this.appObject.Source, sources);
+			store.dataSourceDidFetchQuery(query);
+			this.fetchedSourcesCallback(response);
+		}
+		else {
+			store.dataSourceDidErrorQuery(query, response);
+		}
+	},
 	
 	//implement this to do stuff when the controller is refreshed
 	fetchedBuildingsCallback: function(response){
 		//this.appObject.buildingController.refreshSources();			
+	},
+	
+	fetchedSourcesCallback: function(response){
+		
 	},
 
 	// ..........................................................
