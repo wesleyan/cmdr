@@ -4,9 +4,9 @@
 // ==========================================================================
 /*globals Tp5 */
 
-sc_require('views/volume_button');
 sc_require('views/projector_button');
 sc_require('views/source_button');
+sc_require('views/volume_button');
 
 /** @class
 
