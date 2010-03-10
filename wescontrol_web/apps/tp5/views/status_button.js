@@ -11,7 +11,7 @@
   @extends SC.View
 */
 
-sc_require('mouse_handling');
+sc_require('lib/mouse_handling');
 
 Tp5.ControlButtonView = SC.View.extend(Tp5.MouseHandlingFix, {
 	

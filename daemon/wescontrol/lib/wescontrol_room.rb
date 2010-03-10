@@ -1,14 +1,15 @@
 module Wescontrol
 	class WescontrolRoom < Wescontrol
 		def initialize
-			#begin
-				@room = Room.find_by_mac(MAC.addr)
-			#	throw "Room Does Not Exist" unless @room
-			#rescue
-			#	raise "The room has not been added the database"
-			#end
+			begin
+				@controller = Room.find_by_mac(MAC.addr)
+				throw "Room Does Not Exist" unless @controller
+			rescue
+				raise "The room has not been added the database"
+			end
 
-			device_hashes = Room.devices(@room["id"])
+			device_hashes = Room.devices(@controller["id"])
+			@couchid = @controller['id']
 			super(device_hashes)
 		end
 	end

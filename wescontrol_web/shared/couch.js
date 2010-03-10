@@ -176,7 +176,8 @@ CouchDataSource = SC.DataSource.extend(
 					guid: row.id,
 					name: row.value.name,
 					input: row.value.input,
-					icon: "/rooms/" + row.id + "/" + icon_name
+					icon: "/rooms/" + row.id + "/" + icon_name,
+					belongs_to: row.value.belongs_to
 				};
 				sources.push(source);
 			});

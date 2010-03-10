@@ -2,14 +2,15 @@ module Wescontrol
 	class WescontrolLab < Wescontrol
 		def initialize
 			puts "Initializing lab controller"
-			#begin
-				controller = Controller.find_by_mac(MAC.addr)
-			#	throw "Controller Does Not Exist" unless controller
-			#rescue
-			#	raise "The controller has not been added the database"
-			#end
+			begin
+				@controller = Controller.find_by_mac(MAC.addr)
+				throw "Controller Does Not Exist" unless @controller
+			rescue
+				raise "The controller has not been added the database"
+			end
 
-			device_hashes = Controller.devices(controller["id"])
+			device_hashes = Controller.devices(@controller["id"])
+			@couchid = @controller["id"]
 			super(device_hashes)
 		end
 	end

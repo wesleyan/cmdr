@@ -25,10 +25,13 @@ Tp5.main = function main() {
 	// TODO: Set the content property on your primary controller
 	// ex: Tp5.contactsController.set('content',Tp5.contacts);
 	Tp5.store.find(Tp5.Building);
-	Tp5.deviceController.set('content', Tp5.store.find(Tp5.Device));
-	Tp5.sourceController.set('content', Tp5.store.find(Tp5.Source));
-	//var query = SC.Query.local(Tp5.Room, 'mac = {mac_addr}', {mac_addr: '00:30:1b:82:ac:39'});
-	//Tp5.roomController.set('content', Tp5.store.find(query));
+	
+	var deviceQuery = SC.Query.local(Tp5.Device, 'belongs_to = {room_id}', {room_id: Tp5.appController.roomID});
+	Tp5.deviceController.set('content', Tp5.store.find(deviceQuery));
+	
+	var sourceQuery = SC.Query.local(Tp5.Source, 'belongs_to = {room_id}', {room_id: Tp5.appController.roomID});
+	Tp5.sourceController.set('content', Tp5.store.find(sourceQuery));
+	
 } ;
 
 function main() { Tp5.main(); }

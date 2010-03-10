@@ -11,8 +11,8 @@ module Wescontrol
 			:boolean => 	proc {|a, options| a.is_a?(TrueClass) || a.is_a?(FalseClass)},
 			:number => 		proc {|a, options| a.is_a? Numeric},
 			:string => 		proc {|a, options| a.is_a? String},
-			:percentage => 	proc {|a, options| a.is_a?(Float) && a >= 0 && a <= 1},
-			:decimal =>		proc {|a, options| a.is_a?(Float) },
+			:percentage => 	proc {|a, options| (a*100).round >= 0 && (a*100).round <= 100},
+			:decimal =>		proc {|a, options| a.is_a? Numeric},
 			:option => 		proc {|a, options| options[:options].include? a}
 		}
 		
@@ -25,6 +25,8 @@ module Wescontrol
 				devices resp
 			elsif @path[0] == 'watch'
 				watch resp
+			elsif @path[0] == 'controller'
+				controller resp
 			else
 				resp.status = 404
 				resp.content = {"error" => "resource_not_found"}
@@ -65,6 +67,18 @@ module Wescontrol
 				}
 			}
 		end
+		
+		#def controller resp
+		#	resp.status = 200
+		#	resp.content = {
+		#		"mac" 			=> MAC.addr,
+		#		"id" 			=> @couchid,
+		#		"attributes" 	=> @controller.attributes,
+		#		"belongs_to"	=> @controller.belongs_to,
+		#		"class"			=> @controller.class
+		#	}.to_json + "\n"
+		#	resp.send_response
+		#end
 		
 		def devices resp
 			@method_table ||= self.class.instance_variable_get(:@method_table)

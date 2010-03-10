@@ -31,6 +31,10 @@ Tp5.appController = SC.ObjectController.create(
 	
 	tick: function() {
 		this.set('clock', this.now());
-	}
+	},
+	
+	mac: '00:30:1b:82:ac:39',
+	
+	roomID: 'c180fad1e1599512ea68f1748eb601ea'
 	
 }) ;

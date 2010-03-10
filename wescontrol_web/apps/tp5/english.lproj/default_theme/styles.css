@@ -1,3 +1,16 @@
+@-webkit-keyframes 'pulse' {
+  from {
+    opacity: 0; }
+
+  40% {
+    opacity: 0.6; }
+
+  60% {
+    opacity: 0.6; }
+
+  to {
+    opacity: 0; } }
+
 .overflow {
   overflow: visible; }
 
@@ -28,6 +41,13 @@
       -webkit-box-shadow: rgba(0, 0, 0, 0.398438) 0px -5px 12px inset, black 0px 1px 3px inset, rgba(255, 255, 255, 0.398438) 0px 1px; }
   .sc-view.status-button img {
     z-index: 51;
+    pointer-events: none; }
+  .sc-view.status-button .sc-view.sc-label-view.sc-regular-size {
+    z-index: 51;
+    color: white;
+    font-family: "Myriad Pro";
+    font-size: 25px;
+    line-height: 32px;
     pointer-events: none; }
   .sc-view.status-button .control-drawer {
     background: -webkit-gradient(linear, 0% 25%, 0% 100%, from(#F8D5A9), to(#F9A031));
@@ -66,7 +86,47 @@
         line-height: 40px;
         text-align: center; }
     .sc-view.status-button .control-drawer.volume-control {
-      background: #2B2C2B; }
+      background: sc_static("volume_background.png") 50% 60px no-repeat, #2B2C2B; }
+      .sc-view.status-button .control-drawer.volume-control .volume-slider {
+        background-image: sc_static("volume_controller.png");
+        background-repeat: no-repeat;
+        background-position-x: 50%;
+        background-position-y: 0; }
+      .sc-view.status-button .control-drawer.volume-control .control-button {
+        background: -webkit-gradient(linear, 0% 50%, 0% 100%, from(#FFFFFF), to(#D1D2D3));
+        -webkit-border-radius: 3px; }
+        .sc-view.status-button .control-drawer.volume-control .control-button:active {
+          background: -webkit-gradient(linear, 0% 50%, 0% 100%, from(#D1D1D1), to(#A9AAAB)); }
+        .sc-view.status-button .control-drawer.volume-control .control-button .mute-overlay {
+          width: 32px;
+          height: 7px;
+          left: 50%;
+          top: 50%;
+          margin-left: -16px;
+          margin-top: -3.5px;
+          position: absolute;
+          background: #403E3F;
+          -webkit-border-radius: 3px;
+          pointer-events: none; }
+        .sc-view.status-button .control-drawer.volume-control .control-button .mute-light {
+          width: 32px;
+          height: 7px;
+          left: 50%;
+          top: 50%;
+          margin-left: -16px;
+          margin-top: -3.5px;
+          position: absolute;
+          background: #E82725;
+          -webkit-border-radius: 3px;
+          pointer-events: none;
+          -webkit-animation-name: pulse;
+          -webkit-animation-duration: 3s;
+          -webkit-animation-iteration-count: infinite; }
+      .sc-view.status-button .control-drawer.volume-control .sc-view.sc-label-view.sc-regular-size {
+        font-family: "Gotham Bold";
+        font-size: 14px;
+        color: white;
+        line-height: 14px; }
 
 .main-body {
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#D1D3D4), to(#9D9FA2)); }

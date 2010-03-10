@@ -61,7 +61,7 @@ Tp5.Device = SC.Record.extend(
 	set_var_request_finished: function(response, cvar, state) {
 		var body = response.get('body');
 		if(body.error){
-			console.error("Failed to set %s to %s: %s", cvar, state, response.error);
+			console.error("Failed to set %s to %s: %s", cvar, state, body.error);
 		}
 		else if(body[cvar]){
 			console.log("Attempted to set %s to %s, got %s", cvar, state, body[cvar]);

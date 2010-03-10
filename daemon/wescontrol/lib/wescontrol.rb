@@ -46,6 +46,8 @@ module Wescontrol
 				}
 			}
 			WescontrolHTTP.instance_variable_set(:@method_table, @method_table)
+			#WescontrolHTTP.instance_variable_set(:@couchid, @couchid)
+			#WescontrolHTTP.instance_variable_set(:@controller, @controller)
 		end
 			
 		def inspect
