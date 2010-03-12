@@ -40,8 +40,8 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 	volumeLabel: SC.LabelView.design({
 		layout: {right: 10, centerY: 0, width: 60, height: 28},
 		valueBinding: SC.Binding.transform(function(value, binding){
-			return sprintf("%.0f%%", Tp5.volumeController.get('volume')*100);
-		}).from("Tp5.volumeController.volume"),
+			return sprintf("%.0f%%", Tp5.volumeController.get('lastVolumeSet')*100);
+		}).from("Tp5.volumeController.lastVolumeSet"),
 		textAlign: "right"
 	}),
 	
@@ -64,16 +64,46 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 			
 			dragging: NO,
 			
+			updateTimer: SC.Timer.schedule({
+				interval: 500,
+				target: this,
+				action: "updateVolume",
+				repeating: YES
+			}),
+			
+			updateVolume: function(){
+				console.log("Updating volume: %f", Tp5.volumeController.volume);
+				Tp5.volumeController.updateLastVolumeSet();
+				this.set("background-position-y", sprintf("%.0f%%", Tp5.volumeController.volume*100));
+			},
+			
 			mouseDown: function(){
 				this.set('dragging', YES);
+				this.updateTimer.invalidate();
 			},
 			
 			mouseUp: function(){
 				this.set('dragging', NO);
+				this.updateTimer = SC.Timer.schedule({
+					interval: 500,
+					target: this,
+					action: "updateVolume",
+					repeating: YES,
+					isRunning: YES
+				});
 			},
 			
 			mouseMoved: function(evt){
-				console.log(evt);
+				if(this.dragging)
+				{
+					//console.log("%d, %d", evt.clientY, evt.target.offsetTop, evt.target.offsetTop + evt.target.offsetHeight, evt.target.offsetHeight);
+					var h = evt.target.offsetHeight-36; //height of the draggable area; 36 found empirically
+					var percent = (evt.clientY-evt.target.offsetTop-27)/h;
+					if(percent < 0)percent = 0;
+					if(percent > 1)percent = 1;
+					SC.CoreQuery.find(".volume-slider")[0].style.backgroundPositionY = sprintf("%.1f%%", percent*100);
+					Tp5.volumeController.set_volume(1-percent);
+				}
 			}
 		}),
 		

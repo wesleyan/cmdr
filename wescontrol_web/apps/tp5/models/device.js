@@ -51,11 +51,16 @@ Tp5.Device = SC.Record.extend(
 	}.property('vars_obj').cacheable(),
 	
 	set_var: function(cvar, state) {
-		var json = {};
-		json[cvar] = state;
-		SC.Request.postUrl('/devices/' + this.get('name'), json).json()
-			.notify(this, "set_var_request_finished", cvar, state)
-			.send();
+		try {
+			var json = {};
+			json[cvar] = state;
+			SC.Request.postUrl('/devices/' + this.get('name'), json).json()
+				.notify(this, "set_var_request_finished", cvar, state)
+				.send();
+		}
+		catch(e){
+			console.log("JS Error when setting %s to %s: %s", cvar, state, e.message);
+		}
 	},
 	
 	set_var_request_finished: function(response, cvar, state) {
