@@ -1,5 +1,5 @@
 //MIXINS
-=text-inset(!color=#FFFFFF)
+=text-inset(!color=rgba(255, 255, 255, 0.5))
 	text-shadow = 0px 1px 0px !color
 	
 =fill-parent
@@ -182,6 +182,7 @@
 		-webkit-box-shadow: 7px 0px 5px #333333
 		-moz-box-shadow: 7px 0px 5px #333333
 		overflow: inherit
+		z-index: 40
 		
 		.title-view
 			background: -webkit-gradient(linear, 0% 0%, 0% 91%, from(#96B1CF), to(#5A6A7C), color-stop(.5,#5A6A7C))
@@ -232,5 +233,33 @@
 					top: 50%
 					margin-top: -20px
 					left: 120px
-					
+
+	.sc-view.projector-overlay
+		background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ADAFB2), to(#58595B))
+		-webkit-box-shadow: 0 -2px 2px #333
+		-mox-box-shadow: 0 -2px 3px #333
+		z-index: 39
+		
+		.sc-view.sc-label-view.sc-regular-size
+			+text-inset
+			font-family: "Myriad Pro"
+			font-size: 23px
+			color: black
+			line-height: 25px
+		
+		.control-button
+			+fill-parent
+			+button(#D3D5D6)
+			border-color: #D3D3D3
+			
+			.label
+				+text-inset
+				+fill-parent
+				text-align: center
+				font-weight: 700
+				color: black
+				font-family: "Myriad Pro"
+				font-size: 26px
+				line-height: 40px
+				
 				

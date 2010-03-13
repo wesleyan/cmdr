@@ -12,6 +12,7 @@
 */
 
 sc_require('views/status_button');
+sc_require('views/button');
 
 Tp5.SourceButtonView = Tp5.StatusButtonView.extend(
 /** @scope Tp5.SourceButtonView.prototype */ {
@@ -44,7 +45,7 @@ Tp5.SourceButtonView = Tp5.StatusButtonView.extend(
 			var top = 65;
 			Tp5.log("Sources updated: %d", Tp5.sourceController.get('content').get('length'));
 			Tp5.sourceController.get('content').forEach(function(source){
-				childViews.push(self.createChildView(Tp5.ControlButtonView.design({
+				childViews.push(self.createChildView(Tp5.ButtonView.design({
 					layout: {left: 5, right: 5, top: top, height: 35},
 					
 					action: function(){

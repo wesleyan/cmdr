@@ -12,6 +12,7 @@
 */
 
 sc_require('views/status_button');
+sc_require('views/button');
 
 Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 /** @scope Tp5.ProjectorButtonView.prototype */ {
@@ -49,7 +50,7 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 			height: { duration: 0.25 } // with custom timing curve
 		},
 		
-		onoffButton: Tp5.ControlButtonView.design({
+		onoffButton: Tp5.ButtonView.design({
 			layout: {left: 5, right: 5, bottom: 65, height: 35},
 			
 			action: function(){
@@ -57,6 +58,10 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 				Tp5.deviceController.devices.projector.set_var("power", state == "off");
 				Tp5.mainPage.mainPane.topBar.projectorButton.button.mouseClicked();
 			},
+			
+			statesChanged: function(){
+				this.set('state', Tp5.deviceController.get('devices').projector.get('state_vars').state.state);
+			}.observes("Tp5.deviceController.devices.projector.state_vars"),
 			
 			valueBinding: SC.Binding.transform(function(value, binding){
 				var state = Tp5.deviceController.get('devices').projector.get('states').state;
@@ -68,7 +73,7 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 
 		}),
 		
-		muteButton: Tp5.ControlButtonView.design({
+		muteButton: Tp5.ButtonView.design({
 			layout: {left: 5, right: 5, bottom: 15, height: 35},
 			
 			action: function(){
@@ -76,6 +81,10 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 				Tp5.deviceController.devices.projector.set_var("video_mute", state != "muted");
 				Tp5.mainPage.mainPane.topBar.projectorButton.button.mouseClicked();
 			},
+			
+			statesChanged: function(){
+				this.set('state', Tp5.deviceController.get('devices').projector.get('state_vars').state.state);
+			}.observes("Tp5.deviceController.devices.projector.state_vars"),
 			
 			valueBinding: SC.Binding.transform(function(value, binding){
 				var state = Tp5.deviceController.get('devices').projector.get('state_vars').state.state;

@@ -72,6 +72,9 @@ Tp5.sourceController = SC.ArrayController.create(
 		});
 		this.set('switcher_map', switcher_map);
 		this.set('states', states);
-	}.observes("content")
+	}.observes("content"),
+	
+	projectorBinding: "Tp5.roomController.projector",
+	switcherBinding: "Tp5.roomController.switcher"
 
 }) ;

@@ -100,7 +100,7 @@
         left: 0;
         right: 0;
         position: absolute;
-        text-shadow: 0px 1px 0px white;
+        text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
         font-size: 30px;
         font-family: "Myriad Pro";
         font-weight: 700;
@@ -161,7 +161,8 @@
   .main-body .action-list-view {
     -webkit-box-shadow: 7px 0px 5px #333333;
     -moz-box-shadow: 7px 0px 5px #333333;
-    overflow: inherit; }
+    overflow: inherit;
+    z-index: 40; }
     .main-body .action-list-view .title-view {
       background: -webkit-gradient(linear, 0% 0%, 0% 91%, from(#96B1CF), to(#5A6A7C), color-stop(.5,#5A6A7C));
       -webkit-box-shadow: 0px 4px 6px #333333;
@@ -180,7 +181,7 @@
     .main-body .action-list-view .action-list .sc-view.action-view.sc-collection-item {
       border-bottom: 1pt solid #B5B5B6; }
     .main-body .action-list-view .action-list .action-view-item {
-      text-shadow: 0px 1px 0px white;
+      text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
       height: 100%;
       color: #565656;
       font-size: 36pt;
@@ -204,3 +205,49 @@
         top: 50%;
         margin-top: -20px;
         left: 120px; }
+  .main-body .sc-view.projector-overlay {
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ADAFB2), to(#58595B));
+    -webkit-box-shadow: 0 -2px 2px #333;
+    -mox-box-shadow: 0 -2px 3px #333;
+    z-index: 39; }
+    .main-body .sc-view.projector-overlay .sc-view.sc-label-view.sc-regular-size {
+      text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+      font-family: "Myriad Pro";
+      font-size: 23px;
+      color: black;
+      line-height: 25px; }
+    .main-body .sc-view.projector-overlay .control-button {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+      -webkit-border-radius: 5px;
+      -moz-border-radius: 5px;
+      border: 1px solid #FFF;
+      -webkit-box-shadow: 0 0 3px #000;
+      -moz-box-shadow: 0 0 3px #000;
+      background: -webkit-gradient(linear, 0% 25%, 0% 100%, from(#d3d5d6), to(#a8aaab));
+      border-color: #D3D3D3; }
+      .main-body .sc-view.projector-overlay .control-button:active {
+        background: -webkit-gradient(linear, 0% 25%, 0% 100%, from(#a8aaab), to(#939595));
+        -webkit-box-shadow: 0 0 3px #000 inset;
+        -moz-box-shadow: 0 0 3px #000 inset; }
+      .main-body .sc-view.projector-overlay .control-button.disabled {
+        opacity: 0.6;
+        -webkit-box-shadow: 0 0 3px #000;
+        -moz-box-shadow: 0 0 3px #000;
+        background: -webkit-gradient(linear, 0% 25%, 0% 100%, from(#d3d5d6), to(#a8aaab)); }
+      .main-body .sc-view.projector-overlay .control-button .label {
+        text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        position: absolute;
+        text-align: center;
+        font-weight: 700;
+        color: black;
+        font-family: "Myriad Pro";
+        font-size: 26px;
+        line-height: 40px; }

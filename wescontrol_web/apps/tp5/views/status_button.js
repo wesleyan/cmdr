@@ -13,38 +13,6 @@
 
 sc_require('lib/mouse_handling');
 
-Tp5.ControlButtonView = SC.View.extend(Tp5.MouseHandlingFix, {
-	
-	classNames: ["overflow"],
-	
-	mouseClicked: function(){
-		if(this.disableStates.indexOf(this.state) == -1)
-		{
-			this.action();
-		}
-	},
-		
-	action: function(){
-		//override this to do something
-	},
-	
-	//add states to this to disable the button on those states
-	disableStates: [],
-	
-	statesChanged: function(){
-		this.set('state', Tp5.deviceController.get('devices').projector.get('state_vars').state.state);
-	}.observes("Tp5.deviceController.devices.projector.state_vars"),
-	
-	displayProperties: 'state value'.w(),
-	
-	render: function(context, firstTime) {
-		context = context.begin('div').addClass('control-button');
-		if(this.disableStates.indexOf(this.state) != -1)context.addClass('disabled');
-		context = context.begin('div').addClass('label').push(this.value).end().end();
-	}
-	
-});
-
 
 Tp5.StatusButtonView = SC.View.extend(SC.Animatable,
 /** @scope Tp5.StatusButtonView.prototype */ {
