@@ -196,7 +196,41 @@
 				font-family: "Myriad Pro"
 		
 		.action-list
-			background: #EAEAEA
-						
-			-webkit-box-shadow: 0 0 10px 10px #B5B5B5 inset
-			-moz-box-shadow: 0 0 10px 10px #B5B5B5 inset
+			
+			.sc-view.sc-collection-view.sc-list-view
+				background: #D1D1D1	
+				-webkit-box-shadow: 0 0 10px 10px #B5B5B5 inset
+				-moz-box-shadow: 0 0 10px 10px #B5B5B5 inset
+
+			.sc-view.action-view.sc-collection-item
+				border-bottom: 1pt solid #B5B5B6
+			.action-view-item
+				+text-inset
+				height: 100%
+				color: #565656
+				font-size: 36pt
+				line-height: 36pt
+				font-family: "Myriad Pro"
+				
+				&.selected
+					+text-inset(#000)
+					background: #474747
+					color: #BFBFBF
+					
+				img
+					max-width: 70px
+					max-height: 55px
+					position: absolute
+					left: 20px
+					top: 50%
+					margin-top: -22.5px
+					
+				.action-name
+					position: absolute
+					width: 290px
+					height: 40px
+					top: 50%
+					margin-top: -20px
+					left: 120px
+					
+				

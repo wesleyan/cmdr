@@ -42,7 +42,7 @@ Tp5.SourceButtonView = Tp5.StatusButtonView.extend(
 			var childViews = [];
 			var self = this;
 			var top = 65;
-			console.log("Sources updated: %d", Tp5.sourceController.get('content').get('length'));
+			Tp5.log("Sources updated: %d", Tp5.sourceController.get('content').get('length'));
 			Tp5.sourceController.get('content').forEach(function(source){
 				childViews.push(self.createChildView(Tp5.ControlButtonView.design({
 					layout: {left: 5, right: 5, top: top, height: 35},

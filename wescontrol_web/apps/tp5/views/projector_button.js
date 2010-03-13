@@ -31,7 +31,7 @@ Tp5.ProjectorButtonView = Tp5.StatusButtonView.extend(
 				warming: sc_static('warming.png')
 			};
 			var image = buttonImages[Tp5.deviceController.get('devices').projector.get('states').state];
-			console.log("image");
+			Tp5.log("image");
 			return image? image : buttonImages.off;
 		}).from("Tp5.deviceController.devices.projector.state_vars")
 	}),

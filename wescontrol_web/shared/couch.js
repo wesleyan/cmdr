@@ -84,9 +84,9 @@ CouchDataSource = SC.DataSource.extend(
 				var body = response.get('body');
 				if(body)
 				{
-					console.log("%s changed", body['_id']);
+					Tp5.log("%s changed", body['_id']);
 					var device = this.appObject.store.find(this.appObject.Device, body._id);
-					console.log(device);
+					Tp5.log(device);
 					//device.set('state_vars', body.attributes.state_vars);
 					//device.set('name', device.get('name')+1);
 					var record = {
@@ -125,7 +125,7 @@ CouchDataSource = SC.DataSource.extend(
 			return YES;
 		}
 		else if(query.recordType == this.appObject.Source){
-			console.log("Fetching sources");
+			Tp5.log("Fetching sources");
 			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/sources').json()
 				.notify(this, 'didFetchSources', store, query)
 				.send();

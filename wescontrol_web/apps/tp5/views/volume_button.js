@@ -72,7 +72,7 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 			}),
 			
 			updateVolume: function(){
-				//console.log("Updating volume: %f", Tp5.volumeController.volume);
+				//Tp5.log("Updating volume: %f", Tp5.volumeController.volume);
 				Tp5.volumeController.updateLastVolumeSet();
 				this.set("background-position-y", sprintf("%.0f%%", Tp5.volumeController.volume*100));
 			},
@@ -98,7 +98,7 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 			mouseMoved: function(evt){
 				if(this.dragging)
 				{
-					//console.log("%d, %d", evt.clientY, evt.target.offsetTop, evt.target.offsetTop + evt.target.offsetHeight, evt.target.offsetHeight);
+					//Tp5.log("%d, %d", evt.clientY, evt.target.offsetTop, evt.target.offsetTop + evt.target.offsetHeight, evt.target.offsetHeight);
 					var h = evt.target.offsetHeight-36; //height of the draggable area; 36 found empirically
 					var percent = (evt.clientY-evt.target.offsetTop-27)/h;
 					if(percent < 0)percent = 0;

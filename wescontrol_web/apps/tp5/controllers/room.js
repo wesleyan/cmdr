@@ -14,16 +14,16 @@ Tp5.roomController = SC.ObjectController.create(
 /** @scope Tp5.roomController.prototype */ {
 	
 	updateAttributes: function(){
-		console.log("Content updated");
+		Tp5.log("Content updated");
 		if(this.get('content') && this.get('content').get('attributes'))
 		{
-			console.log("And not null");
+			Tp5.log("And not null");
 			var attributes = Tp5.roomController.get('content').get('attributes').attributes;
 			this.set('attributes', attributes);
 			var devices = Tp5.deviceController.get('devices');
 			if(devices)
 			{
-				console.log("Setting devices");
+				Tp5.log("Setting devices");
 				this.set('volume', devices[attributes.volume]);
 				this.set('projector', devices[attributes.projector]);
 				this.set('switcher', devices[attributes.switcher]);

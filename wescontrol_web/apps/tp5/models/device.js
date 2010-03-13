@@ -59,7 +59,7 @@ Tp5.Device = SC.Record.extend(
 				.send();
 		}
 		catch(e){
-			console.log("JS Error when setting %s to %s: %s", cvar, state, e.message);
+			Tp5.log("JS Error when setting %s to %s: %s", cvar, state, e.message);
 		}
 	},
 	
@@ -69,7 +69,7 @@ Tp5.Device = SC.Record.extend(
 			console.error("Failed to set %s to %s: %s", cvar, state, body.error);
 		}
 		else if(body[cvar]){
-			console.log("Attempted to set %s to %s, got %s", cvar, state, body[cvar]);
+			Tp5.log("Attempted to set %s to %s, got %s", cvar, state, body[cvar]);
 		}
 	}
 }) ;

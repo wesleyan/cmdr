@@ -18,11 +18,11 @@ Tp5.mainPage = SC.Page.design({
 		childViews: 'topBar mainView'.w(),
 		
 		topBar: Tp5.TopBar.design({
-			layout: {left: 0, right: 0, height: 64, top: 0}
+			layout: {left: 0, right: 0, height: 90, top: 0}
 		}),
 		
 		mainView: Tp5.MainView.design({
-			layout: {left:0, right: 0, top: 64, bottom: 0},
+			layout: {left:0, right: 0, top: 90, bottom: 0},
 			
 			childViews: 'actionList'.w(),
 			

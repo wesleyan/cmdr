@@ -21,8 +21,14 @@ Tp5 = SC.Application.create(
 	// connect to a backend server.	 The default setup below connects the store
 	// to any fixtures you define.
 	//store: SC.Store.create().from(SC.Record.fixtures)
-	store: SC.Store.create().from('Tp5.CouchDataSource')
+	store: SC.Store.create().from('Tp5.CouchDataSource'),
 	
 	// TODO: Add global constants or singleton objects needed by your app here.
+	
+	debugging: YES,
+	
+	log: function(){
+		if(this.debugging)console.log.apply(console, arguments);
+	}
 
 }) ;
