@@ -35,6 +35,8 @@ Tp5.appController = SC.ObjectController.create(
 	
 	mac: '00:30:1b:82:ac:39',
 	
-	roomID: 'c180fad1e1599512ea68f1748eb601ea'
+	roomID: 'c180fad1e1599512ea68f1748eb601ea',
+	
+	disableChanges: NO
 	
 }) ;

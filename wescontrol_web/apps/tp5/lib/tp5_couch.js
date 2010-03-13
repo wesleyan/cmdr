@@ -16,6 +16,8 @@ sc_require('lib/couch');
 Tp5.CouchDataSource = CouchDataSource.extend({
 	appObject: Tp5,
 	
+	disableChangesBinding: "Tp5.appController.disableChanges",
+	
 	fetchedBuildingsCallback: function(response){
 		Tp5.deviceController.refreshContent();
 		Tp5.roomController.set('content', Tp5.store.find(Tp5.Room, Tp5.appController.roomID));

@@ -72,7 +72,7 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 			}),
 			
 			updateVolume: function(){
-				console.log("Updating volume: %f", Tp5.volumeController.volume);
+				//console.log("Updating volume: %f", Tp5.volumeController.volume);
 				Tp5.volumeController.updateLastVolumeSet();
 				this.set("background-position-y", sprintf("%.0f%%", Tp5.volumeController.volume*100));
 			},
@@ -80,6 +80,7 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 			mouseDown: function(){
 				this.set('dragging', YES);
 				this.updateTimer.invalidate();
+				Tp5.appController.set('disableChanges', YES);
 			},
 			
 			mouseUp: function(){
@@ -91,6 +92,7 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 					repeating: YES,
 					isRunning: YES
 				});
+				Tp5.appController.set('disableChanges', NO);
 			},
 			
 			mouseMoved: function(evt){

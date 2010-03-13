@@ -16,12 +16,29 @@ CouchDataSource = SC.DataSource.extend(
 	//set this to your global application object to make everything work
 	appObject: null,
 	
+	disableChanges: NO,
+	
+	
 	init: function(){
 		sc_super();
 		parent = this;
+				
 		this.comet = SC.Object.create({
 			appObject: parent.appObject,
+			
+			/**
+			* Stop looking at the changes feed. Use this is you're doing something
+			* which will overload the changes feed, causing problems (ex: volume
+			* control)
+			*/
+			disableChangesBinding: "parent.disableChanges",
 
+			disableChangesChanged: function(){
+				if(!this.get('disableChanges'))
+				{
+					this.doRequest();
+				}
+			}.observes('disableChanges'),
 			
 			start: function(){
 				if(this.running)return;
@@ -34,9 +51,12 @@ CouchDataSource = SC.DataSource.extend(
 			},
 			
 			doRequest: function(){
-				SC.Request.getUrl('/rooms/_changes?feed=longpoll&filter=wescontrol_web/device&since=' + this.since).json()
-					.notify(this, "requestFinished")
-					.send();
+				if(!this.get('disableChanges'))
+				{
+					SC.Request.getUrl('/rooms/_changes?feed=longpoll&filter=wescontrol_web/device&since=' + this.since).json()
+						.notify(this, "requestFinished")
+						.send();
+				}
 			},
 			
 			requestFinished: function(response){
@@ -108,6 +128,12 @@ CouchDataSource = SC.DataSource.extend(
 			console.log("Fetching sources");
 			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/sources').json()
 				.notify(this, 'didFetchSources', store, query)
+				.send();
+			return YES;
+		}
+		else if(query.recordType == this.appObject.Action){
+			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/actions').json()
+				.notify(this, 'didFetchActions', store, query)
 				.send();
 			return YES;
 		}
@@ -190,12 +216,40 @@ CouchDataSource = SC.DataSource.extend(
 		}
 	},
 	
+	didFetchActions: function(response, store, query){
+		if (SC.ok(response)) {
+			var actions = [];
+			response.get('body').rows.forEach(function(row){
+				var icon_name = "";
+				for(var prop in row.value._attachments)icon_name = prop;
+				var action = {
+					guid: row.id,
+					name: row.value.name,
+					settings: row.value.input,
+					icon: "/rooms/" + row.id + "/" + icon_name,
+					belongs_to: row.value.belongs_to
+				};
+				actions.push(action);
+			});
+			store.loadRecords(this.appObject.Action, actions);
+			store.dataSourceDidFetchQuery(query);
+			this.fetchedActionsCallback(response);
+		}
+		else {
+			store.dataSourceDidErrorQuery(query, response);
+		}
+	},
+	
 	//implement this to do stuff when the controller is refreshed
 	fetchedBuildingsCallback: function(response){
 		//this.appObject.buildingController.refreshSources();			
 	},
 	
 	fetchedSourcesCallback: function(response){
+		
+	},
+	
+	fetchedActionsCallback: function(response){
 		
 	},
 

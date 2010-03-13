@@ -4,6 +4,8 @@
 // ==========================================================================
 /*globals Tp5 */
 
+sc_require('views/action');
+
 /** @class
 
   (Document Your View Here)
@@ -31,8 +33,17 @@ Tp5.ActionListView = SC.View.extend(
 		
 	}).classNames("title-view"),
 	
-	actionList: SC.View.design({
-		layout: {top: 50, bottom: 0, left: 0, right: 0}
+	actionList: SC.ScrollView.design({
+		layout: {top: 50, bottom: 0, left: 0, right: 0},
+		borderStyle: SC.BORDER_NONE,
+		hasHorizontalScroller: NO,
+		contentView: SC.ListView.design({
+			contentBinding: "Tp5.actionController",
+			exampleView: Tp5.ActionView,
+			rowHeight: 65,
+			selectionBinding: 'Tp5.actionController.selection',
+			actsOnSelect: YES
+		})
 	}).classNames("action-list")
-
+	
 });

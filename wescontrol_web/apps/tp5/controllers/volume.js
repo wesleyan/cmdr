@@ -49,7 +49,7 @@ Tp5.volumeController = SC.ObjectController.create(
 	set_volume: function(v){
 		this.set('lastVolumeSet', v);
 		if(Math.abs(v - this.get('volume')) > 0.1){
-			//console.log("Setting: %f: %f", Math.abs(v - this.get('volume')), this.get('volume'));
+			//console.log("Setting: %f, %f: %f", v, Math.abs(v - this.get('volume')), this.get('volume'));
 			this.volumeTimer.invalidate();
 			this.set_volume_on_device(v);
 		}
