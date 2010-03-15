@@ -26,7 +26,9 @@ Tp5.appController = SC.ObjectController.create(
 	// TODO: Add your own code here.
 	now: function() {
 		//return new SC.DateTime.create().toFormattedString("%I:%M %p");
-		return new Date().format('h:mm') + " PM"; 
+		var meridian = "AM";
+		if(new Date().getHours() >= 12)meridian = "PM";
+		return new Date().format('h:mm') + " " + meridian; 
 	},
 	
 	tick: function() {

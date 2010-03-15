@@ -171,7 +171,7 @@
       .main-body .action-list-view .title-view .sc-view.sc-label-view.sc-regular-size.title-text {
         text-shadow: 0px 1px 0px #333333;
         font-size: 32px;
-        line-height: 30px;
+        line-height: 34px;
         color: white;
         font-family: "Myriad Pro"; }
     .main-body .action-list-view .action-list .sc-view.sc-collection-view.sc-list-view {
@@ -184,13 +184,13 @@
       text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
       height: 100%;
       color: #565656;
-      font-size: 36pt;
-      line-height: 36pt;
+      font-size: 36px;
+      line-height: 48px;
       font-family: "Myriad Pro"; }
       .main-body .action-list-view .action-list .action-view-item.selected {
         text-shadow: 0px 1px 0px black;
         background: #474747;
-        color: #BFBFBF; }
+        color: #D9D9D9; }
       .main-body .action-list-view .action-list .action-view-item img {
         max-width: 70px;
         max-height: 55px;

@@ -25,7 +25,7 @@ Tp5.ActionListView = SC.View.extend(
 		childViews: "titleText".w(),
 		
 		titleText: SC.LabelView.design({
-			layout: {top: 10, left: 0, right: 0, height: 38},
+			layout: {top: 10, left: 0, right: 0, height: 42},
 			value: "What would you like to do?",
 			textAlign: "center"
 			

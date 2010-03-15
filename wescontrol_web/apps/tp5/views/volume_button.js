@@ -58,23 +58,32 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 		
 		childViews: "muteButton muteLabel volumeSlider".w(),
 		
-		volumeSlider: SC.View.design(SC.Animatable, {
+		volumeSlider: SC.View.design({
+			didCreateLayer: function(){
+				sc_super();
+				
+				this.updateTimer = SC.Timer.schedule({
+					interval: 5000,
+					target: this,
+					action: "updateVolume",
+					repeating: YES
+				});
+			},
 			layout: {height: 312, width: 50, bottom: 55, centerX: -2},
 			classNames: ["volume-slider"],
 			
-			dragging: NO,
+			transitions: {
+				backgroundPositionY: {duration: 0.25}
+			},
 			
-			updateTimer: SC.Timer.schedule({
-				interval: 500,
-				target: this,
-				action: "updateVolume",
-				repeating: YES
-			}),
+			dragging: NO,
 			
 			updateVolume: function(){
 				//Tp5.log("Updating volume: %f", Tp5.volumeController.volume);
+				Tp5.log("Setting to %s", sprintf("%.0f%%", Tp5.volumeController.volume*100));
 				Tp5.volumeController.updateLastVolumeSet();
-				this.set("background-position-y", sprintf("%.0f%%", Tp5.volumeController.volume*100));
+				this.$()[0].style.backgroundPositionY = sprintf("%.0f%%", 100-Tp5.volumeController.volume*100);
+				//this.set("style", {backgroundPositionY: sprintf("%.0f%%", Tp5.volumeController.volume*100)});
 			},
 			
 			mouseDown: function(){
@@ -89,8 +98,7 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 					interval: 500,
 					target: this,
 					action: "updateVolume",
-					repeating: YES,
-					isRunning: YES
+					repeating: YES
 				});
 				Tp5.appController.set('disableChanges', NO);
 			},
