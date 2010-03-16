@@ -32,10 +32,11 @@ Tp5.sourceController = SC.ArrayController.create(
 		//as our feedback may not be working properly
 		if(this.get('projector') && this.attempts < 3 || !this.attempt_source || this.attempt_source != this.get('source').name)
 		{
+			Tp5.log("Attempt #%d", this.attempts);
 			this.projector.set_var("input", this.get('source').projector);
-			this.set('attempts', this.attempts+1);
-			if(this.attempts_source != this.get('source').name)this.set('attempts', 0);
-			this.set('attempt_source', this.get('source').name);
+			this.attempts = this.attempts+1;
+			if(this.attempts_source != this.get('source').name)this.attempts = 0;
+			this.attempt_source = this.get('source').name;
 		}
 
 		if(this.get('switcher'))this.switcher.set_var("input", this.get('source').switcher);
@@ -48,7 +49,7 @@ Tp5.sourceController = SC.ArrayController.create(
 	
 	projectorPowerChanged: function(){
 		if(this.get('content').get('length') === 0)return;
-		if(this.projector.get('states').power == YES && this.get('source'))
+		if(this.projector.get('states').power == YES && this.get('source') && this.projector.get('states').power != this.old_projector_power)
 		{
 			var input = this.get('source').projector;
 			if(input && this.projector.get('states').input != input)
@@ -56,6 +57,7 @@ Tp5.sourceController = SC.ArrayController.create(
 				this.projector.set_var("input", input);
 			}
 		}
+		this.old_projector_power = this.projector.get('states').power;
 	}.observes("projector", "states", ".projector.states"),
 	
 	contentChanged: function() {

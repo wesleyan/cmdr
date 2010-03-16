@@ -17,7 +17,8 @@ Tp5.ContextAreaView = SC.View.extend(
 	childViews: 'projectorOverlay'.w(),
 	
 	projectorOverlay: Tp5.ProjectorOverlayView.design({
-		layout: {bottom: 0, left:0, right:0, height: 70}
+		layout: {bottom: -70, left:0, right:0, height: 70},
+		visibleBinding: "Tp5.appController.projectorOverlayVisible"
 	})
 
 });

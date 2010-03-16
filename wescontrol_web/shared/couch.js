@@ -84,9 +84,9 @@ CouchDataSource = SC.DataSource.extend(
 				var body = response.get('body');
 				if(body)
 				{
-					Tp5.log("%s changed", body['_id']);
+					console.log("%s changed", body['_id']);
 					var device = this.appObject.store.find(this.appObject.Device, body._id);
-					Tp5.log(device);
+					console.log(device);
 					//device.set('state_vars', body.attributes.state_vars);
 					//device.set('name', device.get('name')+1);
 					var record = {
@@ -125,7 +125,7 @@ CouchDataSource = SC.DataSource.extend(
 			return YES;
 		}
 		else if(query.recordType == this.appObject.Source){
-			Tp5.log("Fetching sources");
+			console.log("Fetching sources");
 			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/sources').json()
 				.notify(this, 'didFetchSources', store, query)
 				.send();
@@ -225,7 +225,7 @@ CouchDataSource = SC.DataSource.extend(
 				var action = {
 					guid: row.id,
 					name: row.value.name,
-					settings: row.value.input,
+					settings: row.value.settings,
 					icon: "/rooms/" + row.id + "/" + icon_name,
 					belongs_to: row.value.belongs_to
 				};

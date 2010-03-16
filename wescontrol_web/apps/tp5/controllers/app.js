@@ -39,6 +39,8 @@ Tp5.appController = SC.ObjectController.create(
 	
 	roomID: 'c180fad1e1599512ea68f1748eb601ea',
 	
-	disableChanges: NO
+	disableChanges: NO,
+	
+	projectorOverlayVisible: NO
 	
 }) ;

@@ -42,7 +42,8 @@ Tp5.ActionListView = SC.View.extend(
 			exampleView: Tp5.ActionView,
 			rowHeight: 65,
 			selectionBinding: 'Tp5.actionController.selection',
-			actsOnSelect: YES
+			actsOnSelect: YES,
+			selectOnMouseDown: NO
 		})
 	}).classNames("action-list")
 	
