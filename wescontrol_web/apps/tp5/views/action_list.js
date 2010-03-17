@@ -46,5 +46,4 @@ Tp5.ActionListView = SC.View.extend(
 			selectOnMouseDown: NO
 		})
 	}).classNames("action-list")
-	
 });

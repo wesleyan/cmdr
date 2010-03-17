@@ -130,10 +130,13 @@ module Wescontrol
 			begin
 				updates = JSON.parse(@http_post_content)
 				device = @method_table[path[1]]
+				puts "Path[2] = '#{path[2]}'"
 				if !path[2]
 					updates.each{|k,v|
 						content.merge!(set_var(device, k, v))
 					}
+				elsif path[2].to_sym == :command
+					content = send_command device, updates.keys[0], updates[updates.keys[0]]
 				else
 					content = set_var device, path[2].to_sym, updates
 				end
@@ -162,5 +165,9 @@ module Wescontrol
 			end
 			content
 		end
+	end
+	
+	def send_command device, command, value
+		content = {"result" => device[:device].send(command, value)}
 	end
 end

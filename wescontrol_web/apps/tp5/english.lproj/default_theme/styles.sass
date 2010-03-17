@@ -218,7 +218,8 @@
 				
 				&.selected
 					+text-inset(#000)
-					background: #474747
+					-webkit-box-shadow: #330 0 0 4px inset
+					background: #666
 					color: #D9D9D9
 					
 				img
@@ -241,7 +242,7 @@
 		background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ADAFB2), to(#58595B))
 		-webkit-box-shadow: 0 -2px 2px #333
 		-mox-box-shadow: 0 -2px 3px #333
-		z-index: 39
+		z-index: 100
 		
 		.sc-view.sc-label-view.sc-regular-size
 			+text-inset
@@ -264,5 +265,12 @@
 				font-family: "Myriad Pro"
 				font-size: 26px
 				line-height: 40px
-				
+	
+	.context-area
+		.title
+			+text-inset
+			color: black
+			font-family: 'Myriad Pro'
+			font-size: 48px
+			text-align: center	
 				

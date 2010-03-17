@@ -15,6 +15,8 @@ Tp5.actionController = SC.ArrayController.create(
 
 	lastAction: null,
 	
+	allowsMultipleSelection: NO,
+	
 	doAction: function(action){
 		this.set('lastAction', action);
 		if(action.get('settings').source){
@@ -32,9 +34,14 @@ Tp5.actionController = SC.ArrayController.create(
 	},
 	
 	selectionChanged: function(){
-		Tp5.log("Selection changed to");
-		Tp5.log(this.get('selection'));
-		this.doAction(this.get('selection').get('firstObject'));
-	}.observes("selection")
-
+		if(this.get('hasSelection'))this.doAction(this.get('selection').get('firstObject'));
+	}.observes("selection"),
+	
+	sourceChanged: function(){
+		if(this.get('hasSelection') && Tp5.sourceController.get('source') &&
+			Tp5.sourceController.get('source').name != this.get('selection').get('firstObject').get('settings').source)
+		{
+			this.set('selection', SC.SelectionSet.EMPTY);
+		}
+	}.observes("Tp5.sourceController.source")
 }) ;

@@ -191,7 +191,8 @@
         background: #999; }
       .main-body .action-list-view .action-list .action-view-item.selected {
         text-shadow: 0px 1px 0px black;
-        background: #474747;
+        -webkit-box-shadow: #330 0 0 4px inset;
+        background: #666;
         color: #D9D9D9; }
       .main-body .action-list-view .action-list .action-view-item img {
         max-width: 70px;
@@ -211,7 +212,7 @@
     background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ADAFB2), to(#58595B));
     -webkit-box-shadow: 0 -2px 2px #333;
     -mox-box-shadow: 0 -2px 3px #333;
-    z-index: 39; }
+    z-index: 100; }
     .main-body .sc-view.projector-overlay .sc-view.sc-label-view.sc-regular-size {
       text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
       font-family: "Myriad Pro";
@@ -253,3 +254,9 @@
         font-family: "Myriad Pro";
         font-size: 26px;
         line-height: 40px; }
+  .main-body .context-area .title {
+    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+    color: black;
+    font-family: 'Myriad Pro';
+    font-size: 48px;
+    text-align: center; }

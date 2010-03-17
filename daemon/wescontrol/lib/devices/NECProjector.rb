@@ -167,9 +167,9 @@ class NECProjector < Projector
 	
 	def method_missing(method_name, *args)
 		if @commands[method_name]
-			command = @commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
-			command << @commands[method_name][-1]
-			return send_command(*command)
+			_command = @commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
+			_command << @commands[method_name][-1]
+			return send_command(*_command)
 		else
 			super.method_missing(method_name, *args)
 		end

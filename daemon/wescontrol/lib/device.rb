@@ -22,8 +22,10 @@ module Wescontrol
 		#which is used elsewhere
 		@state_vars = {}
 		@config_vars = []
+		@command_vars = []
 		def state_vars; {}; end
 		def config_vars; []; end
+		def commands_vars; []; end
 		def self.state_var(name, options)
 			sym = name
 			self.class_eval do
@@ -109,6 +111,18 @@ module Wescontrol
 		end
 		def self.time_since_var(name, options)
 		end
+		def self.command(name, options)
+			define_method name, &options[:action]
+			@command_vars ||= []
+			@command_vars << name
+			self.instance_eval do
+				all_command_vars = @command_vars
+				define_method("command_vars") do
+					all_command_vars
+				end
+			end
+			
+		end
 		#this is a hook that gets called when the class is subclassed.
 		#we need to do this because otherwise subclasses don't get a parent
 		#class's state_vars
@@ -124,7 +138,12 @@ module Wescontrol
 					config_var(name)
 				end
 			} if self.instance_variable_get(:@config_vars)
-
+			
+			#self.instance_variable_get(:@command_vars).each{|name, options|
+			#	subclass.class_eval do
+			#		command(name, options)
+			#	end
+			#} if self.instance_variable_get(:@command_vars)
 		end
 		
 		config_var :name
@@ -147,6 +166,8 @@ module Wescontrol
 				options["state"] = eval("@#{var}")
 				hash['state_vars'][var] = options
 			}
+			
+			#hash["commands"] = self.commands
 			
 			return hash
 		end
