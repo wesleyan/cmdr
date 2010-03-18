@@ -130,7 +130,6 @@ module Wescontrol
 			begin
 				updates = JSON.parse(@http_post_content)
 				device = @method_table[path[1]]
-				puts "Path[2] = '#{path[2]}'"
 				if !path[2]
 					updates.each{|k,v|
 						content.merge!(set_var(device, k, v))
@@ -144,9 +143,9 @@ module Wescontrol
 			rescue JSON::ParserError
 				resp.status = 400
 				content = {"error" => "bad_json"}
-			rescue
-				resp.status = 500
-				content = {"error" => $!}
+			#rescue
+			#	resp.status = 500
+			#	content = {"error" => $!}
 			end
 			content
 		end
@@ -165,9 +164,9 @@ module Wescontrol
 			end
 			content
 		end
-	end
-	
-	def send_command device, command, value
-		content = {"result" => device[:device].send(command, value)}
+		
+		def send_command device, command, value
+			content = {"result" => device[:device].send(command, value)}
+		end
 	end
 end

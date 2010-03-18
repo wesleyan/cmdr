@@ -2,37 +2,42 @@ require 'socket'
 
 class IREmitter < Wescontrol::Device
 
-	command :pulse_command, :action => proc {
-		command = "SEND_ONCE #{@remote} #{button}"
-		@commands[command] = nil
+	command :pulse_command, :action => proc {|button|
+		_command = "send_once #{@remote} #{button}"
+		@commands[_command] = nil
 		begin
-			@socket.write("#{command}\n", 0)
+			@socket.write(_command + "\n")
 		rescue
 			begin
-				@socket = UNIXSocket.open("/dev/lircd")
-				@socket.send("#{command}\n", 0)
+				@socket = UNIXSocket.open(@port)
+				@socket.write(_command + "\n")
 			rescue
-				return "Failed to communicate with IR emitter"
+				next "Failed to communicate with IR emitter"
 			end
 		end
 
 		20.times {|t|
-			return @commands[command] if @commands[command]
+			break if @commands[_command]
 			sleep(0.1)
 		}
-		return ["Failed to communicate with IR emitter"]
+		next @commands[_command] if @commands[_command]
+		next "Failed to communicate with IR emitter"
 	}
 
 	def initialize(options)
-		puts "Initializing IR Emitter: #{options[:name]}"
+		Thread.abort_on_exception = true
 		options = options.symbolize_keys
+		puts "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"
 		super(options)
-		begin
-			@socket = UNIXSocket.open("/dev/lircd")
-		rescue
-		end
 		@commands = {}
 		@remote = options[:remote]
+		throw "No remote specified" unless @remote
+		#@port = options[:port]
+		@port = "/var/run/lirc/lircd" unless @port
+		begin
+			@socket = UNIXSocket.open(@port)
+		rescue
+		end
 		read()
 	end
 	
@@ -43,7 +48,7 @@ class IREmitter < Wescontrol::Device
 			while true do
 				if @socket && !@socket.closed?
 					byte = @socket.recvfrom(1)[0]
-					unless byte == "\n"[0]
+					unless byte == "\n"
 						line += byte
 						next
 					end
@@ -54,6 +59,7 @@ class IREmitter < Wescontrol::Device
 						puts "#{buffer[1]}: #{buffer[2]}"
 						@commands[buffer[1]] = buffer[2]
 					end
+					line = ""
 				else
 					sleep(0.1)
 				end

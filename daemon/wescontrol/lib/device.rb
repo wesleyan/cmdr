@@ -139,11 +139,11 @@ module Wescontrol
 				end
 			} if self.instance_variable_get(:@config_vars)
 			
-			#self.instance_variable_get(:@command_vars).each{|name, options|
-			#	subclass.class_eval do
-			#		command(name, options)
-			#	end
-			#} if self.instance_variable_get(:@command_vars)
+			self.instance_variable_get(:@command_vars).each{|name, options|
+				subclass.class_eval do
+					command(name, options)
+				end
+			} if self.instance_variable_get(:@command_vars)
 		end
 		
 		config_var :name
@@ -167,7 +167,7 @@ module Wescontrol
 				hash['state_vars'][var] = options
 			}
 			
-			#hash["commands"] = self.commands
+			hash["command_vars"] = self.commands
 			
 			return hash
 		end
@@ -181,6 +181,7 @@ module Wescontrol
 			state_vars = hash['attributes']['state_vars']
 			state_vars ||= {}
 			hash['attributes']['state_vars'] = nil
+			hash['attributes']['command_vars'] = nil
 			(hash['attributes'].merge(state_vars.each_key{|name| 
 				state_vars[name] = state_vars[name]['state']
 			})).each{|name, value|
