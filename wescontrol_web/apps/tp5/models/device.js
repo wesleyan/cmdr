@@ -71,6 +71,29 @@ Tp5.Device = SC.Record.extend(
 		else if(body[cvar]){
 			Tp5.log("Attempted to set %s to %s, got %s", cvar, state, body[cvar]);
 		}
+	},
+	
+	send_command: function(command, arg){
+		try {
+			var json = {};
+			json[command] = arg;
+			SC.Request.postUrl('/devices/' + this.get('name') + '/command', json).json()
+				.notify(this, "command_request_finished", command, arg)
+				.send();
+		}
+		catch(e){
+			Tp5.log("JS Error when executing command %s with %s: %s", command, arg, e.message);
+		}
+	},
+	
+	command_request_finished: function(response, command, arg){
+		var body = response.get('body');
+		if(body.error){
+			console.error("Failed to run command %s with %s: %s", command, arg, body.error);
+		}
+		else if(body.result){
+			Tp5.log("Attempted to run command %s with %s, got %s", command, arg, body.result);
+		}
 	}
 }) ;
 

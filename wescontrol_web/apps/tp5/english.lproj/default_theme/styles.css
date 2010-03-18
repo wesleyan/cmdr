@@ -42,7 +42,7 @@
 
 .sc-view.status-button {
   overflow: visible;
-  z-index: 49; }
+  z-index: 300; }
   .sc-view.status-button .button {
     background: -webkit-gradient(linear, 0% 0%, 0% 55%, from(#808285), to(black));
     border: 1px solid #303030;
@@ -50,16 +50,16 @@
     -moz-border-radius: 5px;
     -webkit-box-shadow: 0 0 5px #000;
     -moz-box-shadow: 0 0 5px #000;
-    z-index: 50;
+    z-index: 301;
     overflow: visible; }
     .sc-view.status-button .button:active {
       -webkit-box-shadow: rgba(0, 0, 0, 0.398438) 0px -5px 12px inset, black 0px 1px 3px inset, rgba(255, 255, 255, 0.398438) 0px 1px;
       -moz-box-shadow: rgba(0, 0, 0, 0.398438) 0px -5px 12px inset, black 0px 1px 3px inset, rgba(255, 255, 255, 0.398438) 0px 1px; }
   .sc-view.status-button img {
-    z-index: 51;
+    z-index: 302;
     pointer-events: none; }
   .sc-view.status-button .sc-view.sc-label-view.sc-regular-size {
-    z-index: 51;
+    z-index: 302;
     color: white;
     font-family: "Myriad Pro";
     font-size: 25px;
@@ -67,7 +67,7 @@
     pointer-events: none; }
   .sc-view.status-button .control-drawer {
     background: -webkit-gradient(linear, 0% 25%, 0% 100%, from(#F8D5A9), to(#F9A031));
-    z-index: 49;
+    z-index: 300;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-box-shadow: 0 2px 4px #333;
@@ -162,7 +162,7 @@
     -webkit-box-shadow: 7px 0px 5px #333333;
     -moz-box-shadow: 7px 0px 5px #333333;
     overflow: inherit;
-    z-index: 40; }
+    z-index: 200; }
     .main-body .action-list-view .title-view {
       background: -webkit-gradient(linear, 0% 0%, 0% 91%, from(#96B1CF), to(#5A6A7C), color-stop(.5,#5A6A7C));
       -webkit-box-shadow: 0px 4px 6px #333333;

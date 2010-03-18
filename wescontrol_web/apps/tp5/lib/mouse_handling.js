@@ -22,10 +22,10 @@ Tp5.MouseHandlingFix = {
 		return YES;
 	},
 	
-	mouseUp: function(){		
+	mouseUp: function(evt){		
 		if(this.mouseInside)
 		{
-			this.mouseClicked();
+			this.mouseClicked(evt);
 		}
 		return YES;
 	},

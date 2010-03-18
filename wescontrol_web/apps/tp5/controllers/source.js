@@ -21,6 +21,8 @@ Tp5.sourceController = SC.ArrayController.create(
 	attempts: 0,
 	attempt_source: null,
 	
+	contextView: null,
+	
 	setSource: function(name){
 		var source = this.get('states')[name];
 		if(source)this.set('source', source);
@@ -30,6 +32,7 @@ Tp5.sourceController = SC.ArrayController.create(
 	sourceChanged: function(){
 		//this code is to make sure that we don't just keep trying in vain to set the source,
 		//as our feedback may not be working properly
+		if(!this.get('source'))return;
 		if(this.get('projector') && this.attempts < 3 || !this.attempt_source || this.attempt_source != this.get('source').name)
 		{
 			Tp5.log("Attempt #%d", this.attempts);
@@ -40,6 +43,11 @@ Tp5.sourceController = SC.ArrayController.create(
 		}
 
 		if(this.get('switcher'))this.switcher.set_var("input", this.get('source').switcher);
+		
+		this.runCommands(this.get('source'));
+		
+		this.switchContext(this.get('source'));
+		
 	}.observes("source"),
 	
 	switcherChanged: function(){
@@ -65,9 +73,12 @@ Tp5.sourceController = SC.ArrayController.create(
 		var switcher_map = {};
 		this.get('content').forEach(function(source){
 			states[source.get('name')] = {
+				guid: source.get('guid'),
 				name: source.get('name'),
 				projector: source.get('input').projector,
 				switcher: source.get('input').switcher,
+				commands: source.get('input').commands,
+				context: source.get('input').context,
 				image: source.get('icon')
 			};
 			switcher_map[source.get('input').switcher] = source.get('name');
@@ -75,6 +86,35 @@ Tp5.sourceController = SC.ArrayController.create(
 		this.set('switcher_map', switcher_map);
 		this.set('states', states);
 	}.observes("content"),
+	
+	runCommands: function(source){
+		if(source && source.commands){
+			source.commands.forEach(function(command){
+				try {
+					var device = Tp5.store.find(Tp5.Device, command.device);
+					device.send_command(command.command, command.arg);
+				}
+				catch(e) {
+					Tp5.log("Failed to run command %s: %s", command, e.message);
+				}
+			});
+		}
+	},
+	
+	switchContext: function(source){
+		Tp5.log("Switching contexts to %s", source.context);
+		if(source.context && Tp5[source.context])
+		{
+			this.set('contextView', Tp5[source.context].create({
+				layout: {left: 0, right: 0, top: 0, bottom: 0}
+			}));
+			
+		}
+		else
+		{
+			this.set('contextView', null);
+		}
+	},
 	
 	projectorBinding: "Tp5.roomController.projector",
 	switcherBinding: "Tp5.roomController.switcher"

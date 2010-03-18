@@ -17,10 +17,13 @@ Tp5.actionController = SC.ArrayController.create(
 	
 	allowsMultipleSelection: NO,
 	
+	actionPerformedLast: null,
+	
 	doAction: function(action){
 		this.set('lastAction', action);
 		if(action.get('settings').source){
-			Tp5.sourceController.setSource(action.get('settings').source);
+			var source = Tp5.store.find(Tp5.Source, action.get('settings').source);
+			if(source)Tp5.sourceController.setSource(source.get('name'));
 		}
 		if(action.get('settings').prompt_projector){
 			Tp5.appController.set('projectorOverlayVisible', YES);
@@ -31,6 +34,8 @@ Tp5.actionController = SC.ArrayController.create(
 				interval: 15*1000
 			});
 		}
+		this.actionPerformedLast = SC.DateTime.create().get('milliseconds');
+		
 	},
 	
 	selectionChanged: function(){
@@ -39,9 +44,13 @@ Tp5.actionController = SC.ArrayController.create(
 	
 	sourceChanged: function(){
 		if(this.get('hasSelection') && Tp5.sourceController.get('source') &&
-			Tp5.sourceController.get('source').name != this.get('selection').get('firstObject').get('settings').source)
+			Tp5.sourceController.get('source').guid != this.get('selection').get('firstObject').get('settings').source)
 		{
-			this.set('selection', SC.SelectionSet.EMPTY);
+			//only deselect if it's been less than three seconds since you chose
+			if(this.actionPerformedLast && SC.DateTime.create().get('milliseconds')-this.actionPerformedLast > 3000)
+			{
+				this.set('selection', SC.SelectionSet.EMPTY);
+			}
 		}
 	}.observes("Tp5.sourceController.source")
 }) ;

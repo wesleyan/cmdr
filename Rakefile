@@ -3,7 +3,7 @@ require 'extlib'
 WORKING = File.dirname(__FILE__)
 TARGETS = ['/tp5']
 
-SERVERS = ["129.133.124.142"]
+SERVERS = ["129.133.94.118"]
 
 OPTS = {}
 

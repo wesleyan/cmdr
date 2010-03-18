@@ -34,24 +34,24 @@ CouchDataSource = SC.DataSource.extend(
 			disableChangesBinding: "parent.disableChanges",
 
 			disableChangesChanged: function(){
-				if(!this.get('disableChanges'))
+				if(!this.get('disableChanges') && this.running)
 				{
 					this.doRequest();
 				}
 			}.observes('disableChanges'),
-			
+						
 			start: function(){
 				if(this.running)return;
 				this.running = YES;
 				SC.Timer.schedule({
 					target: this,
 					action: "doRequest",
-					interval: 4000
+					interval: 5000
 				});
 			},
 			
 			doRequest: function(){
-				if(!this.get('disableChanges'))
+				if(!this.get('disableChanges') && this.running)
 				{
 					SC.Request.getUrl('/rooms/_changes?feed=longpoll&filter=wescontrol_web/device&since=' + this.since).json()
 						.notify(this, "requestFinished")

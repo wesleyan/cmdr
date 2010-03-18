@@ -167,7 +167,7 @@ module Wescontrol
 				hash['state_vars'][var] = options
 			}
 			
-			hash["command_vars"] = self.commands
+			hash["command_vars"] = self.commands_vars
 			
 			return hash
 		end
