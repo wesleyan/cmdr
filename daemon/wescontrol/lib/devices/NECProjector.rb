@@ -29,7 +29,7 @@ class NECProjector < Projector
 
 	def initialize(options)
 		options = options.symbolize_keys
-		puts "Initializing projector on port #{options[:port]} with name #{options[:name]}"
+		puts "@Initializing projector on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
 	
 		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
@@ -76,6 +76,7 @@ class NECProjector < Projector
 				end
 			}],
 			:common_data_request => [0, 0xC0, nil, proc {|frame|
+				puts "Common data request"
 				data = frame["data"]
 				#@power = data[3] == 1
 				#@cooling = data[4] == 1
@@ -90,6 +91,12 @@ class NECProjector < Projector
 				self.model = MODEL_MAP[[data[0], data[69], data[70]]]
 				self.has_signal = data[84] != 1
 				self.picture_displaying = data[84] == 0
+			}],
+			:projector_info_request => [0, 0xBF, [2].pack("c"), proc {|frame|
+				data = frame['data']
+				puts "PIR: #{data[6]}, #{data[7]}"
+				self.video_mute = data[6] == 1
+				self.mute = data[7] == 1
 			}],
 			:lamp_information => [3, 0x8A, nil, proc {|frame|
 				data = frame["data"]
@@ -116,6 +123,22 @@ class NECProjector < Projector
 					self.volume = (data[7] + data[8] * 2**8) / 63.to_f
 					#puts "Volume should be [#{@min_volume}, #{@max_volume}]"
 				#end
+			}],
+			:mute_information => [0, 0x85, [3].pack("c"), proc {|frame|
+				data = frame['data']
+				puts "Mute info: #{data[0]}, #{data[1]}"
+				self.video_mute = data[0] == 1
+				self.mute = data[1] == 1
+			}],
+			:input_information => [0, 0x85, [2].pack("c"), proc {|frame|
+				data = frame['data']
+				puts "Input info: #{data[2]}, #{data[3]}"
+				case data[2..3]
+					when [1, 1] then self.input = "RGB1"
+					when [2, 1] then self.input = "RGB2"
+					when [1, 2] then self.input = "VIDEO"
+					when [1, 3] then self.input = "SVIDEO"
+				end
 			}],
 			:error_status_request => [0, 0x88, nil, proc{|frame|
 				data = frame["data"]
@@ -149,8 +172,10 @@ class NECProjector < Projector
 
 		Thread.new{
 			while true do
-				self.common_data_request
-				sleep(1)
+				sleep(0.7)
+				self.mute_information
+				sleep(0.5)
+				self.projector_info_request
 			end
 		}
 		Thread.new{
