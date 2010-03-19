@@ -106,7 +106,6 @@ Tp5.VolumeButtonView = Tp5.StatusButtonView.extend(
 			mouseMoved: function(evt){
 				if(this.dragging)
 				{
-					//Tp5.log("%d, %d", evt.clientY, evt.target.offsetTop, evt.target.offsetTop + evt.target.offsetHeight, evt.target.offsetHeight);
 					var h = evt.target.offsetHeight-36; //height of the draggable area; 36 found empirically
 					var percent = (evt.clientY-evt.target.offsetTop-27)/h;
 					if(percent < 0)percent = 0;

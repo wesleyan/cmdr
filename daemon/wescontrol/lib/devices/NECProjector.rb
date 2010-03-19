@@ -139,12 +139,17 @@ class NECProjector < Projector
 				sleep(0.3)
 			end
 		}
+		
+		Thread.new{
+			while true do
+				self.volume_request
+				sleep(0.2)
+			end
+		}
 
 		Thread.new{
 			while true do
 				self.common_data_request
-				sleep(1)
-				self.volume_request
 				sleep(1)
 			end
 		}

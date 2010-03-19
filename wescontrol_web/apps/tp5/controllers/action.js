@@ -26,13 +26,17 @@ Tp5.actionController = SC.ArrayController.create(
 			if(source)Tp5.sourceController.setSource(source.get('name'));
 		}
 		if(action.get('settings').prompt_projector){
-			Tp5.appController.set('projectorOverlayVisible', YES);
-			if(this.hideTimer)this.hideTimer.invalidate();
-			this.hideTimer = SC.Timer.schedule({
-				target: Tp5.appController, 
-				action: function(){ this.set('projectorOverlayVisible', NO);}, 
-				interval: 15*1000
-			});
+			var projector = Tp5.roomController.get('projector');
+			if(projector && !projector.get('states').power)
+			{
+				Tp5.appController.set('projectorOverlayVisible', YES);
+				if(this.hideTimer)this.hideTimer.invalidate();
+				this.hideTimer = SC.Timer.schedule({
+					target: Tp5.appController, 
+					action: function(){ this.set('projectorOverlayVisible', NO);}, 
+					interval: 15*1000
+				});
+			}
 		}
 		this.actionPerformedLast = SC.DateTime.create().get('milliseconds');
 		

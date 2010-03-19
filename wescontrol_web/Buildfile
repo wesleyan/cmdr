@@ -1,11 +1,11 @@
 # ===========================================================================
 # Project:   WescontrolWeb
-# Copyright: Â©2009 My Company, Inc.
+# Copyright: ©2009 My Company, Inc.
 # ===========================================================================
 
 # Add initial buildfile information here
 config :all, :required => [:sproutcore, :"sproutcore/animation"]
 
-proxy "/rooms", :to => "129.133.94.118:5984"
+proxy "/rooms", :to => "129.133.41.247:5984"
 
-proxy "/devices", :to => "129.133.94.118:1412"
+proxy "/devices", :to => "129.133.41.247:1412"

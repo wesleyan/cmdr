@@ -3,7 +3,7 @@ require 'extlib'
 WORKING = File.dirname(__FILE__)
 TARGETS = ['/tp5']
 
-SERVERS = ["129.133.94.118"]
+SERVERS = ["129.133.41.247"]
 
 OPTS = {}
 
@@ -163,6 +163,8 @@ task :link_current => [:collect_password, :prepare_targets] do
 					puts ssh.exec!("rm #{to_path}") || " ~ Removed link at #{to_path}"
 				end
 				puts ssh.exec!("ln -s #{from_path} #{to_path}") || " ~ Linked #{from_path} => #{to_path}"
+				puts "Restarting X"
+				puts ssh.exec!("echo '#{password}' | sudo -S restart x")
 			end
 		end
 	end

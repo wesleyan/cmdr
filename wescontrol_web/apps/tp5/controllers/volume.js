@@ -26,18 +26,15 @@ Tp5.volumeController = SC.ObjectController.create(
 	
 	lastVolumeSet: 0,
 	
-	volumeTimer: SC.Timer.schedule({
-		interval: 500,
-		target: this,
-		action: "set_volume_on_device",
-		repeating: NO,
-		isRunning: NO
-	}),
+	_timer: null,
+	
+	volumeToSet: null,
 	
 	updateLastVolumeSet: function(){
 		this.set('lastVolumeSet', this.get('volume'));
 	},
-
+	
+	
 	/**
 		Sets the volume of the device. In order to protect from the masssive
 		number of changes that a continuous property like this can get from
@@ -47,24 +44,16 @@ Tp5.volumeController = SC.ObjectController.create(
 		@param {v} The volume, in the range [0, 1], which to set the device to
 	*/
 	set_volume: function(v){
+		v = Math.round(v*100)/100;
+		this.volumeToSet =  v;
 		this.set('lastVolumeSet', v);
-		if(Math.abs(v - this.get('volume')) > 0.1){
-			//Tp5.log("Setting: %f, %f: %f", v, Math.abs(v - this.get('volume')), this.get('volume'));
-			this.volumeTimer.invalidate();
-			this.set_volume_on_device(v);
-		}
-		else
-		{
-			//Tp5.log("Rejecting: %f", Math.abs(v - this.get('volume')));
-			//stop any timer currently running
-			this.volumeTimer.invalidate();
-			this.volumeToSet = v;
-			this.volumeTimer = SC.Timer.schedule({
-				interval: 500,
-				target: this,
-				action: "set_volume_on_device",
-				repeating: NO
-			});
+	},
+	
+	update_volume_on_device: function(){
+		if(this.volumeToSet){
+			Tp5.log("Updating volume to %.2f", this.volumeToSet);
+			this.set_volume_on_device(this.volumeToSet);
+			this.volumeToSet = null;
 		}
 	},
 	
@@ -77,9 +66,8 @@ Tp5.volumeController = SC.ObjectController.create(
 	set_volume_on_device: function(v){
 		if(this.get('content'))
 		{
-			if(this.volumeToSet)v = this.volumeToSet;
+			Tp5.log("SETTING VOLUME: %.2f%%", v);
 			this.get('content').set_var("volume", v);
-			this.volumeToSet = undefined;
 		}
 	},
 	
@@ -96,6 +84,7 @@ Tp5.volumeController = SC.ObjectController.create(
 	},
 	
 	updateVolume: function(){
+		Tp5.log("volume changed to " + this.get('content').get('states').volume);
 		this.set('volume', this.get('content').get('states').volume);
 	}.observes('.content.states'),
 	
@@ -105,7 +94,15 @@ Tp5.volumeController = SC.ObjectController.create(
 	
 	updateContent: function(){
 		this.set('content', Tp5.roomController.get('volume'));
-		
+		if(this.get('content'))
+		{
+			this._timer = SC.Timer.schedule({ 
+				target: this, 
+				action: 'update_volume_on_device', 
+				repeats: YES, 
+				interval: 500 
+			});
+		}
 	}.observes("Tp5.roomController.volume")
 
 }) ;
