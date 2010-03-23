@@ -37,7 +37,16 @@ Tp5.DVDModule = SC.View.extend(Tp5.MouseHandlingFix,
 				.end();
 		});
 		context = context.begin('div').addClass('pause-circle').end();
+		
 		context = context.end();
+		
+		context = context.begin('div').addClass('five-way')
+			.begin('div').addClass('right fbutton').end()
+			.begin('div').addClass('down fbutton').end()
+			.begin('div').addClass('left fbutton').end()
+			.begin('div').addClass('up fbutton').end()
+			.begin('div').addClass('center fbutton').end()
+		.end();
 		
 		sc_super();
 	},
@@ -49,6 +58,11 @@ Tp5.DVDModule = SC.View.extend(Tp5.MouseHandlingFix,
 			{
 				Tp5.roomController.get('dvdplayer').send_command("pulse_command", evt.target.title);
 			}
+		}
+		else if(evt.target.className.split(" ").some(function(x){return x == "fbutton";}))
+		{
+			console.log(evt);
+			//console.log(evt.target.className.split(" ").find(function(x){return x != "fbutton";}));
 		}
 	}
 

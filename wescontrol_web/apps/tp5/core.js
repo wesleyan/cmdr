@@ -25,7 +25,7 @@ Tp5 = SC.Application.create(
 	
 	// TODO: Add global constants or singleton objects needed by your app here.
 	
-	debugging: YES,
+	debugging: NO,
 	
 	log: function(){
 		if(this.debugging)console.log.apply(console, arguments);
