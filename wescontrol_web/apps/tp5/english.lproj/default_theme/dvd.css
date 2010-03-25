@@ -128,30 +128,5 @@
     background-position-y: -515px; }
   .dvd-module .five-way.up {
     background-position-y: -685px; }
-  .dvd-module .five-way.center {
+  .dvd-module .five-way.enter {
     background-position-y: -855px; }
-  .dvd-module .five-way .fbutton {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    -webkit-mask-image: sc_static("five-way-masks.png");
-    -webkit-mask-position-x: 50%;
-    -webkit-mask-repeat: no-repeat;
-    z-index: 63; }
-    .dvd-module .five-way .fbutton.right {
-      -webkit-mask-position-y: 2px;
-      background-color: red; }
-    .dvd-module .five-way .fbutton.down {
-      -webkit-mask-position-y: -168px;
-      background-color: blue; }
-    .dvd-module .five-way .fbutton.left {
-      -webkit-mask-position-y: -338px;
-      background-color: green; }
-    .dvd-module .five-way .fbutton.up {
-      -webkit-mask-position-y: -508px;
-      background-color: orange; }
-    .dvd-module .five-way .fbutton.center {
-      -webkit-mask-position-y: -678px;
-      background-color: pink; }
