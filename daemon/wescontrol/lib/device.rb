@@ -112,7 +112,9 @@ module Wescontrol
 		def self.time_since_var(name, options)
 		end
 		def self.command(name, options)
-			define_method name, &options[:action]
+			if options[:action]
+				define_method name, &options[:action]
+			end
 			@command_vars ||= []
 			@command_vars << name
 			self.instance_eval do
