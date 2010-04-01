@@ -106,6 +106,12 @@ class EVID70Camera < WescontrolWeb::RS232Device
 			#}],
 			:power_inquiry => ["09 04 00", proc{|resp|
 				this.power = resp[2] == 2
+			}],
+			:position_inquiry => ["09 06 12", proc{|res|
+				this.position = [
+					resp[2..5].collect{|x| x.to_s(16).join.to_i(16)}, #pan position
+					resp[6..9].collect{|x| x.to_s(16).join.to_i(16)}, #tilt position
+				]
 			}]
 		}
 		

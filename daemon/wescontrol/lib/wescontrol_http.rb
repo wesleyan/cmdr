@@ -13,7 +13,8 @@ module Wescontrol
 			:string => 		proc {|a, options| a.is_a? String},
 			:percentage => 	proc {|a, options| (a*100).round >= 0 && (a*100).round <= 100},
 			:decimal =>		proc {|a, options| a.is_a? Numeric},
-			:option => 		proc {|a, options| options[:options].include? a}
+			:option => 		proc {|a, options| options[:options].include? a},
+			:array =>		proc {|a, options| a.is_a? Array}
 		}
 		
 		def process_http_request
@@ -103,8 +104,11 @@ module Wescontrol
 				#resp.send_response
 			}
 			callback = proc {|res|
-				resp.content = content.to_json + "\n"
-				resp.send_response
+				resp.content = content.to_json + "\n" if content
+				begin		
+					resp.send_response
+				rescue
+				end
 			}
 			
 			EM.defer(operation, callback)
@@ -135,9 +139,9 @@ module Wescontrol
 						content.merge!(set_var(device, k, v))
 					}
 				elsif path[2].to_sym == :command
-					content = send_command device, updates.keys[0], updates[updates.keys[0]]
+					content = send_command device, updates.keys[0], updates[updates.keys[0]], resp
 				else
-					content = set_var device, path[2].to_sym, updates
+					content = set_var device, path[2].to_sym, updates, resp
 				end
 				resp.status = 200
 			rescue JSON::ParserError
@@ -150,12 +154,11 @@ module Wescontrol
 			content
 		end
 	
-		def set_var device, var, value
-			content = {}
+		def set_var device, var, value, resp
+			content = nil
 			if device[:methods][var.to_sym]
 				if @@kind_verifier[device[:methods][var.to_sym][:kind].to_sym].call(value, device[:methods][var.to_sym])
-					device[:device].send("set_#{var}", value)
-					content[var] = device[:device].send("#{var}")
+					deal_with_device_feedback device[:device].send("set_#{var}", value), var, resp
 				else
 					content = {"error" => "#{var}_invalid_data"}
 				end
@@ -165,8 +168,29 @@ module Wescontrol
 			content
 		end
 		
-		def send_command device, command, value
-			content = {"result" => device[:device].send(command, value)}
+		def send_command device, command, value, resp
+			deal_with_device_feedback device[:device].send(command, value), :result, resp
+		end
+		
+		def deal_with_device_feedback feedback, name, resp
+			if feedback.is_a? EM::Deferrable
+				feedback.callback{|fb|
+					resp.status = 200
+					resp.content = {name => fb}.to_json + "\n"
+					resp.send_response
+				}
+				feedback.errback{|error|
+					resp.status = 400
+					resp.content = {:error => error}.to_json + "\n"
+					resp.send_response
+				}
+			else
+				resp.status = 200
+				resp.content = {name => feedback}.to_json + "\n"
+				resp.send_response
+				#sleep(0.1) #wait for value to update
+				#content[var] = device[:device].send("#{var}")
+			end
 		end
 	end
 end
