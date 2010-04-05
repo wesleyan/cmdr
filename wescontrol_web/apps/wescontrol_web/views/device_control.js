@@ -17,7 +17,6 @@ WescontrolWeb.DeviceControlView = SC.View.extend(SC.ContentDisplay, SC.StaticLay
 	content: null,
 	
 	updateContent: function() {
-		console.log("Updating");
 		var childViews = [], view;
 		if(!WescontrolWeb.deviceController.get('hasContent'))return;
 		view = this.createChildView(

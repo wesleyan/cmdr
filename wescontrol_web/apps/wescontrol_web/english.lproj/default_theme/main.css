@@ -25,8 +25,12 @@ a.tabButton {
 	background-color: white;
 }
 
-.tabButton.sel.tan {
+.tabButton.sel.control-tab {
 	background-color: #EFEBE3;
+}
+
+.tabButton.sel.configure-tab {
+	background-color: #C1D699;
 }
 
 .tabButton.sel label.sc-button-label {

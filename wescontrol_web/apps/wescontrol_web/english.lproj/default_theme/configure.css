@@ -1,0 +1,17 @@
+.configure-page .tab-bar {
+  background-color: #c1d699; }
+.configure-page .tabButton {
+  background-color: #c1d699; }
+  .configure-page .tabButton.sel {
+    background-color: white; }
+  .configure-page .tabButton .sc-button-label {
+    font-size: 20px;
+    color: black; }
+.configure-page .general-configuration .sc-view.sc-label-view.sc-regular-size {
+  font-size: 24px;
+  color: black;
+  line-height: 30px; }
+.configure-page .general-configuration .sc-view.sc-text-field-view.sc-regular-size.focus {
+  outline: none; }
+.configure-page .general-configuration .sc-view.sc-text-field-view.sc-regular-size input {
+  font-size: 18px; }

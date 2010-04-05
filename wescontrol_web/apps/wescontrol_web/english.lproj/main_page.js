@@ -18,7 +18,7 @@ WescontrolWeb.mainPage = SC.Page.design({
 	// Add childViews to this pane for views to display immediately on page 
 	// load.
 	mainPane: SC.MainPane.design({
-		childViews: 'topBar mainView bottomBar'.w(),
+		childViews: 'topBar mainView'.w(),
 
 		topBar: SC.View.design({
 			childViews: 'tabBar'.w(),
@@ -27,34 +27,34 @@ WescontrolWeb.mainPage = SC.Page.design({
 						
 			tabBar: SC.View.design({
 				childViews: 'controlButton monitorButton configureButton'.w(),
-				layout: {top: 0, left: 0, width: 140*2+175, height: 72},
+				layout: {top: 0, left: 0, width: 175*2+175, height: 72},
 				
 				controlButton: WescontrolWeb.TabButton.design({
 					displayTitle: 'Control',
-					layout: {bottom: 0, left:0, width:140, height: 40},
+					layout: {bottom: 0, left:0, width:175, height: 40},
 					action: "function(){SC.RunLoop.begin(); WescontrolWeb.appController.set('currentTab', 'control'); SC.RunLoop.end();}",
 					isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.appController.currentTab").isEqualTo("control")
-				}).classNames("tan"),
+				}).classNames("control-tab"),
 				
 				monitorButton: WescontrolWeb.TabButton.design({
 					displayTitle: 'Monitor',
-					layout: {bottom: 0, left:140, width:140, height: 40},
+					layout: {bottom: 0, left:175, width:175, height: 40},
 					action: "function(){SC.RunLoop.begin(); WescontrolWeb.appController.set('currentTab', 'monitor'); SC.RunLoop.end();}",
 					isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.appController.currentTab").isEqualTo("monitor")
 				}),
 				
 				configureButton: WescontrolWeb.TabButton.design({
 					displayTitle: 'Configure',
-					layout: {bottom: 0, left: 140*2, width: 175, height: 40},
+					layout: {bottom: 0, left: 175*2, width: 175, height: 40},
 					action: "function(){SC.RunLoop.begin(); WescontrolWeb.appController.set('currentTab', 'configure'); SC.RunLoop.end();}",
 					isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.appController.currentTab").isEqualTo("configure")
-				})
+				}).classNames("configure-tab")
 			})
 		}).classNames("topBar"),
 		
 		mainView: SC.View.design({
 			childViews: 'scenes'.w(),
-			layout: {top: 72, left: 0, right:0, bottom: 72},
+			layout: {top: 72, left: 0, right:0, bottom: 0},
 			backgroundColor: "#ffffff",
 			
 			scenes: SC.SceneView.design({
@@ -64,11 +64,6 @@ WescontrolWeb.mainPage = SC.Page.design({
 			})
 			
 						
-		}),
-		
-		bottomBar: SC.View.design({
-			layout: {bottom: 0, left: 0, right: 0, height: 72},
-			backgroundColor: "#333333"			
 		})
 		
 	}),

@@ -13,6 +13,6 @@
 WescontrolWeb.appController = SC.Object.create(
 /** @scope WescontrolWeb.appController.prototype */ {
 
-	currentTab: 'control'
+	currentTab: 'configure'
 
 }) ;
