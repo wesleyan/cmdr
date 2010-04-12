@@ -1,3 +1,10 @@
+=text-inset($color: rgba(255, 255, 255, 0.5))
+	text-shadow: 0.5px 0.5px 0px $color
+
+=linear-gradient($start, $end)
+	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from($start), to($end))
+	background-image: -moz-linear-gradient(0% 100% 0deg, $start, $end)
+
 .configure-page
 	.tab-bar
 		background-color: #C1D699
@@ -10,14 +17,50 @@
 			font-size: 20px
 			color: black
 	
-	.general-configuration
-		.sc-view.sc-label-view.sc-regular-size
-			font-size: 24px
-			color: black
-			line-height: 30px
-		
-		.sc-view.sc-text-field-view.sc-regular-size
-			&.focus
-				outline: none
-			input
-				font-size: 18px
+	.sc-view.sc-label-view.sc-regular-size
+		font-size: 24px
+		color: black
+		line-height: 30px
+	
+	.sc-view.sc-text-field-view.sc-regular-size
+		&.focus
+			outline: none
+		input
+			font-size: 18px
+			
+	.crud-list
+		border-right: 1px #DFDFDF solid
+		.sc-view.sc-list-item-view.sc-collection-item.sc-regular-size
+			border-bottom: 1px #DFDFDF solid
+			
+			label
+				font-size: 20px
+				margin-left: 5px
+				height: 22px
+				margin-top: -12px
+			
+			&.selected
+				background-color: #5498FF
+				
+				label
+					color: white
+		.crud-bottom-bar
+			background-color: #E8E8E8
+			border: thin #CCCCCC solid
+			
+			.sc-view.sc-button-view.sc-regular-size.none
+				border-left: thin #AAA solid
+				+linear-gradient(#E8E8E8, #AAA)
+				border-radius: 0px
+				.sc-button-inner[style]
+					min-width: 0px !important
+					
+				&.active
+					+linear-gradient(#AAA,#E8E8E8)
+				
+				label
+					+text-inset(gray)
+					color: white
+					font-size: 53px
+					font-family: "Helvetica, Arial"
+					line-height: 31px

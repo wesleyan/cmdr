@@ -13,6 +13,6 @@
 WescontrolWeb.roomListController = SC.ObjectController.create(
 /** @scope WescontrolWeb.roomListController.prototype */ {
 
-	contentBinding: 'WescontrolWeb.buildingController.selection'
+	contentBinding: SC.Binding.single().from("WescontrolWeb.buildingController.selection")
 
 }) ;

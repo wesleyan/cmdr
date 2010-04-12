@@ -7,11 +7,43 @@
   .configure-page .tabButton .sc-button-label {
     font-size: 20px;
     color: black; }
-.configure-page .general-configuration .sc-view.sc-label-view.sc-regular-size {
+.configure-page .sc-view.sc-label-view.sc-regular-size {
   font-size: 24px;
   color: black;
   line-height: 30px; }
-.configure-page .general-configuration .sc-view.sc-text-field-view.sc-regular-size.focus {
+.configure-page .sc-view.sc-text-field-view.sc-regular-size.focus {
   outline: none; }
-.configure-page .general-configuration .sc-view.sc-text-field-view.sc-regular-size input {
+.configure-page .sc-view.sc-text-field-view.sc-regular-size input {
   font-size: 18px; }
+.configure-page .crud-list {
+  border-right: 1px #dfdfdf solid; }
+  .configure-page .crud-list .sc-view.sc-list-item-view.sc-collection-item.sc-regular-size {
+    border-bottom: 1px #dfdfdf solid; }
+    .configure-page .crud-list .sc-view.sc-list-item-view.sc-collection-item.sc-regular-size label {
+      font-size: 20px;
+      margin-left: 5px;
+      height: 22px;
+      margin-top: -12px; }
+    .configure-page .crud-list .sc-view.sc-list-item-view.sc-collection-item.sc-regular-size.selected {
+      background-color: #5498ff; }
+      .configure-page .crud-list .sc-view.sc-list-item-view.sc-collection-item.sc-regular-size.selected label {
+        color: white; }
+  .configure-page .crud-list .crud-bottom-bar {
+    background-color: #e8e8e8;
+    border: thin #cccccc solid; }
+    .configure-page .crud-list .crud-bottom-bar .sc-view.sc-button-view.sc-regular-size.none {
+      border-left: thin #aaaaaa solid;
+      background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#e8e8e8), to(#aaaaaa));
+      background-image: -moz-linear-gradient(0% 100% 0deg, #e8e8e8, #aaaaaa);
+      border-radius: 0px; }
+      .configure-page .crud-list .crud-bottom-bar .sc-view.sc-button-view.sc-regular-size.none .sc-button-inner[style] {
+        min-width: 0px !important; }
+      .configure-page .crud-list .crud-bottom-bar .sc-view.sc-button-view.sc-regular-size.none.active {
+        background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#aaaaaa), to(#e8e8e8));
+        background-image: -moz-linear-gradient(0% 100% 0deg, #aaaaaa, #e8e8e8); }
+      .configure-page .crud-list .crud-bottom-bar .sc-view.sc-button-view.sc-regular-size.none label {
+        text-shadow: 0.5px 0.5px 0px gray;
+        color: white;
+        font-size: 53px;
+        font-family: "Helvetica, Arial";
+        line-height: 31px; }

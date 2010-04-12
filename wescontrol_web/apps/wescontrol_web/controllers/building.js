@@ -21,14 +21,19 @@ WescontrolWeb.buildingController = SC.TreeController.create(
 			treeItemIsExpanded: YES,
 			hasContentIcon: NO,
 			displayName: 'Buildings',
-			treeItemChildren: WescontrolWeb.store.find(WescontrolWeb.Building).map(function(building){
+			treeItemChildren: WescontrolWeb.store.find(WescontrolWeb.Building).map(function(building, index){
 				return SC.Object.create({
 					contentValueKey: 'displayName',
 					displayName: building.get('name'),
+					name: building.get('name'),
+					guid: building.get('guid'),
+					treeItemIsExpanded: index === 0,
+					isBuilding: YES,
 					treeItemChildren: building.get('rooms').map(function(room){
-						return SC.Object.create({
-							displayName: room.get('name'),
-							devices: room.get('devices')
+						return room.mixin({
+							isRoom: YES,
+							displayName: room.get('name')//,
+						//	devices: WescontrolWeb.store.find(WescontrolWeb.Device, {conditions: 'room = {roomRecord}', roomRecord: room})
 						});
 					})
 				});
@@ -36,6 +41,15 @@ WescontrolWeb.buildingController = SC.TreeController.create(
 		});
 		
 		this.set('content', buildings);
-		//this.set('selection', SC.SelectionSet.create);
-	}
+		var rooms = this.get('arrangedObjects').filterProperty("isRoom");
+		if(rooms.get('length') > 0)this.selectObject(rooms.firstObject(), NO);
+	},
+	
+	arrangedBuildings: function(){
+		if(this.get('arrangedObjects'))
+		{
+			return this.get('arrangedObjects').filterProperty("isBuilding");
+		}
+		return undefined;
+	}.property().cacheable()
 }) ;

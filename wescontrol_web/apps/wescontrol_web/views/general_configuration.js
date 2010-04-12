@@ -23,7 +23,7 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 		childViews: "nameField buildingField".w(),
 		
 		nameField: SC.View.design({
-			layout: {centerX: -200, width:250, height:38, top: 30},
+			layout: {centerX: -250, width:250, height:38, top: 30},
 			childViews: "nameLabel nameField".w(),
 			
 			nameLabel: SC.LabelView.design({
@@ -32,13 +32,13 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 			}),
 			
 			nameField: SC.TextFieldView.design({
-				layout: {left: 100, right:0, height: 38, centerY:0},
-				valueBinding: SC.Binding.single("WescontrolWeb.deviceController.content.name")
+				layout: {left: 100, right:0, height: 30, centerY:0},
+				valueBinding: "WescontrolWeb.roomListController.name"
 			})
 		}),
 		
 		buildingField: SC.View.design({
-			layout: {centerX: 200, width:250, height:38, top: 30},
+			layout: {centerX: 150, width:300, height:38, top: 30},
 			childViews: "buildingLabel buildingField".w(),
 			
 			buildingLabel: SC.LabelView.design({
@@ -47,7 +47,14 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 			}),
 			
 			buildingField: SC.SelectFieldView.design({
-				layout: {left: 120, right:0, height: 38, centerY:0}
+				layout: {left: 120, right:0, height: 28, centerY:0},
+				objectsBinding: "WescontrolWeb.buildingController.arrangedBuildings",
+				nameKey: "name",
+				valueKey: "guid",
+				disableSort: true,
+				emptyName: false,
+				valueBinding: "WescontrolWeb.roomListController.building.guid",
+				theme: 'square'
 			})
 		})
 	})

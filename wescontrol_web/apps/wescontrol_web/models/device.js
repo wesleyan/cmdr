@@ -14,9 +14,27 @@
 WescontrolWeb.Device = SC.Record.extend(
 /** @scope WescontrolWeb.Device.prototype */ {
 
-	room: SC.Record.toOne("WescontrolWeb.Room", {
+	/*room: SC.Record.toOne("WescontrolWeb.Room", {
 		inverse: "devices", isMaster: NO
-	}),
+	}),*/
+	
+	/*configurationChanged: function(){
+		for(var config in this.get("configuration"))
+		{
+			this[config] = function(key, value) { 
+				var config_var = this.get(config); 
+				if (value !== undefined)
+				{
+					config_var = Object.clone(config_var) ; // make a copy with the edit... 
+					config_var.first = value; 
+					this.set(config, config_var); 
+				} 
+				return config_var.first; 
+			}.property(config);
+		}
+	}.observes("attributes"),*/
+	
+	room: SC.Record.attr(String),
 	
 	name: SC.Record.attr(String),
 	

@@ -14,6 +14,7 @@
 WescontrolWeb.Room = SC.Record.extend(
 /** @scope WescontrolWeb.Rooms.prototype */ {
 	
+	guid: SC.Record.attr(String),
 	name: SC.Record.attr(String),
 	building: SC.Record.toOne("WescontrolWeb.Building", {
 		inverse: "rooms", isMaster: YES
@@ -27,8 +28,12 @@ WescontrolWeb.Room = SC.Record.extend(
 		return this.getEach('buildingName', 'name').compact().join(' ');
 	}.property('building', 'name').cacheable(),
 	
-	devices: SC.Record.toMany("WescontrolWeb.Device", {
+	/*devices: SC.Record.toMany("WescontrolWeb.Device", {
 		inverse: "room", isMaster: YES
-	})
+	})*/
+	
+	devices: function(){
+		return WescontrolWeb.store.find(SC.Query.local(WescontrolWeb.Device, {conditions: "room = {room}", room: this.get("guid")}));
+	}.property("guid").cacheable()
 	
 }) ;

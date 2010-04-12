@@ -95,6 +95,12 @@ CouchDataSource = SC.DataSource.extend(
 						room: body.belongs_to,
 						state_vars: body.attributes.state_vars
 					};
+					
+					for(var config in body.attributes.config)
+					{
+						record[config] = body.attributes.config[config];
+					}
+					
 					SC.RunLoop.begin();
 					this.appObject.store.loadRecords(this.appObject.Device, [record]);
 					SC.RunLoop.end();
@@ -134,6 +140,12 @@ CouchDataSource = SC.DataSource.extend(
 		else if(query.recordType == this.appObject.Action){
 			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/actions').json()
 				.notify(this, 'didFetchActions', store, query)
+				.send();
+			return YES;
+		}
+		else if(this.appObject.Driver && query.recordType == this.appObject.Driver){
+			SC.Request.getUrl('/rooms/_design/wescontrol_web/_view/drivers').json()
+				.notify(this, 'didFetchDrivers', store, query)
 				.send();
 			return YES;
 		}
@@ -240,6 +252,27 @@ CouchDataSource = SC.DataSource.extend(
 		}
 	},
 	
+	didFetchDrivers: function(response, store, query){
+		if (SC.ok(response)) {
+			var drivers = [];
+			response.get('body').rows.forEach(function(row){
+				var driver = {
+					guid: row.id,
+					name: row.value.name,
+					type: row.value.type
+				};
+				drivers.push(driver);
+			});
+			store.loadRecords(this.appObject.Driver, drivers);
+			store.dataSourceDidFetchQuery(query);
+			this.fetchedDriversCallback(response);
+		}
+		else {
+			store.dataSourceDidErrorQuery(query, response);
+		}
+	},
+	
+	
 	//implement this to do stuff when the controller is refreshed
 	fetchedBuildingsCallback: function(response){
 		//this.appObject.buildingController.refreshSources();			
@@ -250,6 +283,10 @@ CouchDataSource = SC.DataSource.extend(
 	},
 	
 	fetchedActionsCallback: function(response){
+		
+	},
+	
+	fetchedDriversCallback: function(response){
 		
 	},
 

@@ -21,7 +21,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 	
 	leftBar: SC.View.design({
 		childViews: 'roomsLabel scrollView'.w(),
-		layout: {left: 0, top:47, bottom: 0, width: 300},
+		layout: {left: 0, top:0, bottom: 0, width: 300},
 		backgroundColor: "#EFEBE3",
 		
 		scrollView: SC.ScrollView.design(SC.Border, {
@@ -48,7 +48,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 		
 	tabBar: SC.View.design({
 		childViews: 'general devices sources actions preview'.w(),
-		layout: {top: 0, left: 0, right: 0, height: 47},
+		layout: {top: 0, left: 300, right: 0, height: 47},
 
 		general: WescontrolWeb.TabButton.design({
 			displayTitle: "General",
