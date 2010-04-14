@@ -14,6 +14,6 @@
 WescontrolWeb.Driver = SC.Record.extend(
 /** @scope WescontrolWeb.Driver.prototype */ {
 
-  // TODO: Add your own code here.
+	
 
 }) ;

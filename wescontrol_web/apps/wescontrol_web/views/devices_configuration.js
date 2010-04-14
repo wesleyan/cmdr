@@ -32,7 +32,7 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 		deviceForm: SC.View.design({
 			layout: {left: 150, right: 150, top: 150, bottom: 150},
 			
-			childViews: "name port type".w(),
+			childViews: "name port type driver".w(),
 			
 			name: SC.View.design({
 				layout: {left: 0, right: 0, top: 0, height: 40},
@@ -66,7 +66,48 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 					emptyName: false,
 					theme: 'square'
 				})				
+			}),
+			type: SC.View.design({
+				layout: {left: 0, right: 0, top: 100, height: 40},
+				childViews: "typeLabel typeField".w(),
+				typeLabel: SC.LabelView.design({
+					layout: {left:0, width: 100, height: 30, top: 0},
+					value: "Type"
+				}),
+				
+				typeField: SC.SelectFieldView.design({
+					layout: {left: 120, height: 20, width: 200, top: 0},
+					//valueBinding: "WescontrolWeb.deviceController",
+					objectsBinding: "WescontrolWeb.driverController.arrangedObjects",
+					nameKey: "name",
+					valueKey: "name",
+					disableSort: true,
+					emptyName: false,
+					theme: 'square',
+					valueBinding: "WescontrolWeb.driverController.currentType"
+				})				
+			}),
+			driver: SC.View.design({
+				layout: {left: 0, right: 0, top: 150, height: 40},
+				childViews: "driverLabel driverField".w(),
+				driverLabel: SC.LabelView.design({
+					layout: {left:0, width: 100, height: 30, top: 0},
+					value: "Driver"
+				}),
+				
+				driverField: SC.SelectFieldView.design({
+					layout: {left: 120, height: 20, width: 200, top: 0},
+					//valueBinding: "WescontrolWeb.deviceController",
+					objectsBinding: "WescontrolWeb.driverController.arrangedDrivers",
+					nameKey: "name",
+					valueKey: "name",
+					disableSort: true,
+					emptyName: false,
+					theme: 'square'
+				})				
 			})
+			
+			
 		})
 		
 	})

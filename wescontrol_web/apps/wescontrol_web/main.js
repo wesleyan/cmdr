@@ -25,6 +25,7 @@ WescontrolWeb.main = function main() {
 	// TODO: Set the content property on your primary controller
 	// ex: WescontrolWeb.contactsController.set('content',WescontrolWeb.contacts);
 	WescontrolWeb.buildingController.refreshSources();
+	WescontrolWeb.driverController.refreshSources();
 } ;
 
 function main() { WescontrolWeb.main(); }

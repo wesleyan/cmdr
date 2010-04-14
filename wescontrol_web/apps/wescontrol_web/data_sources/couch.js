@@ -36,7 +36,7 @@ WescontrolWeb.CouchDataSource = CouchDataSource.extend({
 		//WescontrolWeb.roomController.set('content', Tp5.store.find(Tp5.Room, Tp5.appController.roomID));
 	},
 	
-	fetchedSourcesCallback: function(response){
-		//WescontrolWeb.sourceController.contentChanged();
+	fetchedDriversCallback: function(response){
+		WescontrolWeb.driverController.refreshSources();
 	}
 });
