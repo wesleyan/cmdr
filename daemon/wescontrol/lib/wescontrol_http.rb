@@ -14,7 +14,9 @@ module Wescontrol
 			:percentage => 	proc {|a, options| (a*100).round >= 0 && (a*100).round <= 100},
 			:decimal =>		proc {|a, options| a.is_a? Numeric},
 			:option => 		proc {|a, options| options[:options].include? a},
-			:array =>		proc {|a, options| a.is_a? Array}
+			:array =>		proc {|a, options| a.is_a? Array},
+			#TODO: Actually implement support for setting times
+			:time =>		proc {|a, options| begin; Time.at(a); rescue; nil; end}
 		}
 		
 		def process_http_request

@@ -165,7 +165,8 @@ module Wescontrol
 			self.config_vars.each{|var| hash[var] = eval("@#{var}")}
 			
 			self.state_vars.each{|var, options|
-				options["state"] = eval("@#{var}")
+				options['state'] = eval("@#{var}")
+				options['state'] == options['state'].to_i if options['state'].class == Time
 				hash['state_vars'][var] = options
 			}
 			
@@ -184,8 +185,17 @@ module Wescontrol
 			state_vars ||= {}
 			hash['attributes']['state_vars'] = nil
 			hash['attributes']['command_vars'] = nil
-			(hash['attributes'].merge(state_vars.each_key{|name| 
-				state_vars[name] = state_vars[name]['state']
+			
+			#mege the contents of the state_vars hash into attributes
+			(hash['attributes'].merge(state_vars.each_key{|name|
+				if state_vars[name]['kind'] == "time"
+					begin
+						state_vars[name] = Time.at(state_vars[name]['state'])
+					rescue
+					end
+				else
+					state_vars[name] = state_vars[name]['state']
+				end
 			})).each{|name, value|
 				device.instance_variable_set("@#{name}", value)
 			}
