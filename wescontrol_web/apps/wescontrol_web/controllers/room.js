@@ -24,19 +24,8 @@ WescontrolWeb.roomController = SC.ArrayController.create(
 			displayNameBinding: "name",
 			room: this.get('room').get('guid')
 		});
-		
-		//this.addObject(device);
 
-		// select new task in UI
 		this.selectObject(device);
-
-		/* activate inline editor once UI can repaint
-		this.invokeLater(function() {
-		var contentIndex = this.indexOf(task);
-		var list = Todos.mainPage.getPath('mainPane.middleView.contentView');
-		var listItem = list.itemViewForContentIndex(contentIndex);
-		listItem.beginEditing();
-		});*/
 
 		return YES;
 	}

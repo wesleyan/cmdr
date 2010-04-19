@@ -77,14 +77,19 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 				
 				typeField: SC.SelectFieldView.design({
 					layout: {left: 120, height: 20, width: 200, top: 0},
-					//valueBinding: "WescontrolWeb.deviceController",
 					objectsBinding: "WescontrolWeb.driverController.arrangedObjects",
 					nameKey: "name",
 					valueKey: "name",
 					disableSort: true,
 					emptyName: false,
 					theme: 'square',
-					valueBinding: "WescontrolWeb.driverController.currentType"
+					driverChanged: function(){
+						var dr = WescontrolWeb.deviceController.get('driverRecord');
+						if(dr)this.set('value', dr.get('type'));
+					}.observes('WescontrolWeb.deviceController.driverRecord'),
+					changed: function(){
+						WescontrolWeb.driverController.set('currentType', this.get('value'));
+					}.observes('value')
 				})				
 			}),
 			driver: SC.View.design({
@@ -97,7 +102,7 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 				
 				driverField: SC.SelectFieldView.design({
 					layout: {left: 120, height: 20, width: 200, top: 0},
-					//valueBinding: "WescontrolWeb.deviceController",
+					valueBinding: "WescontrolWeb.deviceController.driver",
 					objectsBinding: "WescontrolWeb.driverController.arrangedDrivers",
 					nameKey: "name",
 					valueKey: "name",

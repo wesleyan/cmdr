@@ -53,7 +53,7 @@ WescontrolWeb.driverController = SC.TreeController.create(
 		{
 			return this.get('arrangedObjects').filterProperty("isType");
 		}
-		return undefined;
+		return [];
 	}.property("arrangedObjects").cacheable(),
 	
 	arrangedDrivers: function(){
@@ -61,7 +61,7 @@ WescontrolWeb.driverController = SC.TreeController.create(
 		{
 			return this.get('typeHash')[this.get('currentType')];
 		}
-		return undefined;
+		return [];
 	}.property("currentType").cacheable()
 	
 }) ;

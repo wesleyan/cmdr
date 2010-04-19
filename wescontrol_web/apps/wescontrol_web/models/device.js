@@ -56,6 +56,12 @@ WescontrolWeb.Device = SC.Record.extend(
 		return this.get('vars_obj').filter(function(item){
 			return (item.editable === undefined || item.editable);
 		}).sortProperty('display_order');
-	}.property('vars_obj').cacheable()
+	}.property('vars_obj').cacheable(),
+	
+	driverRecord: function(){
+		if(this.get('driver')){
+			return WescontrolWeb.store.find(SC.Query.local(WescontrolWeb.Driver, 'name = {name}', {name: this.get('driver')})).firstObject();
+		}
+	}.property('driver').cacheable()
 
 }) ;

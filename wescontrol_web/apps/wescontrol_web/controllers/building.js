@@ -15,6 +15,7 @@ WescontrolWeb.buildingController = SC.TreeController.create(
 	
 	treeItemIsGrouped: YES,
 	content: null,
+	contentValueKey: 'name',
 	
 	refreshSources: function(){
 		var buildings = SC.Object.create({
@@ -23,8 +24,8 @@ WescontrolWeb.buildingController = SC.TreeController.create(
 			displayName: 'Buildings',
 			treeItemChildren: WescontrolWeb.store.find(WescontrolWeb.Building).map(function(building, index){
 				return SC.Object.create({
-					contentValueKey: 'displayName',
-					displayName: building.get('name'),
+					contentValueKey: 'name',
+					//displayName: building.get('name'),
 					name: building.get('name'),
 					guid: building.get('guid'),
 					treeItemIsExpanded: index === 0,
@@ -32,7 +33,8 @@ WescontrolWeb.buildingController = SC.TreeController.create(
 					treeItemChildren: building.get('rooms').map(function(room){
 						return room.mixin({
 							isRoom: YES,
-							displayName: room.get('name')//,
+							contentValueKey: 'name'
+							//displayName: room.get('name')//,
 						//	devices: WescontrolWeb.store.find(WescontrolWeb.Device, {conditions: 'room = {roomRecord}', roomRecord: room})
 						});
 					})

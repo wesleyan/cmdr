@@ -93,7 +93,8 @@ CouchDataSource = SC.DataSource.extend(
 						guid: body._id, 
 						name: body.attributes.name,
 						room: body.belongs_to,
-						state_vars: body.attributes.state_vars
+						state_vars: body.attributes.state_vars,
+						driver: body['class']
 					};
 					
 					for(var config in body.attributes.config)

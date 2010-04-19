@@ -28,7 +28,7 @@ WescontrolWeb.ControlPage = SC.View.extend(
 			hasHorizontalScroller: NO,
 			layout: {top: 20, left: 0, right: 0, bottom: 0},
 			contentView: SC.ListView.design({
-				contentValueKey: "displayName",
+				contentValueKey: "name",
 				contentBinding: 'WescontrolWeb.buildingController.arrangedObjects',
 				selectionBinding: 'WescontrolWeb.buildingController.selection',
 				rowHeight: 28,

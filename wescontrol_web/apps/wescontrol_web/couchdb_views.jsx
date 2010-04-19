@@ -19,7 +19,8 @@ function(doc) {
 			guid: doc._id, 
 			name: doc.attributes.name, 
 			room: doc.belongs_to, 
-			state_vars: doc.attributes.state_vars
+			state_vars: doc.attributes.state_vars,
+			driver: doc.class
 		};
 		
 		for(var config in doc.attributes.config)

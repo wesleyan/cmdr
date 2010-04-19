@@ -34,7 +34,7 @@ WescontrolWeb.CrudList = SC.View.extend(
 			layout: {right: 0, top: 0, bottom: 0, width: 52},
 			theme: "none",
 			displayTitle: "+",
-			target: "WescontrolWeb.roomController",
+			targetBinding: ".parentView.parentView.content",
 			action: "addNew"
 		}),
 		

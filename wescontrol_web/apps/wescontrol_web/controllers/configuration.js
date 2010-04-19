@@ -12,10 +12,11 @@
 */
 sc_require("views/general_configuration");
 sc_require("views/devices_configuration");
+sc_require("views/sources_configuration");
 WescontrolWeb.configurationController = SC.Object.create(
 /** @scope WescontrolWeb.configurationController.prototype */ {
 
-	currentTab: "devices",
+	currentTab: "sources",
 	
 	init: function(){
 		this.onCurrentTabChange();
