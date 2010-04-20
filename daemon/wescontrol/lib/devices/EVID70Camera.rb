@@ -21,42 +21,42 @@ class EVID70Camera < WescontrolWeb::RS232Device
 	command :move_down_right, :kind => 'array'
 	command :move_stop
 	
+	ERRORS = {
+		1 => "Message length error (>14 bytes)",
+		2 => "Syntax Error",
+		3 => "Command buffer full",
+		4 => "Command cancelled",
+		5 => "No socket (to be cancelled)",
+		0x41 => "Command not executable"
+	}
+	
+	ZOOM = {
+		1  => "0000",
+		2  => "1606",
+		3  => "2151",
+		4  => "2860",
+		5  => "2CB5",
+		6  => "3060",
+		7  => "32D3",
+		8  => "3545",
+		9  => "3727",
+		10 => "38A9",
+		11 => "3A42",
+		12 => "3B4B",
+		13 => "3C85",
+		14 => "3D75",
+		15 => "3E4E",
+		16 => "3EF7",
+		17 => "3FA0",
+		18 => "4000"
+	}
+	
 	def initialize(options)
 		options = options.symbolize_keys
 		puts "@Initializing camera on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
 		@address = options[:address]
-		
-		ERRORS = {
-			1 => "Message length error (>14 bytes)",
-			2 => "Syntax Error",
-			3 => "Command buffer full",
-			4 => "Command cancelled",
-			5 => "No socket (to be cancelled)",
-			0x41 => "Command not executable"
-		}
-		
-		ZOOM = {
-			1  => "0000",
-			2  => "1606",
-			3  => "2151",
-			4  => "2860",
-			5  => "2CB5",
-			6  => "3060",
-			7  => "32D3",
-			8  => "3545",
-			9  => "3727",
-			10 => "38A9",
-			11 => "3A42",
-			12 => "3B4B",
-			13 => "3C85",
-			14 => "3D75",
-			15 => "3E4E",
-			16 => "3EF7",
-			17 => "3FA0",
-			18 => "4000"
-		}
-		
+			
 		@_commands = {
 			#name => [message, callback]
 			

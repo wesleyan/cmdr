@@ -15,6 +15,7 @@ spec = Gem::Specification.new do |s|
 	s.add_dependency('eventmachine', '>= 0.12.10')
 	s.add_dependency('eventmachine_httpserver', '>= 0.2.0')
 	s.add_dependency('chronic', '>= 0.2.3')
+	s.add_dependency('daemons', ">= 1.0.10")
 
 	s.author = "Micah Wylde"
 	s.email = "mwylde@wesleyan.edu"

@@ -137,8 +137,17 @@ module Wescontrol
 				updates = JSON.parse(@http_post_content)
 				device = @method_table[path[1]]
 				if !path[2]
+					#here are some hacks to integrate old-style modules with new-style
+					#(ie, those that use deferrables rather than threads). The problem
+					#is that we cant support request that update both kinds. This probably
+					#won't ever be an actual problem, but we should check for it.
 					updates.each{|k,v|
-						content.merge!(set_var(device, k, v))
+						content_response = set_var device, k, v, resp
+						if !content_response
+							content = nil
+							break
+						end
+						content.merge!(content_response)
 					}
 				elsif path[2].to_sym == :command
 					content = send_command device, updates.keys[0], updates[updates.keys[0]], resp

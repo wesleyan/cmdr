@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'couchrest'
-require 'Time'
+require 'time'
 require "#{File.dirname(__FILE__)}/MAC.rb"
 
 require "#{File.dirname(__FILE__)}/wescontrol_http"

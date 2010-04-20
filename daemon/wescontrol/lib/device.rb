@@ -165,8 +165,11 @@ module Wescontrol
 			self.config_vars.each{|var| hash[var] = eval("@#{var}")}
 			
 			self.state_vars.each{|var, options|
-				options['state'] = eval("@#{var}")
-				options['state'] == options['state'].to_i if options['state'].class == Time
+				if options[:kind] == "time"
+					options['state'] = eval("@#{var}.to_i")
+				else
+					options['state'] = eval("@#{var}")
+				end
 				hash['state_vars'][var] = options
 			}
 			

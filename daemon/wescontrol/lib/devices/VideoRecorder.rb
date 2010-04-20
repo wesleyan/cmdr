@@ -6,13 +6,6 @@ class VideoRecorder < Wescontrol::Device
 	state_var :recording, :kind => 'boolean'
 	state_var :recording_started, :kind => 'time', :editable => false
 	state_var :recording_stopped, :kind => 'time', :editable => false
-	virtual_var :recording_time, :kind => 'number', :depends_on => [:recording_started, :recording_stopped], :transformation => proc {
-		if this.recording
-			Time.now - this.recording_started
-		else
-			this.recording_stopped - this.recording_started
-		end
-	}, :display_order => 6
 	
 	def initialize(options)
 		Thread.abort_on_exception = true
@@ -34,14 +27,17 @@ class VideoRecorder < Wescontrol::Device
 				`god load #{File.dirname(__FILE__)}/../../bin/encoder_watch.god`
 			end
 			if @_god.status && @_god.status["recorder"][:state] == :unmonitored
-				this.recording_started = Time.now
+				puts "Starting recorder"
+				self.recording_started = Time.now
 				`god start recorder`
 			end
 		else
 			if @_god.status && @_god.status["recorder"][:state] != :unmonitored
-				this.recording_stopped = Time.now
+				puts "Stopping recorder"
+				self.recording_stopped = Time.now
 				`god stop recorder`
 			end
 		end
+		@_god && @_god.status ? @_god.status["recorder"][:state] != :unmonitored : nil
 	end
 end
