@@ -18,7 +18,7 @@ Tp5.roomController = SC.ObjectController.create(
 		if(this.get('content') && this.get('content').get('attributes'))
 		{
 			Tp5.log("And not null");
-			var attributes = Tp5.roomController.get('content').get('attributes').attributes;
+			var attributes = Tp5.roomController.get('content').get('attributes');
 			this.set('attributes', attributes);
 			var devices = Tp5.deviceController.get('devices');
 			if(devices)

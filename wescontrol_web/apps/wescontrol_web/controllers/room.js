@@ -28,7 +28,6 @@ WescontrolWeb.roomController = SC.ArrayController.create(
 		this.selectObject(device);
 
 		return YES;
-	}
-  
+	}  
 		
 }) ;
