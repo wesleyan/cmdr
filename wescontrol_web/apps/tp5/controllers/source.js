@@ -43,7 +43,6 @@ Tp5.sourceController = SC.ArrayController.create(
 		}
 
 		if(this.get('switcher'))this.switcher.set_var("input", this.get('source').switcher);
-		
 		this.runCommands(this.get('source'));
 		
 		this.switchContext(this.get('source'));
@@ -51,9 +50,14 @@ Tp5.sourceController = SC.ArrayController.create(
 	}.observes("source"),
 	
 	switcherChanged: function(){
-		if(this.get('content').get('length') === 0)return;
+		if(this.get('content').get('length') === 0 || !this.get('switcher'))return;
 		this.set("source", this.get('states')[this.switcher_map[this.switcher.get('states').input]]);
 	}.observes("switcher", "states", ".switcher.states"),
+	
+	projectorChanged: function(){
+		if(this.get('content').get('length') === 0 || this.get('switcher'))return;
+		this.set("source",this.get('states')[this.projector_map[this.projector.get('states').input]]);
+	}.observes("projector", "states", ".projector.states"),
 	
 	projectorPowerChanged: function(){
 		if(this.get('content').get('length') === 0)return;
@@ -71,6 +75,7 @@ Tp5.sourceController = SC.ArrayController.create(
 	contentChanged: function() {
 		var states = {};
 		var switcher_map = {};
+		var projector_map = {};
 		this.get('content').forEach(function(source){
 			states[source.get('name')] = {
 				guid: source.get('guid'),
@@ -82,9 +87,16 @@ Tp5.sourceController = SC.ArrayController.create(
 				image: source.get('icon')
 			};
 			switcher_map[source.get('input').switcher] = source.get('name');
+			projector_map[source.get('input').projector] = source.get('name');
 		});
 		this.set('switcher_map', switcher_map);
+		this.set('projector_map', projector_map);
 		this.set('states', states);
+		
+		if(!Tp5.roomController.switcher) //we're in a projector-only room
+		{
+			//hopefully we have a 1-1 mapping from projector inputs to sources
+		}
 	}.observes("content"),
 	
 	runCommands: function(source){
