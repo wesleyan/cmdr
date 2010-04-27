@@ -1,5 +1,5 @@
-!button_height = 50px
-!button_spacing = 60px
+$button_height: 50px
+$button_spacing: 60px
 
 .dvd-module
 	.controls
@@ -29,7 +29,7 @@
 				font-size: 13px
 		
 		.dvd-button
-			height= !button_height
+			height: $button_height
 			position: absolute
 			background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#BABABA), to(#FFFFFF))
 			-webkit-box-shadow: 0 0 2px #333
@@ -38,7 +38,7 @@
 			border: 1px solid #FFF
 						
 			&:active
-				background = -webkit-gradient("linear", 0% 25%, 0% 100%, from(#BABABA*0.8), to(#BABABA*0.7))
+				background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#BABABA*0.8), to(#BABABA*0.7))
 				-webkit-box-shadow: 0 0 3px #000 inset
 			
 			.image
@@ -58,14 +58,14 @@
 					background-position: 50% -8px
 		
 			&.back
-				top= !button_spacing
+				top: $button_spacing
 				left: 0
 				width: 57px
 				.image
 					background-position: -5px 225px
 		
 			&.pause
-				top= !button_spacing
+				top: $button_spacing
 				left: 50%
 				margin-left: -30px
 				width: 60px
@@ -73,57 +73,57 @@
 				-webkit-border-radius: 100px
 				z-index: 62
 				&:active
-					background = -webkit-gradient("linear", 0% 25%, 0% 100%, from(#FFE37B*0.8), to(#FFE37B*0.7))
+					background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#FFE37B*0.8), to(#FFE37B*0.7))
 				.image
 					background-position: 50% 225px
 		
 			&.forward
-				top= !button_spacing
+				top: $button_spacing
 				right: 0
 				width: 57px
 				.image
 					background-position: 70px 225px
 			
 			&.stop
-				top= !button_spacing*2
+				top: $button_spacing*2
 				left: 0
 				right: 0
 				.image
 					background-position: 50% 160px
 		
 			&.previous
-				width= 150px/2
+				width: 150px/2
 				left: 0
-				top= !button_spacing*3
+				top: $button_spacing*3
 				.image
 					background-position: 10% 105px
 		
 			&.next
-				width= 150px/2
+				width: 150px/2
 				right: 0
-				top= !button_spacing*3
+				top: $button_spacing*3
 				.image
 					background-position: 90% 105px
 		
 			&.menu
-				width= 150px/2
+				width: 150px/2
 				left: 0
-				top= !button_spacing*4
+				top: $button_spacing*4
 				.image
 					background-position: 10% 55px
 
 			&.title
-				width= 150px/2
+				width: 150px/2
 				right: 0
-				top= !button_spacing*4
+				top: $button_spacing*4
 				.image
 					background-position: 90% 55px
 					
 		.pause-circle
 			position: absolute
 			width: 80px
-			height= !button_height + 10px
-			top= !button_spacing - 5px
+			height: $button_height + 10px
+			top: $button_spacing - 5px
 			left: 50%
 			margin-left: -40px
 			-webkit-border-radius: 100px

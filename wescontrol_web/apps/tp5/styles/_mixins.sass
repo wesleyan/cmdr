@@ -1,0 +1,47 @@
+=border-radius($radius)
+	-webkit-border-radius: $radius
+	-moz-border-radius: $radius
+	border-radius: $radius
+
+=box-shadow($values)
+	-moz-box-shadow: $values
+	-webkit-box-shadow: $values
+	box-shadow: $values
+	
+=gradient($color1, $color2, $start:0, $end:1)
+	background: -webkit-gradient(linear, left top, left bottom, color-stop($start, $color1), color-stop($end, $color2))
+	background: -moz-linear-gradient(center top, $color1 $start*100%, $color2 $end*100%)	
+
+=text-inset($color: rgba(255, 255, 255, 0.5))
+	text-shadow: 0px 1px 0px $color
+	
+=fill-parent
+	top: 0
+	bottom: 0
+	left: 0
+	right: 0
+	position: absolute
+	
+=centered($width, $height)
+	width:  $width
+	height: $height
+	left: 50%
+	top: 50%
+	margin-left: -$width/2
+	margin-top: -$height/2
+	position: absolute
+	
+=button($topcolor: #F6F6F6)
+	+border-radius(5px)
+	border: 1px solid #FFF
+	+box-shadow(0 0 3px #000)
+	+gradient($topcolor, $topcolor*0.8, 0.25, 1)
+	
+	&:active
+		+gradient($topcolor*0.8, $topcolor*0.7, 0.25, 1)
+		+box-shadow(0 0 3px #000 inset)
+	&.disabled
+		opacity: 0.6
+		+box-shadow(0 0 3px #000)
+		+box-shadow(0 0 3px #000)
+		+gradient($topcolor, $topcolor*0.8, 0.25, 1)

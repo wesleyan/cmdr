@@ -303,4 +303,301 @@
     color: black;
     font-family: "Myriad Pro";
     font-size: 48px;
-    text-align: center; }
+    text-align: center;
+    line-height: 48px; }
+
+.computer-module .computer-off .computer-off-label.title {
+  color: #68121c;
+  font-size: 30px; }
+.computer-module .computer-off .control-button {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  border: 1px solid white;
+  -moz-box-shadow: 0 0 3px black;
+  -webkit-box-shadow: 0 0 3px black;
+  box-shadow: 0 0 3px black;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #d3d5d6), color-stop(1, #a8aaab));
+  background: -moz-linear-gradient(center top, #d3d5d6 25%, #a8aaab 100%);
+  border-color: #d3d3d3; }
+  .computer-module .computer-off .control-button:active {
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #a8aaab), color-stop(1, #939595));
+    background: -moz-linear-gradient(center top, #a8aaab 25%, #939595 100%);
+    -moz-box-shadow: 0 0 3px black inset;
+    -webkit-box-shadow: 0 0 3px black inset;
+    box-shadow: 0 0 3px black inset; }
+  .computer-module .computer-off .control-button.disabled {
+    opacity: 0.6;
+    -moz-box-shadow: 0 0 3px black;
+    -webkit-box-shadow: 0 0 3px black;
+    box-shadow: 0 0 3px black;
+    -moz-box-shadow: 0 0 3px black;
+    -webkit-box-shadow: 0 0 3px black;
+    box-shadow: 0 0 3px black;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #d3d5d6), color-stop(1, #a8aaab));
+    background: -moz-linear-gradient(center top, #d3d5d6 25%, #a8aaab 100%); }
+  .computer-module .computer-off .control-button .label {
+    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    text-align: center;
+    font-weight: 400;
+    color: black;
+    font-family: "Myriad Pro";
+    font-size: 24px;
+    line-height: 40px; }
+
+.vcr-module .controls {
+  position: absolute;
+  left: 50%;
+  margin-left: -80px;
+  width: 160px;
+  top: 80px;
+  bottom: 20px; }
+  .vcr-module .controls .background {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background-color: #3e3e3e;
+    -webkit-border-radius: 20px;
+    -webkit-box-shadow: 0 0 3px 4px #333333; }
+    .vcr-module .controls .background .wescontrol-text {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      color: #b7b7b8;
+      font-family: "Myriad Pro";
+      font-weight: bold;
+      font-size: 13px; }
+  .vcr-module .controls .vcr-button {
+    height: 50px;
+    position: absolute;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#bababa), to(white));
+    -webkit-box-shadow: 0 0 2px #333333;
+    -webkit-border-radius: 5px;
+    z-index: 60;
+    border: 1px solid white; }
+    .vcr-module .controls .vcr-button:active {
+      background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#949494), to(#828282));
+      -webkit-box-shadow: 0 0 3px black inset; }
+    .vcr-module .controls .vcr-button .image {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+      background-image: sc_static("dvd_controls.png");
+      pointer-events: none; }
+    .vcr-module .controls .vcr-button.play {
+      left: 0;
+      right: 0;
+      top: 0; }
+      .vcr-module .controls .vcr-button.play .image {
+        background-position: 50% -8px; }
+    .vcr-module .controls .vcr-button.back {
+      top: 60px;
+      left: 0;
+      width: 57px; }
+      .vcr-module .controls .vcr-button.back .image {
+        background-position: -5px 225px; }
+    .vcr-module .controls .vcr-button.pause {
+      top: 60px;
+      left: 50%;
+      margin-left: -30px;
+      width: 60px;
+      background: -webkit-gradient(linear, 0% 0%, 0% 75%, from(#ffe37b), to(#fee22d));
+      -webkit-border-radius: 100px;
+      z-index: 62; }
+      .vcr-module .controls .vcr-button.pause:active {
+        background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#ccb562), to(#b29e56)); }
+      .vcr-module .controls .vcr-button.pause .image {
+        background-position: 50% 225px; }
+    .vcr-module .controls .vcr-button.forward {
+      top: 60px;
+      right: 0;
+      width: 57px; }
+      .vcr-module .controls .vcr-button.forward .image {
+        background-position: 70px 225px; }
+    .vcr-module .controls .vcr-button.stop {
+      top: 120px;
+      left: 0;
+      right: 0; }
+      .vcr-module .controls .vcr-button.stop .image {
+        background-position: 50% 160px; }
+    .vcr-module .controls .vcr-button.previous {
+      width: 150px/2;
+      left: 0;
+      top: 180px; }
+      .vcr-module .controls .vcr-button.previous .image {
+        background-position: 10% 105px; }
+    .vcr-module .controls .vcr-button.next {
+      width: 150px/2;
+      right: 0;
+      top: 180px; }
+      .vcr-module .controls .vcr-button.next .image {
+        background-position: 90% 105px; }
+    .vcr-module .controls .vcr-button.menu {
+      width: 150px/2;
+      left: 0;
+      top: 240px; }
+      .vcr-module .controls .vcr-button.menu .image {
+        background-position: 10% 55px; }
+    .vcr-module .controls .vcr-button.title {
+      width: 150px/2;
+      right: 0;
+      top: 240px; }
+      .vcr-module .controls .vcr-button.title .image {
+        background-position: 90% 55px; }
+  .vcr-module .controls .pause-circle {
+    position: absolute;
+    width: 80px;
+    height: 60px;
+    top: 55px;
+    left: 50%;
+    margin-left: -40px;
+    -webkit-border-radius: 100px;
+    background: #3e3e3e;
+    z-index: 61; }
+
+.dvd-module .controls {
+  position: absolute;
+  left: 30px;
+  width: 160px;
+  top: 80px;
+  bottom: 20px; }
+  .dvd-module .controls .background {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background-color: #3e3e3e;
+    -webkit-border-radius: 20px;
+    -webkit-box-shadow: 0 0 3px 4px #333333; }
+    .dvd-module .controls .background .wescontrol-text {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      color: #b7b7b8;
+      font-family: "Myriad Pro";
+      font-weight: bold;
+      font-size: 13px; }
+  .dvd-module .controls .dvd-button {
+    height: 50px;
+    position: absolute;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#bababa), to(white));
+    -webkit-box-shadow: 0 0 2px #333333;
+    -webkit-border-radius: 5px;
+    z-index: 60;
+    border: 1px solid white; }
+    .dvd-module .controls .dvd-button:active {
+      background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#949494), to(#828282));
+      -webkit-box-shadow: 0 0 3px black inset; }
+    .dvd-module .controls .dvd-button .image {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+      background-image: sc_static("dvd_controls.png");
+      pointer-events: none; }
+    .dvd-module .controls .dvd-button.play {
+      left: 0;
+      right: 0;
+      top: 0; }
+      .dvd-module .controls .dvd-button.play .image {
+        background-position: 50% -8px; }
+    .dvd-module .controls .dvd-button.back {
+      top: 60px;
+      left: 0;
+      width: 57px; }
+      .dvd-module .controls .dvd-button.back .image {
+        background-position: -5px 225px; }
+    .dvd-module .controls .dvd-button.pause {
+      top: 60px;
+      left: 50%;
+      margin-left: -30px;
+      width: 60px;
+      background: -webkit-gradient(linear, 0% 0%, 0% 75%, from(#ffe37b), to(#fee22d));
+      -webkit-border-radius: 100px;
+      z-index: 62; }
+      .dvd-module .controls .dvd-button.pause:active {
+        background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#ccb562), to(#b29e56)); }
+      .dvd-module .controls .dvd-button.pause .image {
+        background-position: 50% 225px; }
+    .dvd-module .controls .dvd-button.forward {
+      top: 60px;
+      right: 0;
+      width: 57px; }
+      .dvd-module .controls .dvd-button.forward .image {
+        background-position: 70px 225px; }
+    .dvd-module .controls .dvd-button.stop {
+      top: 120px;
+      left: 0;
+      right: 0; }
+      .dvd-module .controls .dvd-button.stop .image {
+        background-position: 50% 160px; }
+    .dvd-module .controls .dvd-button.previous {
+      width: 150px/2;
+      left: 0;
+      top: 180px; }
+      .dvd-module .controls .dvd-button.previous .image {
+        background-position: 10% 105px; }
+    .dvd-module .controls .dvd-button.next {
+      width: 150px/2;
+      right: 0;
+      top: 180px; }
+      .dvd-module .controls .dvd-button.next .image {
+        background-position: 90% 105px; }
+    .dvd-module .controls .dvd-button.menu {
+      width: 150px/2;
+      left: 0;
+      top: 240px; }
+      .dvd-module .controls .dvd-button.menu .image {
+        background-position: 10% 55px; }
+    .dvd-module .controls .dvd-button.title {
+      width: 150px/2;
+      right: 0;
+      top: 240px; }
+      .dvd-module .controls .dvd-button.title .image {
+        background-position: 90% 55px; }
+  .dvd-module .controls .pause-circle {
+    position: absolute;
+    width: 80px;
+    height: 60px;
+    top: 55px;
+    left: 50%;
+    margin-left: -40px;
+    -webkit-border-radius: 100px;
+    background: #3e3e3e;
+    z-index: 61; }
+.dvd-module .five-way {
+  position: absolute;
+  width: 157px;
+  height: 157px;
+  top: 150px;
+  left: 222px;
+  background-image: sc_static("five-way.png");
+  background-position-x: 50%;
+  background-position-y: -5px;
+  z-index: 62; }
+  .dvd-module .five-way.right {
+    background-position-y: -175px; }
+  .dvd-module .five-way.down {
+    background-position-y: -345px; }
+  .dvd-module .five-way.left {
+    background-position-y: -515px; }
+  .dvd-module .five-way.up {
+    background-position-y: -685px; }
+  .dvd-module .five-way.enter {
+    background-position-y: -855px; }
