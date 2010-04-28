@@ -75,7 +75,7 @@ Tp5.DVDModule = SC.View.extend(Tp5.MouseHandlingFix,
 		
 		context = context.begin('div').addClass('controls');
 		context = context.begin('div').addClass('background')
-			.begin('div').addClass('wescontrol-text').push("WesController").end()
+			.begin('div').addClass('wescontrol-text').push("RoomTroller").end()
 		.end();
 		this.buttons.forEach(function(name){
 			context = 

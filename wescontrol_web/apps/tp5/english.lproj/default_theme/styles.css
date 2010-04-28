@@ -306,6 +306,9 @@
     text-align: center;
     line-height: 48px; }
 
+.computer-module .computer-on-label.title {
+  color: #565656;
+  font-size: 30px; }
 .computer-module .computer-off .computer-off-label.title {
   color: #68121c;
   font-size: 30px; }
@@ -355,6 +358,8 @@
     font-size: 24px;
     line-height: 40px; }
 
+.vcr-module .title {
+  margin-top: 10px; }
 .vcr-module .controls {
   position: absolute;
   left: 50%;
@@ -469,6 +474,8 @@
     background: #3e3e3e;
     z-index: 61; }
 
+.dvd-module .title {
+  margin-top: 10px; }
 .dvd-module .controls {
   position: absolute;
   left: 30px;
@@ -548,25 +555,25 @@
       .dvd-module .controls .dvd-button.stop .image {
         background-position: 50% 160px; }
     .dvd-module .controls .dvd-button.previous {
-      width: 150px/2;
+      width: 75px;
       left: 0;
       top: 180px; }
       .dvd-module .controls .dvd-button.previous .image {
         background-position: 10% 105px; }
     .dvd-module .controls .dvd-button.next {
-      width: 150px/2;
+      width: 75px;
       right: 0;
       top: 180px; }
       .dvd-module .controls .dvd-button.next .image {
         background-position: 90% 105px; }
     .dvd-module .controls .dvd-button.menu {
-      width: 150px/2;
+      width: 75px;
       left: 0;
       top: 240px; }
       .dvd-module .controls .dvd-button.menu .image {
         background-position: 10% 55px; }
     .dvd-module .controls .dvd-button.title {
-      width: 150px/2;
+      width: 75px;
       right: 0;
       top: 240px; }
       .dvd-module .controls .dvd-button.title .image {

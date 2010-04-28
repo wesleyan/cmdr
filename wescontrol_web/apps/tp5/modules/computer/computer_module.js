@@ -16,9 +16,23 @@ sc_require('views/button');
 Tp5.ComputerModule = SC.View.extend(Tp5.MouseHandlingFix,
 /** @scope Tp5.ActionView.prototype */ {
 
+	didCreateLayer: function(){
+		sc_super();
+		this.onReachableChanged();
+	},
+
 	classNames: ['computer-module'],
 	
-	childViews: "titleLabel computerOffView".w(),
+	childViews: "titleLabel computerOffView computerOnView".w(),
+	
+	onReachableChanged: function(){
+		if(Tp5.roomController.get('pc').get('states'))
+		{
+			console.log("ReachableChanged");
+			this.computerOffView.set('isVisible', !Tp5.roomController.get('pc').get('states').reachable);
+			this.computerOnView.set('isVisible', Tp5.roomController.get('pc').get('states').reachable);
+		}
+	}.observes("Tp5.roomController.pc.state_vars"),
 	
 	titleLabel: SC.LabelView.design({
 		layout: {top: 20, left: 0, right: 0, height: 50},
@@ -30,11 +44,7 @@ Tp5.ComputerModule = SC.View.extend(Tp5.MouseHandlingFix,
 		layout: {top: 90, left: 10, right: 10, bottom: 10},
 		childViews: "offLabel onButton".w(),
 		classNames: 'computer-off',
-		
-		init: function(){
-			sc_super();
-			this.onReachableChanged();
-		},
+		isVisible: NO,
 		
 		offLabel: SC.LabelView.design({
 			layout: {top: 0, left:0, right: 0, height: 38},
@@ -49,14 +59,19 @@ Tp5.ComputerModule = SC.View.extend(Tp5.MouseHandlingFix,
 			action: function(){
 				Tp5.roomController.get('pc').send_command("start");
 			}
-		}),
+		})		
+	}),
+	
+	computerOnView: SC.View.design({
+		layout: {top: 90, left: 10, right: 10, bottom: 10},
+		childViews: "label".w(),
+		isVisible: NO,
 		
-		onReachableChanged: function(){
-			if(Tp5.roomController.get('pc').get('states'))
-			{
-				this.set('isVisible', !Tp5.roomController.get('pc').get('states').reachable);
-			}
-		}.observes("Tp5.roomController.pc.state_vars")
-		
+		label: SC.LabelView.design({
+			layout: {top: 0, left:0, right:0, height: 38},
+			classNames: 'computer-on-label title',
+			value: "computer is on",
+			textAlign: "center"
+		})
 	})
 });
