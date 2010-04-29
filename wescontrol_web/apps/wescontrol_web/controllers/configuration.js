@@ -13,6 +13,7 @@
 sc_require("views/general_configuration");
 sc_require("views/devices_configuration");
 sc_require("views/sources_configuration");
+sc_require("views/preview_configuration");
 WescontrolWeb.configurationController = SC.Object.create(
 /** @scope WescontrolWeb.configurationController.prototype */ {
 

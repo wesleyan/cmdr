@@ -23,7 +23,7 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 		childViews: "nameField buildingField".w(),
 		
 		nameField: SC.View.design({
-			layout: {centerX: -250, width:250, height:38, top: 30},
+			layout: {left: 20, width:250, height:38, top: 30},
 			childViews: "nameLabel nameField".w(),
 			
 			nameLabel: SC.LabelView.design({
@@ -38,7 +38,7 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 		}),
 		
 		buildingField: SC.View.design({
-			layout: {centerX: 150, width:300, height:38, top: 30},
+			layout: {right: 20, width:300, height:38, top: 30},
 			childViews: "buildingLabel buildingField".w(),
 			
 			buildingLabel: SC.LabelView.design({
@@ -64,7 +64,6 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 		childViews: ["image"],
 		
 		image: SC.ImageView.design({
-			layout: {top: 0, left: 0, right: 0, bottom: 0},
 			value: "http://localhost:4567/?room=c180fad1e1599512ea68f1748eb601ea"
 		})
 	}).classNames("graph-image")

@@ -10,6 +10,7 @@
 
 	@extends SC.DataSource
 */
+
 CouchDataSource = SC.DataSource.extend(
 /** @scope this.appObject.CouchDataSource.prototype */ {
 	
@@ -17,7 +18,6 @@ CouchDataSource = SC.DataSource.extend(
 	appObject: null,
 	
 	disableChanges: NO,
-	
 	
 	init: function(){
 		sc_super();
@@ -191,8 +191,11 @@ CouchDataSource = SC.DataSource.extend(
 				}
 				else if(row.key[1] === 2)
 				{
-					room_hash[row.value.room].devices.push(row.value.guid);
-					devices.push(row.value);
+					if(room_hash[row.value.room])
+					{
+						room_hash[row.value.room].devices.push(row.value.guid);
+						devices.push(row.value);
+					}
 				}
 			});
 			store.loadRecords(this.appObject.Building, buildings);
@@ -307,8 +310,33 @@ CouchDataSource = SC.DataSource.extend(
 		
 		// TODO: Add handlers to submit new records to the data source.
 		// call store.dataSourceDidComplete(storeKey) when done.
-		
-		return NO ; // return YES if you handled the storeKey
+		console.log("Create record");
+		var hash = store.readDataHash(storeKey);
+		if (SC.kindOf(store.recordTypeFor(storeKey), this.appObject.Device)) {
+			console.log("Creating record: %s", hash.name);
+			SC.Request.putUrl('/rooms/' + this.randomUUID).json()
+				.notify(this, this.didCreateDoc, store, storeKey)
+				.send({
+					belongs_to: hash.room,
+					attributes: {
+						state_vars: {},
+						name: hash.name
+					},
+					device: YES,
+					"class": hash.driver
+				});
+			return YES;
+		}
+		else if(SC.kindOf(store.recordTypeFor(storeKey),  this.appObject.Source)){
+			return YES;
+		}
+		/*else if(query.recordType == this.appObject.Action){
+			return YES;
+		}*/
+		else if(this.appObject.Driver && SC.kindOf(store.recordTypeFor(storeKey), this.appObject.Driver)){
+			return YES;
+		}
+		else return NO;
 	},
 	
 	updateRecord: function(store, storeKey) {
@@ -325,6 +353,26 @@ CouchDataSource = SC.DataSource.extend(
 		// call store.dataSourceDidDestroy(storeKey) when done
 		
 		return NO ; // return YES if you handled the storeKey
+	},
+	
+	randomUUID: function() {
+		var s = [], itoh = '0123456789ABCDEF';
+
+		// Make array of random hex digits. The UUID only has 32 digits in it, but we
+		// allocate an extra items to make room for the '-'s we'll be inserting.
+		for (var i = 0; i <36; i++) s[i] = Math.floor(Math.random()*0x10);
+
+		// Conform to RFC-4122, section 4.4
+		s[14] = 4;  // Set 4 high bits of time_high field to version
+		s[19] = (s[19] & 0x3) | 0x8;  // Specify 2 high bits of clock sequence
+
+		// Convert to hex chars
+		for (i = 0; i <36; i++) s[i] = itoh[s[i]];
+
+		// Insert '-'s
+		s[8] = s[13] = s[18] = s[23] = '-';
+
+		return s.join('');
 	}
 	
 }) ;

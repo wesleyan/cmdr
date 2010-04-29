@@ -9,6 +9,10 @@
 |*        Tabs CSS        *|
 \*------------------------*/
 
+.tabButton.sc-view.sc-button-view.sc-regular-size {
+	border-radius: 0;
+}
+
 a.tabButton {
 	border-radius: 0px;
 }

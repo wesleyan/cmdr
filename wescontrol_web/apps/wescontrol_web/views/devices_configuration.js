@@ -30,7 +30,7 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 		childViews: "deviceForm".w(),
 		
 		deviceForm: SC.View.design({
-			layout: {left: 150, right: 150, top: 150, bottom: 150},
+			layout: {centerX: 0, width: 320, top: 40, bottom: 40},
 			
 			childViews: "name port type driver".w(),
 			

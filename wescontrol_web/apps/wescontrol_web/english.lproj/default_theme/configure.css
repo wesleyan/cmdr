@@ -1,5 +1,15 @@
 .configure-page .graph-image {
-  background-color: #0a3459; }
+  background-color: #0a3459;
+  -moz-box-shadow: 0 0 5px black;
+  -webkit-box-shadow: 0 0 5px black;
+  box-shadow: 0 0 5px black; }
+  .configure-page .graph-image img[style] {
+    margin-left: auto;
+    margin-right: auto;
+    top: 50% !important;
+    margin-top: -40%;
+    width: 80%;
+    max-height: 80%; }
 .configure-page .tab-bar {
   background-color: #c1d699; }
 .configure-page .tabButton {
@@ -13,6 +23,11 @@
   font-size: 24px;
   color: black;
   line-height: 30px; }
+  .configure-page .sc-view.sc-label-view.sc-regular-size.backgroundText {
+    font-family: Helvetica, Arial;
+    font-size: 87px;
+    line-height: 80px;
+    opacity: 0.08; }
 .configure-page .sc-view.sc-text-field-view.sc-regular-size.focus {
   outline: none; }
 .configure-page .sc-view.sc-text-field-view.sc-regular-size input {
@@ -44,7 +59,7 @@
         background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#aaaaaa), to(#e8e8e8));
         background-image: -moz-linear-gradient(0% 100% 0deg, #aaaaaa, #e8e8e8); }
       .configure-page .crud-list .crud-bottom-bar .sc-view.sc-button-view.sc-regular-size.none label {
-        text-shadow: 0.5px 0.5px 0px gray;
+        text-shadow: 0px 1px 0px gray;
         color: white;
         font-size: 53px;
         font-family: "Helvetica, Arial";

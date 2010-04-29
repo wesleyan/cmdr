@@ -1,5 +1,4 @@
-=text-inset($color: rgba(255, 255, 255, 0.5))
-	text-shadow: 0.5px 0.5px 0px $color
+@import mixins.sass
 
 =linear-gradient($start, $end)
 	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from($start), to($end))
@@ -8,6 +7,14 @@
 .configure-page
 	.graph-image
 		background-color: #0A3459
+		+box-shadow(0 0 5px #000)
+		img[style]
+			margin-left: auto
+			margin-right: auto
+			top: 50% !important
+			margin-top: -40%
+			width: 80%
+			max-height: 80%
 	.tab-bar
 		background-color: #C1D699
 	.tabButton
@@ -23,6 +30,11 @@
 		font-size: 24px
 		color: black
 		line-height: 30px
+		&.backgroundText
+			font-family: Helvetica, Arial
+			font-size: 87px
+			line-height: 80px
+			opacity: 0.08
 	
 	.sc-view.sc-text-field-view.sc-regular-size
 		&.focus

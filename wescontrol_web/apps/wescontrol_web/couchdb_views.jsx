@@ -22,16 +22,15 @@ function(doc) {
 			state_vars: doc.attributes.state_vars,
 			driver: doc.class
 		};
-		
+		device["config"] = {};
 		for(var config in doc.attributes.config)
 		{
-			device[config] = doc.attributes.config[config];
+			device["config"][config] = doc.attributes.config[config];
 		}
 		
 		emit([[0], 2], device); 		
 	}
 }
-
 //Device
 function(doc) {
 	if(doc.device && doc.attributes)
