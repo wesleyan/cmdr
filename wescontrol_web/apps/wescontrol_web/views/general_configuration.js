@@ -15,7 +15,7 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 	
 	classNames: "general-configuration",
 	
-	childViews: "generalSettings".w(),
+	childViews: "generalSettings graphImage".w(),
 	
 	generalSettings: SC.View.design({
 		layout: {left: 0, right: 0, height: 100},
@@ -57,7 +57,17 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 				theme: 'square'
 			})
 		})
-	})
+	}),
+	
+	graphImage: SC.View.design({
+		layout: {top: 80, left: 20, right: 20, bottom: 20},
+		childViews: ["image"],
+		
+		image: SC.ImageView.design({
+			layout: {top: 0, left: 0, right: 0, bottom: 0},
+			value: "http://localhost:4567/?room=c180fad1e1599512ea68f1748eb601ea"
+		})
+	}).classNames("graph-image")
 
   // TODO: Add your own code here.
 

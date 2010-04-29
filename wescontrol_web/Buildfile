@@ -6,6 +6,6 @@
 # Add initial buildfile information here
 config :all, :required => [:sproutcore, :"sproutcore/animation"]
 
-proxy "/rooms", :to => "localhost:5984"
+proxy "/rooms", :to => "129.133.124.142:5984"
 
 proxy "/devices", :to => "129.133.124.142:1412"
