@@ -9,3 +9,5 @@ config :all, :required => [:sproutcore, :"sproutcore/animation"]
 proxy "/rooms", :to => "localhost:5984"
 
 proxy "/devices", :to => "129.133.124.142:1412"
+
+proxy "/graph", :to => "localhost:4567"

@@ -19,6 +19,8 @@ WescontrolWeb.configurationController = SC.Object.create(
 
 	currentTab: "sources",
 	
+	graphValue: "",
+	
 	init: function(){
 		this.onCurrentTabChange();
 	},
@@ -42,6 +44,27 @@ WescontrolWeb.configurationController = SC.Object.create(
 				})
 			}));
 		}
-	}.observes("currentTab")
+	}.observes("currentTab"),
+	
+	generateGraph: function(){
+		console.log("Something changed");
+		if(WescontrolWeb.roomController.get('content') && WescontrolWeb.sourceController.get('content'))
+		{
+			SC.Request.postUrl('/graph').json()
+				.notify(this, "graphGenerated")
+				.send({
+					devices: WescontrolWeb.roomController.get('content').mapProperty('attributes'),
+					sources: WescontrolWeb.sourceController.get('content').mapProperty('attributes')
+				});
+		}
+	}.observes("WescontrolWeb.deviceController.content", 
+		"WescontrolWeb.sourceSelectionController.content",
+		"WescontrolWeb.sourceController.hasContent",
+		"WescontrolWeb.roomController.hasContent"),
+	
+	graphGenerated: function(response){
+		this.set('graphValue', "data:image/svg+xml;base64," + response.get('body')["data"]);
+	}
+	
 
 }) ;
