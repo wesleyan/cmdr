@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
 	s.name = 'wescontrol'
-	s.version = '0.2.0'
+	s.version = '0.2.1'
 	s.summary = "WesControl daemon"
 	s.description = %{WesControl daemon and related classes}
 	s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb'] + ['bin/wescontrol-daemon']
@@ -16,6 +16,8 @@ spec = Gem::Specification.new do |s|
 	s.add_dependency('eventmachine_httpserver', '>= 0.2.0')
 	s.add_dependency('chronic', '>= 0.2.3')
 	s.add_dependency('daemons', ">= 1.0.10")
+	s.add_dependency('wol', ">= 0.3.3")
+	s.add_dependency('sinatra', ">= 1.0")
 
 	s.author = "Micah Wylde"
 	s.email = "mwylde@wesleyan.edu"

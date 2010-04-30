@@ -71,11 +71,11 @@ Tp5.DVDModule = SC.View.extend(Tp5.MouseHandlingFix,
 	render: function(context, firstTime) {
 		var content = this.get('content');
 		
-		context = context.begin('div').addClass('title').push("DVD Player").end();
+		context = context.begin('div').addClass('title').addClass('top-margin').push("DVD Player").end();
 		
 		context = context.begin('div').addClass('controls');
 		context = context.begin('div').addClass('background')
-			.begin('div').addClass('wescontrol-text').push("RoomTroller").end()
+			.begin('div').addClass('wescontrol-text').push("Roomtroller").end()
 		.end();
 		this.buttons.forEach(function(name){
 			context = 

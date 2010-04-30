@@ -22,7 +22,8 @@ WescontrolWeb.sourceController = SC.ArrayController.create(
 		var source = WescontrolWeb.store.createRecord(WescontrolWeb.Source, {
 			name: "unnamed",
 			displayNameBinding: "name",
-			belongs_to: this.get('room').get('guid')
+			belongs_to: this.get('room').get('guid'),
+			input: {}
 		});
 
 		this.selectObject(source);

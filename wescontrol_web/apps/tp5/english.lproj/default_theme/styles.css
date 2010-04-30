@@ -474,7 +474,7 @@
     background: #3e3e3e;
     z-index: 61; }
 
-.dvd-module .title {
+.dvd-module .title.top-margin {
   margin-top: 10px; }
 .dvd-module .controls {
   position: absolute;
