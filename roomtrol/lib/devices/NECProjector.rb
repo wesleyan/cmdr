@@ -34,7 +34,7 @@ class NECProjector < Projector
 
 	def initialize(options)
 		options = options.symbolize_keys
-		puts "@Initializing projector on port #{options[:port]} with name #{options[:name]}"
+		DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
 	
 		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
@@ -81,7 +81,6 @@ class NECProjector < Projector
 				end
 			}],
 			:common_data_request => [0, 0xC0, nil, proc {|frame|
-				puts "Common data request"
 				data = frame["data"]
 				#@power = data[3] == 1
 				#@cooling = data[4] == 1
@@ -99,7 +98,6 @@ class NECProjector < Projector
 			}],
 			:projector_info_request => [0, 0xBF, [2].pack("c"), proc {|frame|
 				data = frame['data']
-				puts "PIR: #{data[6]}, #{data[7]}"
 				self.video_mute = data[6] == 1
 				self.mute = data[7] == 1
 			}],
@@ -131,13 +129,11 @@ class NECProjector < Projector
 			}],
 			:mute_information => [0, 0x85, [3].pack("c"), proc {|frame|
 				data = frame['data']
-				puts "Mute info: #{data[0]}, #{data[1]}"
 				self.video_mute = data[0] == 1
 				self.mute = data[1] == 1
 			}],
 			:input_information => [0, 0x85, [2].pack("c"), proc {|frame|
 				data = frame['data']
-				puts "Input info: #{data[2]}, #{data[3]}"
 				case data[2..3]
 					when [1, 1] then self.input = "RGB1"
 					when [2, 1] then self.input = "RGB2"
@@ -153,7 +149,7 @@ class NECProjector < Projector
 						if data[i] & 2 ** t != 0
 							@errors << ERROR_STATUS[i][t]
 							error(ERROR_STATUS[i][t])
-							puts "Projector Error: #{ERROR_STATUS[i][t]}"
+							DaemonKit.logger.error "Projector Error: #{ERROR_STATUS[i][t]}"
 						end
 					}
 				}
@@ -308,8 +304,8 @@ class NECProjector < Projector
 							if frame["ack"]
 								begin
 									@frames[frame['id2']].call(frame) if @frames[frame['id2']]
-								rescue
-									puts "Error in NECProjector: #{$!}"
+								rescue => e
+									DaemonKit.logger.exception e
 								end
 								@responses[frame['id2']] = ""
 							else
@@ -329,7 +325,7 @@ class NECProjector < Projector
 		error_codes = {0 => "Not supported", 1 => "Parameter error", 2 => "Operation mode error", 
 			3 => "Gain-related error", 4 => "Logo transfer error"}
 		if frame['data'] && frame['data'][0]
-			puts "#{frame['id2'].to_s(16)}: The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
+			DaemonKit.logger.error "#{frame['id2'].to_s(16)}: The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
 			return "The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
 		end
 	end

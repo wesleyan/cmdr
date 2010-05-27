@@ -53,7 +53,7 @@ class EVID70Camera < Wescontrol::RS232Device
 	
 	def initialize(options)
 		options = options.symbolize_keys
-		puts "@Initializing camera on port #{options[:port]} with name #{options[:name]}"
+		DaemonKit.logger.info "Initializing camera on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
 		@address = options[:address]
 			
@@ -205,7 +205,7 @@ class EVID70Camera < Wescontrol::RS232Device
 					end
 				elsif buffer[1] >> 4 == 6 #error
 					_error = ERRORS[buffer[2]]
-					puts "Camera error: #{_error}"
+					DaemonKit.logger.error "Camera error: #{_error}"
 					deferrable = @_last_command[buffer[1] & 0b00001111][1]
 					deferrable.set_deferred_status :failed, _error if deferrable.class == EM::Deferrable
 				end

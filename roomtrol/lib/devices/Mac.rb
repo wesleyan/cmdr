@@ -26,7 +26,7 @@ class Mac < Computer
 	state_var :mac_addr,		:kind => :string,	:editable => false
 	
 	def initialize(options)
-		puts "Initializing Mac on #{self.ip_address}"
+		DaemonKit.logger.info "Initializing Mac on #{self.ip_address}"
 		options = options.symbolize_keys
 
 		Thread.abort_on_exception = true

@@ -27,7 +27,7 @@ class IREmitter < Wescontrol::Device
 	def initialize(options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
-		puts "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"
+		DaemonKit.logger.info "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"
 		super(options)
 		@commands = {}
 		@remote = options[:remote]
@@ -52,11 +52,11 @@ class IREmitter < Wescontrol::Device
 						line += byte
 						next
 					end
-					puts "READING: #{line}"
+					DaemonKit.logger.debug "READING: #{line}"
 					buffer = [] if line.strip == "BEGIN"
 					buffer.push(line)
 					if line.strip == "END"
-						puts "#{buffer[1]}: #{buffer[2]}"
+						DaemonKit.logger.debug "#{buffer[1]}: #{buffer[2]}"
 						@commands[buffer[1]] = buffer[2]
 					end
 					line = ""

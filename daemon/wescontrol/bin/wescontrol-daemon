@@ -1,9 +1,0 @@
-#!/usr/bin/env ruby
-
-require 'rubygems'
-require 'daemons'
-
-Daemons.run_proc 'wescontrol.rb', :log_output => true, :monitor => true do
-	require 'wescontrol'
-	Wescontrol::WescontrolRoom.new.start
-end

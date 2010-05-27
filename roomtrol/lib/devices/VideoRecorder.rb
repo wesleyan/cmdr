@@ -10,9 +10,9 @@ class VideoRecorder < Wescontrol::Device
 	def initialize(options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
-		puts "Initializing Video Recorder #{options[:name]} on #{options[:port]}"
-		puts "starting god"
-		puts `god`
+		DaemonKit.logger.info "Initializing Video Recorder #{options[:name]} on #{options[:port]}"
+		DaemonKit.logger.info "starting god:"
+		DaemonKit.logger.info `god`
 		@_god = DRbObject.new_with_uri(SERVER_URI)
 		super(options)
 	end
@@ -20,20 +20,20 @@ class VideoRecorder < Wescontrol::Device
 	def set_recording(on)
 		if on
 			if !@_god.ping
-				puts "Starting god"
+				DaemonKit.logger.debug puts "Starting god"
 				`god`
 			end
 			if !@_god.status || !@_god.status["recorder"]
 				`god load #{File.dirname(__FILE__)}/../../bin/encoder_watch.god`
 			end
 			if @_god.status && @_god.status["recorder"][:state] == :unmonitored
-				puts "Starting recorder"
+				DaemonKit.logger.debug "Starting recorder"
 				self.recording_started = Time.now
 				`god start recorder`
 			end
 		else
 			if @_god.status && @_god.status["recorder"][:state] != :unmonitored
-				puts "Stopping recorder"
+				DaemonKit.logger.debug "Stopping recorder"
 				self.recording_stopped = Time.now
 				`god stop recorder`
 			end

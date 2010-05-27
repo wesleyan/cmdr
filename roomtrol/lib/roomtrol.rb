@@ -17,9 +17,9 @@ Dir.glob("#{File.dirname(__FILE__)}/devices/*.rb").each{|device|
 	begin
 		require device
 	rescue
-		puts "Failed to load #{device}"
+		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
 	rescue LoadError
-		puts "Failed to load #{device}"
+		DaemonKit.logger.error "Failed to load #{device}: syntax error"
 	end
 }
 
@@ -32,7 +32,7 @@ module Wescontrol
 				begin
 					Object.const_get(hash['value']['class']).from_couch(hash['value'])
 				rescue
-					puts "Failed to create device: #{$!}"
+					DaemonKit.logger.error "Failed to create device: #{$!}"
 				end
 			}.compact
 			
@@ -56,11 +56,11 @@ module Wescontrol
 			"<Wescontrol:0x#{object_id.to_s(16)}>"
 		end
 		
-		def start		
+		def start
+			puts "Starting WescontrolHTTP on 0.0.0.0:1412"
 			EventMachine::run {
 				EventMachine.epoll
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
-				puts "Starting WescontrolHTTP on 0.0.0.0:1412"
 				
 				if defined? WescontrolDBus
 					Thread.abort_on_exception = true

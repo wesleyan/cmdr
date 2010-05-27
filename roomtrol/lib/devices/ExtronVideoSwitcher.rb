@@ -8,7 +8,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 
 	def initialize(options)
 		options = options.symbolize_keys
-		puts "Initializing Extron on port #{options[:port]} with name #{options[:name]}"
+		DaemonKit.logger.info "Initializing Extron on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
 	
 		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
@@ -71,10 +71,10 @@ class ExtronVideoSwitcher < VideoSwitcher
 				end
 				@responses[name] = nil
 			rescue
-				puts "Failed to send command #{name}: #{$!}"
+				DaemonKit.logger.info "Failed to send command #{name}: #{$!}"
 			end
 		else
-			puts "No command '#{name}'"
+			DaemonKit.logger.info "No command '#{name}'"
 		end
 	end
 	
@@ -104,7 +104,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 		while true do
 			response = @serial_port.readline.strip
 			if @errors[response]
-				puts "Extron Error: #{response}"
+				DaemonKit.logger.error "Extron Error: #{response}"
 			else
 				command = nil
 				@commands.each{|key, value|
@@ -113,8 +113,8 @@ class ExtronVideoSwitcher < VideoSwitcher
 				if command
 					begin
 						@responses[command[0]] = command[2].call(response)
-					rescue
-						puts "Error in ExtronVideoSwitcher: #{$!}"
+					rescue => e
+						DaemonKit.logger.exception(e)
 					end
 				end
 			end

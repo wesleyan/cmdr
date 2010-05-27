@@ -1,11 +1,11 @@
 spec = Gem::Specification.new do |s|
-	s.name = 'wescontrol'
-	s.version = '0.2.2'
-	s.summary = "WesControl daemon"
-	s.description = %{WesControl daemon and related classes}
-	s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb'] + ['bin/wescontrol-daemon']
+	s.name = 'roomtrol'
+	s.version = '0.3.0'
+	s.summary = "Roomtrol daemon"
+	s.description = %{Roomtrol daemon and related classes}
+	s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb'] + ['bin/roomtrol', 'start-recording']
 	s.require_path = 'lib'
-	s.executables = ["wescontrol-daemon"]
+	s.executables = ["roomtrol", "start-recording"]
 
 	s.add_dependency('macaddr', '>= 1.0.0')
 	s.add_dependency('json', '>= 1.2.0')
@@ -18,6 +18,7 @@ spec = Gem::Specification.new do |s|
 	s.add_dependency('daemons', ">= 1.0.10")
 	s.add_dependency('wol', ">= 0.3.3")
 	s.add_dependency('sinatra', ">= 1.0")
+	s.add_dependency('daemonkit', ">= 0.1.8rc3")
 
 	s.author = "Micah Wylde"
 	s.email = "mwylde@wesleyan.edu"

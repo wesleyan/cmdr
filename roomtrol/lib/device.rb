@@ -54,7 +54,7 @@ module Wescontrol
 									transformation = self.instance_eval &state_vars[var][:transformation]
 									self.send("\#{var}=", transformation)
 								rescue
-									puts "Transformation on \#{var} failed: \#{$!}"
+									DaemonKit.logger.error "Transformation on \#{var} failed: \#{$!}"
 								end
 							}
 						end
@@ -221,12 +221,12 @@ module Wescontrol
 					doc["_rev"] = @_rev
 				end
 				@_rev = @db.save_doc(doc)['rev']
-			rescue Exception => e
+			rescue => e
 				if !retried
 					retried = true
 					retry
 				else
-					puts "Failed"
+					DaemonKit.logger.exception e
 				end
 			end
 		end
