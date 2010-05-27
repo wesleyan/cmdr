@@ -1,8 +1,13 @@
-require 'rubygems'
-require 'serialport'
-require 'bitpack'
-
 class NECProjector < Projector
+	
+	class NECBitStruct < BitStruct
+		unsigned :id1,     8,    "Identification data assigned to each command"
+		unsigned :id2,     8,    "Identification data assigned to each command"
+		unsigned :p_id,    8,    "Projector ID"
+		unsigned :m_code,  4,    "Model code for projector"
+		unsigned :len,     12,   "Length of data"
+		rest     :data,          "Data and checksum"
+	end
 	
 	state_var :projector_name, 	:kind => 'string', 		:editable => false
 	state_var :projector_id,	:kind => 'string', 		:editable => false
@@ -233,43 +238,41 @@ class NECProjector < Projector
 
     def package_message(id1, id2, data, projector_id, model_code)
         # create a new BitPack object to pack the message into
-        bp = BitPack.new
+		message = NECBitStruct.new
+		message.id1 = id1
+		message.id2 = id2
+		message.p_id = projector_id
+		message.m_code = model_code
 
-        bp.append_bits(id1, 8)
-        bp.append_bits(id2, 8)
-        bp.append_bits(projector_id, 8)
-        bp.append_bits(model_code, 4)
         if data
-            bp.append_bits(data.size, 12)
-            bp.append_bytes(data)
+			message.length = data.size
+			message.data = data
         else
-            bp.append_bits(0, 12)
+            message.length = 0
+			message.data = ""
         end
         
         #now append the checksum, which is the last 8 bits of the sum of all the other stuff
         sum = 0
-        bp.to_bytes.each_byte{|byte| sum += byte}
-        bp.append_bits(sum & 255, 8) #mask by 255 to get just the last 8 bits
+        message.each_byte{|byte| sum += byte}
+        message.data += (sum & 255).chr #mask by 255 to get just the last 8 bits
         
-        #puts bp.to_bin.scan(/.{1,8}/m).collect{|a| a.to_i(2).to_s(16)}.join(" ")
-        return bp.to_bytes
+        return message.to_s
     end
 	
 	def interpret_message(frame)
-		bp = BitPack.new
-
-		bp.append_bytes(frame.pack("c*"))
+		message = NECBitStruct.new(frame.pack("c*"))
 
 		cm = {}
-		cm["id1"] = bp.read_bits(8)
-		cm["id2"] = bp.read_bits(8)
-		cm["projector_id"] = bp.read_bits(8)
-		cm["model_code"] = bp.read_bits(4)
-		cm["data_size"] = bp.read_bits(12)
+		cm["id1"] = message.id1
+		cm["id2"] = message.id2
+		cm["projector_id"] = message.p_id
+		cm["model_code"] = message.m_code
+		cm["data_size"] = message.len
 
-		cm["data"] = frame[5..-2] if cm["data_size"] > 0
+		cm["data"] = message.data.bytes.to_a[0..-2]
 
-		cm["checksum"] = bp.read_bits(8)
+		cm["checksum"] = message.data.bytes.to_a[-1]
 		
 		#Test whether the bit 8 is set or not. If it is, the response is acknowledged
 		#printf("id1: %08b\n", cm["id1"])

@@ -11,6 +11,7 @@ require "#{File.dirname(__FILE__)}/device"
 require "#{File.dirname(__FILE__)}/RS232Device"
 require "#{File.dirname(__FILE__)}/devices/Projector"
 require "#{File.dirname(__FILE__)}/devices/VideoSwitcher"
+require "#{File.dirname(__FILE__)}/devices/Computer"
 
 Dir.glob("#{File.dirname(__FILE__)}/devices/*.rb").each{|device|
 	begin

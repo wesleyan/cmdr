@@ -1,4 +1,4 @@
-class EVID70Camera < WescontrolWeb::RS232Device
+class EVID70Camera < Wescontrol::RS232Device
 	
 	config_var :address
 	state_var :power, 				:kind => 'boolean'

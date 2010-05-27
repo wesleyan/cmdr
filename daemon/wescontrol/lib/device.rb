@@ -112,11 +112,13 @@ module Wescontrol
 		def self.time_since_var(name, options)
 		end
 		def self.command(name, options)
+			#puts name
+			#puts options.inspect
 			if options[:action]
 				define_method name, &options[:action]
 			end
-			@command_vars ||= []
-			@command_vars << name
+			@command_vars ||= {}
+			@command_vars[name] = options
 			self.instance_eval do
 				all_command_vars = @command_vars
 				define_method("command_vars") do
@@ -219,10 +221,12 @@ module Wescontrol
 					doc["_rev"] = @_rev
 				end
 				@_rev = @db.save_doc(doc)['rev']
-			rescue
+			rescue Exception => e
 				if !retried
 					retried = true
 					retry
+				else
+					puts "Failed"
 				end
 			end
 		end

@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'serialport'
-require 'bitpack'
+require 'bit-struct'
 
 module Wescontrol
 	class RS232Device < Device

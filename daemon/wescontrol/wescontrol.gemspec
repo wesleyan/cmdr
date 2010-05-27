@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
 	s.name = 'wescontrol'
-	s.version = '0.2.1'
+	s.version = '0.2.2'
 	s.summary = "WesControl daemon"
 	s.description = %{WesControl daemon and related classes}
 	s.files = Dir['lib/**/*.rb'] + Dir['test/**/*.rb'] + ['bin/wescontrol-daemon']
@@ -9,8 +9,8 @@ spec = Gem::Specification.new do |s|
 
 	s.add_dependency('macaddr', '>= 1.0.0')
 	s.add_dependency('json', '>= 1.2.0')
-	s.add_dependency('bitpack', '>= 0.1')
 	s.add_dependency('serialport', '>= 0.8.0')
+	s.add_dependency('bit-struct', '>= 0.13.6')
 	s.add_dependency('couchrest', '>= 0.33')
 	s.add_dependency('eventmachine', '>= 0.12.10')
 	s.add_dependency('eventmachine_httpserver', '>= 0.2.0')

@@ -9,8 +9,8 @@ module MAC
 
 			lines = nil
 			cmds.each do |cmd|
-			stdout = IO.popen("#{ cmd } 2> #{ null }"){|fd| fd.readlines} rescue next
-			next unless stdout and stdout.size > 0
+				stdout = IO.popen("#{ cmd } 2> #{ null }"){|fd| fd.readlines} rescue next
+				next unless stdout and stdout.size > 0
 				lines = stdout and break
 			end
 			raise "all of #{ cmds.join ' ' } failed" unless lines
@@ -25,6 +25,11 @@ module MAC
 			maddr.strip!
 			maddr.instance_eval{ @list = candidates; def list() @list end }
 
+			#This is really, really bizarre. I have no fucking clue what's going on here,
+			#but for some reason, despite being in every way I can tell a perfectly ordinary
+			#string, maddr as is crashes the JSON library. WTF, right? Anyways, for some reason
+			#recomposing a new string from the byte array makes a good string, so that's what we're doing
+			maddr = maddr.bytes.to_a.collect{|byte| byte.chr}.join
 			@mac_address = maddr
 		end
 	end

@@ -1,9 +1,3 @@
-require 'rubygems'
-require 'serialport'
-require 'bitpack'
-
-#require "#{File.dirname(__FILE__)}/wescontrol/devices/Projector"
-
 class EikiProjector < Projector
 	
 	attr_reader :power, :cooling, :input, :video_mute

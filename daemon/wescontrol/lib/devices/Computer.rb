@@ -13,7 +13,7 @@ class Computer < Wescontrol::Device
 	}
 	
 	#current info
-	state_var :reachable, 		:kind => :boolean, 	:editable => false, :display_order => 1
+	state_var :reachable, :kind => :boolean, :editable => false, :display_order => 1
 	
 	def initialize(options)
 		@ip_address = options[:ip_address]
