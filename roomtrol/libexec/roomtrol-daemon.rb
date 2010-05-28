@@ -12,4 +12,5 @@ DaemonKit::Application.running! do |config|
 end
 
 # Sample loop to show process
+puts "Starting WescontrolHTTP on 0.0.0.0:1412"
 Wescontrol::WescontrolRoom.new.start

@@ -57,7 +57,6 @@ module Wescontrol
 		end
 		
 		def start
-			puts "Starting WescontrolHTTP on 0.0.0.0:1412"
 			EventMachine::run {
 				EventMachine.epoll
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP

@@ -43,7 +43,7 @@ module Wescontrol
 				def #{sym}= (val)
 					if @#{sym} != val
 						@#{sym} = val
-						printf("%-10s = %s\n", "#{sym}", val.to_s)
+						DaemonKit.logger.debug sprintf("%-10s = %s\n", "#{sym}", val.to_s)
 						state_vars = self.class.instance_variable_get(:@state_vars)
 						if callback = state_vars[:#{sym}][:on_change]
 							callback.call(val)
