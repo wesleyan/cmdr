@@ -213,6 +213,7 @@ describe "do virtual vars" do
 					"#{first} #{last}"
 				}
 		end
+		DeviceSubclass.state_vars[:first][:affects].should == [:full_name]
 		class DeviceSubSubclass < DeviceSubclass
 			virtual_var :full_name_inverse, 
 				:type => :string, 
@@ -221,11 +222,14 @@ describe "do virtual vars" do
 					"#{last} #{first}"
 				}
 		end
+		DeviceSubclass.state_vars[:first][:affects].should == [:full_name]
 		ds = DeviceSubclass.new
 		ds.first = "Micah"
 		ds.last = "Wylde"
 		ds.full_name.should == "Micah Wylde"
 		dss = DeviceSubSubclass.new
+		dss.first = "Micah"
+		dss.last = "Wylde"
 		dss.full_name.should == "Micah Wylde"
 		dss.first = "James"
 		dss.last = "Smith"

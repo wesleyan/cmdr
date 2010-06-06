@@ -4,9 +4,10 @@ module Wescontrol
 		#we need to do this because otherwise subclasses don't get a parent
 		#class's state_vars
 		def self.inherited(subclass)
+			subclass.instance_variable_set(:@state_vars, {})
 			self.instance_variable_get(:@state_vars).each{|name, options|
 				subclass.class_eval do
-					state_var(name, options)
+					state_var(name, options.deep_dup)
 				end
 			} if self.instance_variable_get(:@state_vars)
 			
@@ -18,7 +19,7 @@ module Wescontrol
 			
 			self.instance_variable_get(:@command_vars).each{|name, options|
 				subclass.class_eval do
-					command(name, options)
+					command(name, options.deep_dup)
 				end
 			} if self.instance_variable_get(:@command_vars)
 		end
@@ -65,7 +66,6 @@ module Wescontrol
 						@#{sym} = val
 						if virtuals = self.state_vars[:#{sym}][:affects]
 							virtuals.each{|var|
-								puts "<pre>\#{var}: \#{state_vars[var].inspect}</pre>"
 								begin
 									transformation = self.instance_eval &state_vars[var][:transformation]
 									self.send("\#{var}=", transformation)
@@ -113,5 +113,32 @@ module Wescontrol
 		def inspect
 			"<#{self.class.to_s}:0x#{object_id.to_s(16)}>"
 		end
+	end
+end
+
+
+#Thes methods dup all objects inside the hash/array as well as the data structure itself
+#However, because we don't check for cycles, they will cause an infinite loop if present
+class Object
+	def deep_dup
+		begin
+			self.dup
+		rescue
+			self
+		end
+	end
+end
+
+class Hash
+	def deep_dup
+		new_hash = {}
+		self.each{|k, v| new_hash[k] = v.deep_dup}
+		new_hash
+	end
+end
+
+class Array
+	def deep_dup
+		self.collect{|x| x.deep_dup}
 	end
 end
