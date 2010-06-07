@@ -113,6 +113,26 @@ module Wescontrol
 		def inspect
 			"<#{self.class.to_s}:0x#{object_id.to_s(16)}>"
 		end
+		
+		def to_couch
+			hash = {:state_vars => {}, :config => {}, :commands => {}}
+			
+			self.class.configuration.each{|var, value| hash[:config][var] = value}
+			
+			self.class.state_vars.each{|var, options|
+				if options[:type] == :time
+					options[:state] = eval("@#{var}.to_i")
+				else
+					options[:state] = eval("@#{var}")
+				end
+				hash[:state_vars][var] = options
+			}
+			
+			self.class.commands.each{|var, options| hash[:commands][var] = options}
+
+			return hash
+		end
+		
 	end
 end
 

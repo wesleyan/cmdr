@@ -172,6 +172,14 @@ describe "do virtual vars" do
 		ds = DeviceSubclass.new
 		ds.capital_name
 	end
+	it "should require a depends_on and transformation field" do
+		proc {
+			class DeviceSubclass < Wescontrol::Device
+				state_var :name, :type => :string
+				virtual_var :capital_name, :type => :string
+			end
+		}.should raise_error
+	end
 	it "should recalculate virtual vars" do
 		class DeviceSubclass < Wescontrol::Device
 			state_var :name, :type => :string
@@ -258,5 +266,41 @@ describe "deal with commands" do
 		end
 		DeviceSubclass.commands[:something].should_not == nil
 		DeviceSubclass.commands[:another].should == {:type => :array}
+	end
+end
+
+describe "persist to couchdb database" do
+	it "should create hash representation of device" do
+		class DeviceSubclass < Wescontrol::Device
+			configure do
+				baud 9600
+			end
+			state_var :name, :type => :string
+			state_var :brightness, :type => :percentage
+			command :focus, :type => :percentage
+		end
+		ds = DeviceSubclass.new
+		ds.name = "Projector"
+		ds.brightness = 0.8
+		ds.to_couch.should == {
+			:config => {
+				:baud => 9600
+			},
+			:state_vars => {
+				:name => {
+					:type => :string,
+					:state => "Projector"
+				},
+				:brightness => {
+					:type => :percentage,
+					:state => 0.8
+				}
+			},
+			:commands => {
+				:focus => {
+					:type => :percentage
+				}
+			}
+		}
 	end
 end
