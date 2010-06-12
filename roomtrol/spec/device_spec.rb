@@ -20,17 +20,29 @@ class DaemonKit
 	end
 end
 
+Spec::Runner.configure do |config|
+	config.before(:each) {
+		#this creates a mock save method so that nothing actually gets
+		#saved to the database. There's probably a better way to do this,
+		#involving mocking frameworks or a testing db.
+		class DeviceTest < Wescontrol::Device
+			def save
+			end
+		end
+	}
+end
+
 describe "allow configuration" do
   
 	it "should respond to configure" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			configure do
 			end
 		end
 	end
 	
 	it "should set configuration info" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -41,7 +53,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow multiple configuration blocks" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -57,7 +69,7 @@ describe "allow configuration" do
 	
 	it "should not allow multiple values in configuration" do
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < DeviceTest
 				configure do
 					baud 9600, 400, "no"
 				end
@@ -68,27 +80,27 @@ end
 
 describe "deal with state_vars properly" do
 	it "should respond to state_var" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 		end
 	end
 	
 	it "should require a :type field" do
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < DeviceTest
 				state_var :name
 			end
 		}.should raise_error
 		
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < DeviceTest
 				state_var :name, :someting => :else
 			end
 		}.should raise_error
 	end
 
 	it "should create accessor methods for state_var" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 		end
 		ds = DeviceSubclass.new
@@ -97,7 +109,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should inherit state_vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -110,7 +122,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should not share state_var values between subclasses" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -138,7 +150,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should set all state_vars in state_vars hash and allow access" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 			state_var :something, :type => :option, :options => (1..6).to_a
 		end
@@ -150,7 +162,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should create set_ methods if :action is provided" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :power, :type => :string, :action => proc {|x| "hello #{x}"}
 		end
 		ds = DeviceSubclass.new
@@ -160,7 +172,7 @@ end
 
 describe "do virtual vars" do
 	it "should allow creation of virtual vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -174,14 +186,14 @@ describe "do virtual vars" do
 	end
 	it "should require a depends_on and transformation field" do
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < DeviceTest
 				state_var :name, :type => :string
 				virtual_var :capital_name, :type => :string
 			end
 		}.should raise_error
 	end
 	it "should recalculate virtual vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :name, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -195,7 +207,7 @@ describe "do virtual vars" do
 		ds.capital_name.should == "MICAH"
 	end
 	it "should work with multiple depends_on vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -211,7 +223,7 @@ describe "do virtual vars" do
 		ds.full_name.should == "Micah Wylde"
 	end
 	it "should inherit virtual_vars properly" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -248,30 +260,38 @@ end
 
 describe "deal with commands" do
 	it "should allow setting commands" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			command :do_thing
 		end
 	end
 	it "should allow settings command with actions" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			command :do_thing, :action => proc{"hello"}
 		end
 		ds = DeviceSubclass.new
 		ds.do_thing.should == "hello"
 	end
 	it "should allow accessing commands" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			command :something
 			command :another, :type => :array
 		end
 		DeviceSubclass.commands[:something].should_not == nil
 		DeviceSubclass.commands[:another].should == {:type => :array}
 	end
+	it "should allow commands with arguments" do
+		class DeviceSubclass < DeviceTest
+			command :do_thing, :type => "percentage", :action => proc{|p| (p*100).to_i}
+			
+		end
+		ds = DeviceSubclass.new
+		ds.do_thing(0.1).should == 10
+	end
 end
 
 describe "persist to couchdb database" do
 	it "should create hash representation of device" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < DeviceTest
 			configure do
 				baud 9600
 			end
@@ -302,5 +322,50 @@ describe "persist to couchdb database" do
 				}
 			}
 		}
+	end
+	
+	it "should load a new device from hash" do
+		class DeviceSubclass < DeviceTest
+			configure do
+				baud 9600
+			end
+			state_var :name, :type => :string
+			state_var :brightness, :type => :percentage
+			command :focus, :type => :percentage
+		end
+		
+		ds = DeviceSubclass.from_couch({
+			"_id" => "0a2392bb27551acf35cdd1ca621ec26b",
+			"_rev" => "1654-ff63755fb7999e3d6fb97cc011575c38",
+			"attributes" => {
+				"config" => {
+					"baud" => 9600
+				},
+				"state_vars" => {
+					"name" => {
+						"type" => "string",
+						"state" => "Projector"
+					},
+					"brightness" => {
+						"type" => "percentage",
+						"state" => 0.8
+					}
+				},
+				"commands" => {
+					"focus" => {
+						"type" => "percentage"
+					}
+				}
+			},
+			"belongs_to" => "c180fad1e1599512ea68f1748eb601ea"
+		})
+		
+		ds.name.should == "Projector"
+		ds.brightness.should == 0.8
+		ds.name = "Extron"
+		ds.name.should == "Extron"
+		ds.state_vars[:name].should == {:type => :string}
+		ds._id.should == "0a2392bb27551acf35cdd1ca621ec26b"
+		ds._rev.should == "1654-ff63755fb7999e3d6fb97cc011575c38"
 	end
 end

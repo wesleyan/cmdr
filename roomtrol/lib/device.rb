@@ -1,5 +1,16 @@
+require 'couchrest'
 module Wescontrol
 	class Device
+		attr_accessor :_id, :_rev, :belongs_to, :controller
+		
+		def initialize(hash = {})
+			#TODO: Maybe force name to be provided?
+			hash_s = hash.symbolize_keys
+			@name = hash_s[:name]
+			#TODO: The database uri should not be hard-coded
+			@db = CouchRest.database("http://localhost:5984/rooms")
+		end
+
 		#this is a hook that gets called when the class is subclassed.
 		#we need to do this because otherwise subclasses don't get a parent
 		#class's state_vars
@@ -27,6 +38,7 @@ module Wescontrol
 		def self.configuration
 			@configuration
 		end
+		
 		class ConfigurationHandler
 			attr_reader :configuration
 			def initialize
@@ -36,6 +48,7 @@ module Wescontrol
 				@configuration[name] = args
 			end
 		end
+		
 		def self.configure &block
 			ch = ConfigurationHandler.new
 			ch.instance_eval(&block)
@@ -74,6 +87,17 @@ module Wescontrol
 								end
 							}
 						end
+						if @change_deferrable
+							@change_deferrable.set_deferred_status :succeeded, "#{sym}", val
+							@change_deferrable = nil
+							
+							if @auto_register
+								@auto_register.each{|block|
+									register_for_changes.callback(&block)
+								}
+							end
+						end
+						self.save
 					end
 					val
 				end
@@ -132,6 +156,66 @@ module Wescontrol
 
 			return hash
 		end
+		def self.from_couch(hash)
+			device = self.new(hash['attributes'])
+			device._id = hash['_id']
+			device._rev = hash['_rev']
+			device.belongs_to = hash['belongs_to']
+			device.controller = hash['controller']
+			state_vars = hash['attributes']['state_vars']
+			state_vars ||= {}
+			hash['attributes']['state_vars'] = nil
+			hash['attributes']['command_vars'] = nil
+
+			#merge the contents of the state_vars hash into attributes
+			(hash['attributes'].merge(state_vars.each_key{|name|
+				if state_vars[name]['kind'] == "time"
+					begin
+						state_vars[name] = Time.at(state_vars[name]['state'])
+					rescue
+					end
+				else
+					state_vars[name] = state_vars[name]['state']
+				end
+			})).each{|name, value|
+				device.instance_variable_set("@#{name}", value)
+			}
+			return device
+		end
+		def self.from_doc(id)
+			from_couch(CouchRest.database(@database).get(id))
+		end
+		
+		def save
+			retried = false
+			begin
+				hash = self.to_couch
+				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
+				if @_id && @_rev
+					doc["_id"] = @_id
+					doc["_rev"] = @_rev
+				end
+				#@_rev = @db.save_doc(doc)['rev']
+			rescue => e
+				if !retried
+					retried = true
+					retry
+				else
+					DaemonKit.logger.exception e
+				end
+			end
+		end
+		
+		def register_for_changes
+			@change_deferrable ||= EM::DefaultDeferrable.new
+			@change_deferrable
+		end
+		
+		def auto_register_for_changes(&block)
+			@auto_register ||= []
+			@auto_register << block
+			register_for_changes.callback(&block)
+		end
 		
 	end
 end
@@ -150,6 +234,17 @@ class Object
 end
 
 class Hash
+	def symbolize_keys!
+		t = self.dup
+		self.clear
+		t.each_pair{|k, v| self[k.to_sym] = v}
+		self
+	end
+	def symbolize_keys
+		t = {}
+		self.each_pair{|k, v| t[k.to_sym] = v}
+		t
+	end
 	def deep_dup
 		new_hash = {}
 		self.each{|k, v| new_hash[k] = v.deep_dup}
