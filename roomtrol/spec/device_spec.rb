@@ -1,24 +1,9 @@
 #require File.dirname(__FILE__) + '/spec_helper.rb'
 require File.dirname(__FILE__) + '/../lib/device.rb'
+require 'device_spec'
 # Time to add your specs!
 # http://rspec.info/
 
-class DaemonKit
-	def self.logger
-		return Logger
-	end
-	class Logger
-		def self.debug x
-			puts "Debug: #{x}"
-		end
-		def self.log x
-			puts "Log: #{x}"
-		end
-		def self.error x
-			puts "Error: #{x}"
-		end
-	end
-end
 
 Spec::Runner.configure do |config|
 	config.before(:each) {
@@ -27,6 +12,7 @@ Spec::Runner.configure do |config|
 		#involving mocking frameworks or a testing db.
 		class DeviceTest < Wescontrol::Device
 			def save
+				puts "save"
 			end
 		end
 	}
@@ -48,6 +34,7 @@ describe "allow configuration" do
 				port "/dev/something"
 			end
 		end
+		DaemonKit.logger.log("Hello")
 		DeviceSubclass.configuration[:baud].should == 9600
 		DeviceSubclass.configuration[:port].should == "/dev/something"
 	end
