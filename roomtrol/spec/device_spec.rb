@@ -1,4 +1,4 @@
-#require File.dirname(__FILE__) + '/spec_helper.rb'
+require File.dirname(__FILE__) + '/spec_helper.rb'
 require File.dirname(__FILE__) + '/../lib/device.rb'
 require 'device_spec'
 # Time to add your specs!
@@ -12,7 +12,6 @@ Spec::Runner.configure do |config|
 		#involving mocking frameworks or a testing db.
 		class DeviceTest < Wescontrol::Device
 			def save
-				puts "save"
 			end
 		end
 	}
@@ -34,9 +33,18 @@ describe "allow configuration" do
 				port "/dev/something"
 			end
 		end
-		DaemonKit.logger.log("Hello")
 		DeviceSubclass.configuration[:baud].should == 9600
 		DeviceSubclass.configuration[:port].should == "/dev/something"
+	end
+	
+	it "should allow empty configuration" do
+		class DeviceSubclass < DeviceTest
+			configure do
+				port
+			end
+		end
+		DeviceSubclass.configuration.size.should == 1
+		DeviceSubclass.configuration.each{|k,v| k.should == :port}
 	end
 	
 	it "should allow multiple configuration blocks" do

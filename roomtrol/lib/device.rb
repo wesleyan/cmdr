@@ -44,7 +44,7 @@ module Wescontrol
 			def initialize
 				@configuration = {}
 			end
-			def method_missing name, args
+			def method_missing name, args = nil
 				@configuration[name] = args
 			end
 		end

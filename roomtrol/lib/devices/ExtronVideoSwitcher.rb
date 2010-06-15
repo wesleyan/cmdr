@@ -27,10 +27,10 @@ class ExtronVideoSwitcher < Wescontrol::RS232Device
 			on ? "1Z\r\n" : "0Z\r\n"
 		}
 	
-	state_var :model, :kind => 'string'
-	state_var :firmware_version, :kind => 'string'
-	state_var :part_number, :kind => 'string'
-	state_var :clipping, :kind => 'boolean', :display_order => 4
+	state_var :model, :kind => 'string', :editable => false
+	state_var :firmware_version, :kind => 'string', :editable => false
+	state_var :part_number, :kind => 'string', :editable => false
+	state_var :clipping, :kind => 'boolean', :display_order => 4, :editable => false
 	
 	responses do
 		match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i.to_s}
