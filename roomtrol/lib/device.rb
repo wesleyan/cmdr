@@ -1,4 +1,6 @@
 require 'couchrest'
+require 'mq'
+require 'json'
 module Wescontrol
 	class Device
 		attr_accessor :_id, :_rev, :belongs_to, :controller
@@ -9,7 +11,66 @@ module Wescontrol
 			@name = hash_s[:name]
 			#TODO: The database uri should not be hard-coded
 			@db = CouchRest.database("http://localhost:5984/rooms")
+			@runners = []
 		end
+		
+		def run
+			
+			AMQP.start(:host => 'localhost') do
+				@amq_responder = MQ.new
+				handle_feedback = proc {|feedback, req, resp, job|
+					if feedback.is_a? EM::Deferrable
+						feedback.callback do |fb|
+							puts "Feedback called!"
+							resp["result"] = fb
+							@amq_responder.queue(req["queue"]).publish(resp.to_json)
+						end
+						feedback.errback do |error|
+							resp["error"] = error
+							@amq_responder.queue(req["queue"]).publish(resp.to_json)
+						end
+					else
+						resp["result"] = feedback
+						@amq_responder.queue(req["queue"]).publish(resp.to_json)
+					end
+				}
+				
+				amq = MQ.new
+				amq.queue('roomtrol:dqueue:Extron').subscribe{ |msg|
+					req = JSON.parse(msg)
+					resp = {:id => req["id"]}
+					case req["type"]
+					when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
+					when "state_set" then handle_feedback.call(self.send("#{req["var"]}=", req["value"]), req, resp)
+					when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
+					else puts "Didn't match: #{req["type"]}" 
+					end
+				}
+				
+			end
+		end
+
+#					This is what requests look like:
+#					{
+#						id: "FF00F317-108C-41BD-90CB-388F4419B9A1",
+#						queue: "roomtrol:http"
+#						type: "command",
+#						method: "power",
+#						args: [true]
+#					}
+#					{
+#						id: "D62F993B-E036-417C-948B-FEA389480984",
+#						queue: "roomtrol:websocket"
+#						type: "state_set",
+#						var: "input",
+#						value: 4
+#					}
+#					{
+#						id: "DD2297B4-6982-4804-976A-AEA868564DF3",
+#						queue: "roomtrol:http"
+#						type: "state_get",
+#						var: "input"
+#					}
 
 		#this is a hook that gets called when the class is subclassed.
 		#we need to do this because otherwise subclasses don't get a parent
@@ -219,7 +280,6 @@ module Wescontrol
 		
 	end
 end
-
 
 #Thes methods dup all objects inside the hash/array as well as the data structure itself
 #However, because we don't check for cycles, they will cause an infinite loop if present

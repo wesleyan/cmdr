@@ -15,15 +15,19 @@ module Wescontrol
 		end
 				
 		def send_string(string)
-			@serialport.send_data(string) if @serialport
+			send_data(string)
 		end
 		
 		def read data
 		end
+		
+		def run
+			EM::run { }
+			
+		end
 	
 		protected
 		def initialize(options)
-			puts "Initialized"
 			options = options.symbolize_keys
 			@port = options[:port]
 			throw "Must supply serial port parameter" unless @port
@@ -33,9 +37,7 @@ module Wescontrol
 			@parity = options[:parity] ? options[:parity] : 0
 			my_connection = RS232Connection.dup
 			my_connection.instance_variable_set(:@receiver, self)
-			#Thread.new {
-				EM::run { EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, my_connection}
-			#}
+			@runners = [proc{EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, my_connection}]
 			super(options)
 		end
 	end

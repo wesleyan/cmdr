@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 require File.dirname(__FILE__) + '/../lib/device.rb'
-require 'device_spec'
+require 'eventmachine'
+require 'mq'
 # Time to add your specs!
 # http://rspec.info/
 
@@ -362,5 +363,41 @@ describe "persist to couchdb database" do
 		ds.state_vars[:name].should == {:type => :string}
 		ds._id.should == "0a2392bb27551acf35cdd1ca621ec26b"
 		ds._rev.should == "1654-ff63755fb7999e3d6fb97cc011575c38"
+	end
+end	
+describe "handling requests from beanstalk" do
+	it "should return requested data" do
+		Thread.abort_on_exception = true
+		class DeviceSubclass < DeviceTest
+			state_var :name, :type => :string
+		end
+		
+		#@redis.del("roomtrol:test:1")
+		#redis.del("roomtrol:dqueue:Extron")
+		
+		ds = DeviceSubclass.new
+		ds.name = "Extron"
+		Thread.new{
+			ds.run
+		}
+		
+		json = '{
+			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"queue": "roomtrol:test:1",
+			"type": "state_get",
+			"var": "name"
+		}'
+		AMQP.start(:host => 'localhost') do
+			amq = MQ.new
+			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue('roomtrol:test:1').subscribe{|msg|
+				@msg = msg
+				EM::stop
+			}
+		end
+		JSON.parse(@msg).should == {
+			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"result" => "Extron"
+		}
 	end
 end
