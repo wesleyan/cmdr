@@ -4,7 +4,7 @@ require 'json'
 module Wescontrol
 	class Device
 		attr_accessor :_id, :_rev, :belongs_to, :controller
-		
+				
 		def initialize(hash = {})
 			#TODO: Maybe force name to be provided?
 			hash_s = hash.symbolize_keys
@@ -15,13 +15,11 @@ module Wescontrol
 		end
 		
 		def run
-			
-			AMQP.start(:host => 'localhost') do
+			AMQP.start(:host => 'localhost'){
 				@amq_responder = MQ.new
 				handle_feedback = proc {|feedback, req, resp, job|
 					if feedback.is_a? EM::Deferrable
 						feedback.callback do |fb|
-							puts "Feedback called!"
 							resp["result"] = fb
 							@amq_responder.queue(req["queue"]).publish(resp.to_json)
 						end
@@ -36,7 +34,7 @@ module Wescontrol
 				}
 				
 				amq = MQ.new
-				amq.queue('roomtrol:dqueue:Extron').subscribe{ |msg|
+				amq.queue("roomtrol:dqueue:#{@name}").subscribe{ |msg|
 					req = JSON.parse(msg)
 					resp = {:id => req["id"]}
 					case req["type"]
@@ -46,8 +44,7 @@ module Wescontrol
 					else puts "Didn't match: #{req["type"]}" 
 					end
 				}
-				
-			end
+			}
 		end
 
 #					This is what requests look like:
@@ -277,6 +274,9 @@ module Wescontrol
 			@auto_register << block
 			register_for_changes.callback(&block)
 		end
+		
+		state_var :name, :type => :string
+		
 		
 	end
 end

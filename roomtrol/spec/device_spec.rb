@@ -365,7 +365,46 @@ describe "persist to couchdb database" do
 		ds._rev.should == "1654-ff63755fb7999e3d6fb97cc011575c38"
 	end
 end	
-describe "handling requests from beanstalk" do
+describe "handling requests from amqp" do
+	it "should work for commands" do
+		Thread.abort_on_exception = true
+		class DeviceSubclass < DeviceTest
+			command :power, :action => proc{|on| "power=#{on}"}
+		end
+		
+		ds = DeviceSubclass.new
+		ds.name = "Extron"
+		
+		json = '{
+			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"queue": "roomtrol:test:2",
+			"type": "command",
+			"method": "power",
+			"args": [true]
+		}'
+		AMQP.start(:host => 'localhost') do
+			ds.run
+			amq = MQ.new
+			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue('roomtrol:test:2').subscribe{|msg|
+				@msg = msg
+				AMQP.stop do
+					EM.stop
+				end
+			}
+			
+			EM::add_periodic_timer(3) do
+				AMQP.stop do
+					EM.stop
+				end
+			end
+		end
+		@msg.class.should == String
+		JSON.parse(@msg).should == {
+			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"result" => "power=true"
+		}
+	end
 	it "should return requested data" do
 		Thread.abort_on_exception = true
 		class DeviceSubclass < DeviceTest
@@ -377,9 +416,6 @@ describe "handling requests from beanstalk" do
 		
 		ds = DeviceSubclass.new
 		ds.name = "Extron"
-		Thread.new{
-			ds.run
-		}
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -388,16 +424,26 @@ describe "handling requests from beanstalk" do
 			"var": "name"
 		}'
 		AMQP.start(:host => 'localhost') do
+			ds.run
 			amq = MQ.new
 			amq.queue('roomtrol:dqueue:Extron').publish(json)
 			amq.queue('roomtrol:test:1').subscribe{|msg|
 				@msg = msg
-				EM::stop
+				AMQP.stop do
+					EM.stop
+				end
 			}
+			
+			EM::add_periodic_timer(3) do
+				AMQP.stop do
+					EM.stop
+				end
+			end
 		end
 		JSON.parse(@msg).should == {
 			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
 			"result" => "Extron"
 		}
 	end
+
 end
