@@ -35,11 +35,12 @@ module Wescontrol
 				
 				amq = MQ.new
 				amq.queue("roomtrol:dqueue:#{@name}").subscribe{ |msg|
+					#puts msg
 					req = JSON.parse(msg)
 					resp = {:id => req["id"]}
 					case req["type"]
 					when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
-					when "state_set" then handle_feedback.call(self.send("#{req["var"]}=", req["value"]), req, resp)
+					when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
 					when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
 					else puts "Didn't match: #{req["type"]}" 
 					end

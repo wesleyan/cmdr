@@ -366,6 +366,50 @@ describe "persist to couchdb database" do
 	end
 end	
 describe "handling requests from amqp" do
+	it "should work for setting vars" do
+		Thread.abort_on_exception = true
+		class DeviceSubclass < DeviceTest
+			state_var :power, :type => :boolean
+			def set_power state
+				self.power = state
+			end
+		end
+		
+		ds = DeviceSubclass.new
+		ds.name = "Extron"
+		ds.power = false
+		ds.power.should == false
+		json = '{
+			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"queue": "roomtrol:test:3",
+			"type": "state_set",
+			"var": "power",
+			"value": true
+		}'
+		AMQP.start(:host => 'localhost') do
+			ds.run
+			amq = MQ.new
+			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue('roomtrol:test:3').subscribe{|msg|
+				@msg = msg
+				AMQP.stop do
+					EM.stop
+				end
+			}
+			
+			EM::add_periodic_timer(3) do
+				AMQP.stop do
+					EM.stop
+				end
+			end
+		end
+		@msg.class.should == String
+		JSON.parse(@msg).should == {
+			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"result" => true
+		}
+		ds.power.should == true
+	end
 	it "should work for commands" do
 		Thread.abort_on_exception = true
 		class DeviceSubclass < DeviceTest
@@ -411,9 +455,6 @@ describe "handling requests from amqp" do
 			state_var :name, :type => :string
 		end
 		
-		#@redis.del("roomtrol:test:1")
-		#redis.del("roomtrol:dqueue:Extron")
-		
 		ds = DeviceSubclass.new
 		ds.name = "Extron"
 		
@@ -444,6 +485,71 @@ describe "handling requests from amqp" do
 			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
 			"result" => "Extron"
 		}
+	end
+	it "should work under stressful situations" do
+		Thread.abort_on_exception = true
+		@times = 1000
+		class DeviceSubclass < DeviceTest
+			command :zoom, :action => proc{|zoom| "zoom=#{zoom}"}
+			#state_var :power, :type => :boolean, :action => proc{|on| this.power = on}
+			state_var :brightness, :type => :integer, :action => proc{|v| self.brightness = v}
+			state_var :volume, :type => :integer, :action => proc{|v| self.volume = v}
+		end
+				
+		ds = DeviceSubclass.new
+		ds.name = "Extron"
+		
+		@states = {:brightness => 1, :volume => 1}
+		
+		types = [:state_get, :state_set, :command]
+		@messages = []
+		@recv = 0
+		srand(124209350982)
+		AMQP.start(:host => 'localhost') do
+			EM::add_periodic_timer(5) do
+				AMQP.stop do
+					EM.stop
+				end
+			end
+			ds.run
+			amq = MQ.new
+			amq.queue('roomtrol:test:4').subscribe{|json|
+				msg = JSON.parse(json)
+				if @messages[msg["id"]].is_a? Symbol
+					#puts "Symbol"
+					#msg["result"].should == ds.send(@messages[msg["id"]])
+				else
+					msg["result"].should == @messages[msg["id"]]
+				end
+				@recv+=1
+				if @recv == @times
+					AMQP.stop do
+						EM.stop
+					end
+				end
+			}
+			@times.times{|i|
+				msg = {:id => i, :queue => "roomtrol:test:4"}
+				case types[rand(3)]
+				when :state_get then
+					msg[:type] = :state_get
+					msg[:var] = @states.keys[rand(2)]
+					@messages[i] = msg[:var]
+				when :state_set then
+					msg[:type] = :state_set
+					msg[:var] = @states.keys[rand(2)]
+					msg[:value] = rand(100)
+					@messages[i] = msg[:value]
+				when :command then
+					msg[:type] = :command
+					msg[:method] = :zoom
+					msg[:args] = rand(100)
+					@messages[i] = "zoom=#{msg[:args]}"
+				end
+				amq.queue('roomtrol:dqueue:Extron').publish(msg.to_json)
+			}
+		end
+		@recv.should == @times
 	end
 
 end
