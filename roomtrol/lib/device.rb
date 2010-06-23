@@ -1,3 +1,4 @@
+$eventmachine_library = :pure_ruby
 require 'couchrest'
 require 'mq'
 require 'json'
@@ -11,7 +12,6 @@ module Wescontrol
 			@name = hash_s[:name]
 			#TODO: The database uri should not be hard-coded
 			@db = CouchRest.database("http://localhost:5984/rooms")
-			@runners = []
 		end
 		
 		def run
@@ -48,27 +48,27 @@ module Wescontrol
 			}
 		end
 
-#					This is what requests look like:
-#					{
-#						id: "FF00F317-108C-41BD-90CB-388F4419B9A1",
-#						queue: "roomtrol:http"
-#						type: "command",
-#						method: "power",
-#						args: [true]
-#					}
-#					{
-#						id: "D62F993B-E036-417C-948B-FEA389480984",
-#						queue: "roomtrol:websocket"
-#						type: "state_set",
-#						var: "input",
-#						value: 4
-#					}
-#					{
-#						id: "DD2297B4-6982-4804-976A-AEA868564DF3",
-#						queue: "roomtrol:http"
-#						type: "state_get",
-#						var: "input"
-#					}
+#		This is what requests look like:
+#		{
+#			id: "FF00F317-108C-41BD-90CB-388F4419B9A1",
+#			queue: "roomtrol:http"
+#			type: "command",
+#			method: "power",
+#			args: [true]
+#		}
+#		{
+#			id: "D62F993B-E036-417C-948B-FEA389480984",
+#			queue: "roomtrol:websocket"
+#			type: "state_set",
+#			var: "input",
+#			value: 4
+#		}
+#		{
+#			id: "DD2297B4-6982-4804-976A-AEA868564DF3",
+#			queue: "roomtrol:http"
+#			type: "state_get",
+#			var: "input"
+#		}
 
 		#this is a hook that gets called when the class is subclassed.
 		#we need to do this because otherwise subclasses don't get a parent
@@ -81,12 +81,8 @@ module Wescontrol
 				end
 			} if self.instance_variable_get(:@state_vars)
 			
-			self.instance_variable_get(:@config_vars).each{|name|
-				subclass.class_eval do
-					config_var(name)
-				end
-			} if self.instance_variable_get(:@config_vars)
-			
+			subclass.instance_variable_set(:@configuration, @configuration)
+						
 			self.instance_variable_get(:@command_vars).each{|name, options|
 				subclass.class_eval do
 					command(name, options.deep_dup)
@@ -98,13 +94,21 @@ module Wescontrol
 			@configuration
 		end
 		
+		def configuration
+			self.class.instance_variable_get(:@configuration)
+		end
+		
 		class ConfigurationHandler
 			attr_reader :configuration
 			def initialize
 				@configuration = {}
 			end
 			def method_missing name, args = nil
-				@configuration[name] = args
+				if args.class == Hash
+					@configuration[name] = args[:default]
+				else
+					@configuration[name] = args
+				end
 			end
 		end
 		
@@ -112,7 +116,7 @@ module Wescontrol
 			ch = ConfigurationHandler.new
 			ch.instance_eval(&block)
 			@configuration ||= {}
-			@configuration = ch.configuration.merge @configuration
+			@configuration = @configuration.merge ch.configuration
 		end
 		
 		def self.state_vars; @state_vars; end
@@ -184,6 +188,7 @@ module Wescontrol
 		end
 		
 		def self.commands; @command_vars; end
+		def commands; self.class.commands; end
 		
 		def self.command name, options = {}
 			if options[:action].class == Proc
@@ -200,7 +205,9 @@ module Wescontrol
 		def to_couch
 			hash = {:state_vars => {}, :config => {}, :commands => {}}
 			
-			self.class.configuration.each{|var, value| hash[:config][var] = value}
+			if configuration
+				configuration.each{|var, value| hash[:config][var] = value}
+			end
 			
 			self.class.state_vars.each{|var, options|
 				if options[:type] == :time
@@ -210,8 +217,9 @@ module Wescontrol
 				end
 				hash[:state_vars][var] = options
 			}
-			
-			self.class.commands.each{|var, options| hash[:commands][var] = options}
+			if commands
+				commands.each{|var, options| hash[:commands][var] = options}
+			end
 
 			return hash
 		end

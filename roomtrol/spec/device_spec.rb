@@ -38,14 +38,24 @@ describe "allow configuration" do
 		DeviceSubclass.configuration[:port].should == "/dev/something"
 	end
 	
-	it "should allow empty configuration" do
+	it "should allow variable configuration" do
 		class DeviceSubclass < DeviceTest
 			configure do
-				port
+				port :type => :string
 			end
 		end
 		DeviceSubclass.configuration.size.should == 1
 		DeviceSubclass.configuration.each{|k,v| k.should == :port}
+	end
+	
+	it "should allow default values for variable configuration" do
+		class DeviceSubclass < DeviceTest
+			configure do
+				baud :type => :integer, :default => 9600
+			end
+		end
+		DeviceSubclass.configuration.size.should == 1
+		DeviceSubclass.configuration.each{|k,v| k.should == :baud; v.should == 9600}
 	end
 	
 	it "should allow multiple configuration blocks" do
@@ -71,6 +81,22 @@ describe "allow configuration" do
 				end
 			end
 		}.should raise_error
+	end
+	
+	it "should share configuration with subclasses" do
+		class DeviceSubclass < DeviceTest
+			configure do
+				baud 9600
+				port "/dev/something"
+			end
+		end
+		class DeviceSubSubclass < DeviceSubclass
+			configure do
+				baud 2400
+				parity 0
+			end
+		end
+		DeviceSubSubclass.configuration.should == {:baud => 2400, :port => "/dev/something", :parity => 0}
 	end
 end
 

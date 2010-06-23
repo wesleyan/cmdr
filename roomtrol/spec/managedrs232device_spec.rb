@@ -2,6 +2,7 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 require File.dirname(__FILE__) + '/../lib/device.rb'
 require File.dirname(__FILE__) + '/../lib/rs232device.rb'
 require File.dirname(__FILE__) + '/../lib/managedrs232device.rb'
+
 # Time to add your specs!
 # http://rspec.info/
 
@@ -43,10 +44,53 @@ describe "do responses" do
 	end
 
 	it "should allow setting responses with match" do
-		class DeviceSubclass < DeviceTest
+		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
+		class MR232DeviceSubclass < MR232Device
 			responses do
-				match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i.to_s}
+				match :channel,  /Chn\d/, $proc
 			end
 		end
+		MR232DeviceSubclass.instance_variable_get(:@matchers)[0].should == [:channel, /Chn\d/, $proc]
+	end
+	it "should allow setting multiple matches" do
+		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
+		class MR232DeviceSubclass < MR232Device
+			responses do
+				match :channel,  /Chn\d/, $proc
+				match :volume, /Vol\d/, $proc
+			end
+		end
+		MR232DeviceSubclass.instance_variable_get(:@matchers).should == [
+			[:channel, /Chn\d/, $proc],
+			[:volume, /Vol\d/, $proc],
+		]
+	end
+	it "should properly match regexps" do
+		class MR232DeviceSubclass < MR232Device
+			state_var :input, 
+				:type => 'option', 
+				:display_order => 1, 
+				:options => ("1".."6").to_a,
+				:response => :channel,
+				:action => proc{|input|
+					"#{input}!\r\n"
+				}
+			state_var :volume,
+				:type => 'percentage',
+				:display_order => 2,
+				:response => :volume,
+				:action => proc{|volume|
+					"#{(volume*100).to_i}V\r\n"
+				}
+			responses do
+				match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i}
+				match :volume,   /Vol\d+/, proc{|r| self.volume = r.strip[3..-1].to_i/100.0}
+			end
+		end
+		ds = MR232DeviceSubclass.new(:name => "Extron", :port => '/dev/null')
+		ds.read "Chn4\r\n"
+		ds.read "Vol12\r\n"
+		ds.input.should == 4
+		ds.volume.should == 0.12
 	end
 end
