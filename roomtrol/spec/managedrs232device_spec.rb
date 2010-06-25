@@ -32,7 +32,25 @@ describe "state_var enhancements" do
 		end
 		MR232DeviceSubclass.state_vars[:input][:type] == :option
 	end
-	
+	it "should create action methods that add the message to the send queue" do
+		class MR232DeviceSubclass < MR232Device
+			attr_accessor :string
+			state_var :input, 
+				:type => :options, 
+				:display_order => 1, 
+				:options => ("1".."6").to_a,
+				:response => :channel,
+				:action => proc{|input|
+					"#{input}!\r\n"
+				}
+			def send_string string
+				@string = string
+			end
+		end
+		ds = MR232DeviceSubclass.new(:name => "Extron", :port => "/dev/null")
+		ds.set_input(4)
+		ds.string.should == "4!\r\n"
+	end
 end
 
 describe "do responses" do

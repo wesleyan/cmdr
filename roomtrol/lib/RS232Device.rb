@@ -15,7 +15,7 @@ module Wescontrol
 		end
 				
 		def send_string(string)
-			send_data(string)
+			@serialport.send_data(string)
 		end
 		
 		def read data

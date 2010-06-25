@@ -10,21 +10,21 @@ class ExtronVideoSwitcher < Wescontrol::RS232Device
 		:options => ("1".."6").to_a,
 		:response => :channel,
 		:action => proc{|input|
-			"#{input}!\r\n"
+			"#{input}!"
 		}
 	state_var :volume,
 		:kind => 'percentage',
 		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
-			"#{(volume*100).to_i}V\r\n"
+			"#{(volume*100).to_i}V"
 		}
 	state_var :mute,
 		:kind => 'boolean',
 		:display_order => 3,
 		:response => :mute,
 		:action => proc{|on|
-			on ? "1Z\r\n" : "0Z\r\n"
+			on ? "1Z\r\n" : "0Z"
 		}
 	
 	state_var :model, :kind => 'string', :editable => false
@@ -44,8 +44,8 @@ class ExtronVideoSwitcher < Wescontrol::RS232Device
 	end
 	
 	requests do
-		send "I\r\n", 0.5, :response => :status
-		send "V\r\n", 0.5, :response => :volume
-		send "Z\r\n", 0.5, :response => :mute
+		send :input, "I\r\n", 0.5
+		send :volume, "V\r\n", 0.5
+		send :mute, "Z\r\n", 0.5
 	end
 end
