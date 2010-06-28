@@ -1,9 +1,14 @@
 require 'strscan'
 module Wescontrol
 	class ManagedRS232Device < RS232Device
-		TIMEOUT = 2.0
+		TIMEOUT = 2.0 #number of seconds to wait for a reply
 		configure do
 			message_end "\r\n"
+		end
+		
+		def initialize options
+			@_send_queue = []
+			super(options)
 		end
 				
 		def self.state_var name, options
@@ -12,7 +17,7 @@ module Wescontrol
 			super name, options
 			
 			if options[:action].is_a? Proc
-				define_method "set_#{name}".to_sym {|value|
+				define_method "set_#{name}".to_sym, proc {|value|
 					message = options[:action].call(value)
 					do_message message, EM::DefaultDeferrable.new
 				}
@@ -99,18 +104,22 @@ module Wescontrol
 					end
 				} if matchers
 				if m
-					case m[0]
-						when :ack then
-							@_message_handler.succeed
-						when :nack then
-							@_message_handler.fail
-						when :error then
-							resp = m[2].is_a? Proc ? m[2].call(msg) : m[2]
-							@_message_handler.fail resp
-						else
-							@_message_handler.succeed instance_exec(msg, &m[2])
+					if @_message_handler
+						case m[0]
+							when :ack then
+								@_message_handler.succeed
+							when :nack then
+								@_message_handler.fail
+							when :error then
+								resp = m[2].is_a? Proc ? m[2].call(msg) : m[2]
+								@_message_handler.fail resp
+							else
+								@_message_handler.succeed instance_exec(msg, &m[2])
+						end
+						@_message_handler = nil
+					else
+						instance_exec(msg, &m[2])
 					end
-					@_message_handler = nil
 				end
 			end
 			@_buffer = s.rest
@@ -122,11 +131,12 @@ module Wescontrol
 		
 		def ready_to_send=(state)
 			@_ready_to_send = state
-			@_ready_to_send = true if Time.now - @_last_sent_time > 1
+			@_ready_to_send = true if @_last_sent_time == nil || Time.now - @_last_sent_time > 1
 
 			if @_ready_to_send
 				if @_send_queue.size == 0
-					do_message choose_request
+					request = choose_request
+					do_message request if request
 				end
 				send_from_queue
 			end
@@ -145,6 +155,7 @@ module Wescontrol
 		end
 		
 		def choose_request
+			return nil unless request_scheduler
 			@_request_iter ||= -1
 			@_request_iter += 1
 			request_scheduler[@_request_iter % request_scheduler.size][1]

@@ -412,7 +412,7 @@ describe "handling requests from amqp" do
 			"var": "power",
 			"value": true
 		}'
-		AMQP.start(:host => 'localhost') do
+		AMQP.start(:host => '127.0.0.1') do
 			ds.run
 			amq = MQ.new
 			amq.queue('roomtrol:dqueue:Extron').publish(json)
@@ -452,7 +452,7 @@ describe "handling requests from amqp" do
 			"method": "power",
 			"args": [true]
 		}'
-		AMQP.start(:host => 'localhost') do
+		AMQP.start(:host => '127.0.0.1') do
 			ds.run
 			amq = MQ.new
 			amq.queue('roomtrol:dqueue:Extron').publish(json)
@@ -490,7 +490,7 @@ describe "handling requests from amqp" do
 			"type": "state_get",
 			"var": "name"
 		}'
-		AMQP.start(:host => 'localhost') do
+		AMQP.start(:host => '127.0.0.1') do
 			ds.run
 			amq = MQ.new
 			amq.queue('roomtrol:dqueue:Extron').publish(json)
@@ -531,7 +531,7 @@ describe "handling requests from amqp" do
 		@messages = []
 		@recv = 0
 		srand(124209350982)
-		AMQP.start(:host => 'localhost') do
+		AMQP.start(:host => '127.0.0.1') do
 			EM::add_periodic_timer(5) do
 				AMQP.stop do
 					EM.stop

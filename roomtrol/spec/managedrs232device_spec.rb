@@ -34,7 +34,7 @@ describe "state_var enhancements" do
 	end
 	it "should create action methods that add the message to the send queue" do
 		class MR232DeviceSubclass < MR232Device
-			attr_accessor :string
+			attr_accessor :_send_queue
 			state_var :input, 
 				:type => :options, 
 				:display_order => 1, 
@@ -43,13 +43,10 @@ describe "state_var enhancements" do
 				:action => proc{|input|
 					"#{input}!\r\n"
 				}
-			def send_string string
-				@string = string
-			end
 		end
 		ds = MR232DeviceSubclass.new(:name => "Extron", :port => "/dev/null")
 		ds.set_input(4)
-		ds.string.should == "4!\r\n"
+		ds._send_queue[0][0].should == "4!\r\n"
 	end
 end
 
@@ -68,7 +65,7 @@ describe "do responses" do
 				match :channel,  /Chn\d/, $proc
 			end
 		end
-		MR232DeviceSubclass.instance_variable_get(:@matchers)[0].should == [:channel, /Chn\d/, $proc]
+		MR232DeviceSubclass.instance_variable_get(:@_matchers)[0].should == [:channel, /Chn\d/, $proc]
 	end
 	it "should allow setting multiple matches" do
 		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
@@ -78,7 +75,7 @@ describe "do responses" do
 				match :volume, /Vol\d/, $proc
 			end
 		end
-		MR232DeviceSubclass.instance_variable_get(:@matchers).should == [
+		MR232DeviceSubclass.instance_variable_get(:@_matchers).should == [
 			[:channel, /Chn\d/, $proc],
 			[:volume, /Vol\d/, $proc],
 		]

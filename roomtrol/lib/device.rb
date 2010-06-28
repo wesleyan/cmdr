@@ -2,6 +2,15 @@ $eventmachine_library = :pure_ruby
 require 'couchrest'
 require 'mq'
 require 'json'
+
+module EventMachine
+	class Connection
+		def associate_callback_target(sig) #:nodoc:
+		#   For reasons unknown, this method was commented out
+		#   in recent version of EM. We need it, though, for AMQP.
+		end
+	end
+end
 module Wescontrol
 	class Device
 		attr_accessor :_id, :_rev, :belongs_to, :controller
@@ -15,7 +24,7 @@ module Wescontrol
 		end
 		
 		def run
-			AMQP.start(:host => 'localhost'){
+			AMQP.start(:host => '127.0.0.1'){
 				@amq_responder = MQ.new
 				handle_feedback = proc {|feedback, req, resp, job|
 					if feedback.is_a? EM::Deferrable
