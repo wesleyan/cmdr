@@ -149,6 +149,7 @@ module Wescontrol
 				def #{sym}= val
 					if @#{sym} != val
 						@#{sym} = val
+						DaemonKit.logger.debug sprintf("%-10s = %s\n", "#{sym}", val.to_s)
 						if virtuals = self.state_vars[:#{sym}][:affects]
 							virtuals.each{|var|
 								begin

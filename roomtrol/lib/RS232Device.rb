@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'em-serialport'
+require "#{File.dirname(__FILE__)}/em-serialport"
 require 'bit-struct'
 
 module Wescontrol
@@ -23,13 +23,12 @@ module Wescontrol
 		
 		def run
 			EM::run {
-				EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, my_connection
-				super.run
+				EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
+				super
 			}
 			
 		end
 	
-		protected
 		def initialize(options)
 			options = options.symbolize_keys
 			@port = options[:port]
@@ -38,8 +37,8 @@ module Wescontrol
 			@data_bits = options[:data_bits] ? options[:data_bits] : 8
 			@stop_bits = options[:stop_bits] ? options[:stop_bits] : 1
 			@parity = options[:parity] ? options[:parity] : 0
-			my_connection = RS232Connection.dup
-			my_connection.instance_variable_set(:@receiver, self)
+			@connection = RS232Connection.dup
+			@connection.instance_variable_set(:@receiver, self)
 			super(options)
 		end
 	end

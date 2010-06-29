@@ -1,14 +1,23 @@
 require 'strscan'
 module Wescontrol
 	class ManagedRS232Device < RS232Device
-		TIMEOUT = 2.0 #number of seconds to wait for a reply
+		TIMEOUT = 5.0 #number of seconds to wait for a reply
 		configure do
 			message_end "\r\n"
 		end
 		
 		def initialize options
 			@_send_queue = []
+			@_ready_to_send = true
 			super(options)
+		end
+		
+		def run
+			EM::run {
+				ready_to_send = true
+				EM::add_periodic_timer(0.5) { self.ready_to_send = @_ready_to_send}
+				super
+			}
 		end
 				
 		def self.state_var name, options
@@ -76,8 +85,8 @@ module Wescontrol
 			multiplier = 1.0/@_requests.collect{|x| x[2]}.min
 			r = @_requests.collect{|x| [x[0], x[1], (x[2]*multiplier).to_i]}
 			iter = 0
-			r.inject{|x, sum| x[2] + sum}.times{|i|
-				while r[iter % r.size][2] != 0
+			r.inject(0){|sum, x|x[2] + sum}.times{|i|
+				while r[iter % r.size][2] == 0
 					iter += 1
 				end
 				r[iter % r.size][2] -= 1
@@ -131,7 +140,7 @@ module Wescontrol
 		
 		def ready_to_send=(state)
 			@_ready_to_send = state
-			@_ready_to_send = true if @_last_sent_time == nil || Time.now - @_last_sent_time > 1
+			@_ready_to_send = true if !@_last_sent_time || Time.now - @_last_sent_time > TIMEOUT
 
 			if @_ready_to_send
 				if @_send_queue.size == 0
