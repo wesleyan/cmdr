@@ -109,3 +109,90 @@ describe "do responses" do
 		ds.volume.should == 0.12
 	end
 end
+
+describe "do requests" do
+	it "should properly send requests" do
+		class MR232DeviceSubclass < MR232Device
+			attr_reader :string_array
+			def initialize(options)
+				super(options)
+				@string_array = []
+			end
+			configure do
+				baud        9600
+				message_end "\r"
+			end
+
+			requests do
+				send :input, "I\r\n", 0.5
+				send :volume, "V\r\n", 1
+				send :mute, "Z\r\n", 0.5
+			end
+			
+			def send_string string
+				@string_array << string
+			end
+		end
+		ds = MR232DeviceSubclass.new(:name => "Extron", :port => "/dev/null")
+		EM::run {
+			EM::add_periodic_timer(3) {
+				AMQP.stop do
+					EM.stop
+				end
+			}
+			ds.run
+		}
+		ds.string_array[0..3].sort.should == ["I\r\n", "V\r\n", "V\r\n", "Z\r\n"]
+	end
+end
+
+describe "sending messages" do
+	it "should respond to AMQP messages appropriately" do
+		class MR232DeviceSubclass < MR232Device
+			attr_reader :string_array
+			def initialize(options)
+				super(options)
+				@string_array = []
+				@power = true
+			end
+			state_var :power, 
+				:type => :boolean,
+				:action => proc{|p| "power=#{p}\r\n"}
+			def send_string string
+				@string_array << string
+			end
+		end
+		
+		ds = MR232DeviceSubclass.new(:name => 'Extron', :port => '/dev/null')
+		json = '{
+			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"queue": "roomtrol:test:3",
+			"type": "state_set",
+			"var": "power",
+			"value": false
+		}'
+		AMQP.start(:host => '127.0.0.1') do
+			ds.run
+			amq = MQ.new
+			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue('roomtrol:test:3').subscribe{|msg|
+				@msg = msg
+				AMQP.stop do
+					EM.stop
+				end
+			}
+			
+			EM::add_periodic_timer(3) do
+				AMQP.stop do
+					EM.stop
+				end
+			end
+		end
+		@msg.class.should == String
+		JSON.parse(@msg).should == {
+			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
+			"error" => nil
+		}
+		ds.string_array.should == ["power=false\r\n"]
+	end
+end

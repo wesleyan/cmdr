@@ -1,7 +1,7 @@
 require 'strscan'
 module Wescontrol
 	class ManagedRS232Device < RS232Device
-		TIMEOUT = 5.0 #number of seconds to wait for a reply
+		TIMEOUT = 0.5 #number of seconds to wait for a reply
 		configure do
 			message_end "\r\n"
 		end
@@ -15,7 +15,7 @@ module Wescontrol
 		def run
 			EM::run {
 				ready_to_send = true
-				EM::add_periodic_timer(0.5) { self.ready_to_send = @_ready_to_send}
+				EM::add_periodic_timer(TIMEOUT) { self.ready_to_send = @_ready_to_send}
 				super
 			}
 		end
@@ -28,7 +28,9 @@ module Wescontrol
 			if options[:action].is_a? Proc
 				define_method "set_#{name}".to_sym, proc {|value|
 					message = options[:action].call(value)
-					do_message message, EM::DefaultDeferrable.new
+					deferrable = EM::DefaultDeferrable.new
+					do_message message, deferrable
+					deferrable
 				}
 			end
 		end

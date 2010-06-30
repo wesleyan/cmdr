@@ -23,7 +23,10 @@ module Wescontrol
 		
 		def run
 			EM::run {
-				EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
+				begin
+					EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
+				rescue
+				end
 				super
 			}
 			
