@@ -9,13 +9,13 @@ class NECProjector < Projector
 		rest     :data,          "Data and checksum"
 	end
 	
-	state_var :projector_name, 	:kind => 'string', 		:editable => false
-	state_var :projector_id,	:kind => 'string', 		:editable => false
-	state_var :projector_usage,	:kind => 'number', 		:editable => false
-	state_var :has_signal,		:kind => 'boolean', 	:editable => false
-	state_var :picture_displaying, :kind => 'boolean',	:editable => false
-	state_var :volume,			:kind => 'percentage'
-	state_var :mute,			:kind => 'boolean'
+	state_var :projector_name,     :type => :string,   :editable => false
+	state_var :projector_id,       :type => :string,   :editable => false
+	state_var :projector_usage,    :type => :number,   :editable => false
+	state_var :has_signal,         :type => :boolean,  :editable => false
+	state_var :picture_displaying, :type => :boolean,  :editable => false
+	state_var :volume,             :type => :percentage
+	state_var :mute,               :type => :boolean
 	
 	RGB1   = 1
 	RGB2   = 2
@@ -155,8 +155,9 @@ class NECProjector < Projector
 				}
 			}]
 		}
-
-		Thread.new{ read() }
+	end
+	
+	def run
 		Thread.new{
 			while true do
 				self.running_sense
@@ -193,6 +194,7 @@ class NECProjector < Projector
 				sleep(0.5)
 			end
 		}
+		super
 	end
 
 	
@@ -281,9 +283,9 @@ class NECProjector < Projector
 		return cm
 	end
 	
-	def read
-		while true do
-			@buffer << @serial_port.getc
+	def read data
+		data.each_byte{|byte|
+			@buffer << byte
 			@buffer[0..-6].each_index{|i|
 				#this fun line uses bit-level operations to get the 12 bits that are the size of the data
 				#data_size = ((@buffer[i + 4] & 0b1111) << 8) + @buffer[i + 5]
@@ -296,7 +298,7 @@ class NECProjector < Projector
 					#we add up the bytes of the supposed frame, and see if it matches the checksum
 					#if it does, it's probably a frame and we will treat it as such
 					bytes = @buffer[i..(i + 4 + data_size + 1)]
-					
+				
 					if bytes[-1] != 0 && bytes[-1] == bytes[0..-2].inject{|sum, byte| sum += byte} & 255
 						#printf("%08b " * bytes.size + "\n", *bytes)
 						frame = interpret_message(bytes)
@@ -315,10 +317,9 @@ class NECProjector < Projector
 						@buffer = []
 						break
 					end
-					
 				end
 			}
-		end
+		}
 	end
 	
 	def interpret_error(frame)

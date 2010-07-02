@@ -7,7 +7,7 @@ module Wescontrol
 		attr_accessor :serialport
 		
 		configure do
-			port :type => :string
+			port :type => :port
 			baud :type => :integer, :default => 9600
 			data_bits 8
 			stop_bits 1

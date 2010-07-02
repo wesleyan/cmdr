@@ -1,24 +1,3 @@
-require "#{File.dirname(__FILE__)}/../device"
-require "#{File.dirname(__FILE__)}/../RS232Device"
-require "#{File.dirname(__FILE__)}/../ManagedRS232Device"
-
-class DaemonKit
-	def self.logger
-		return Logger
-	end
-	class Logger
-		def self.debug x
-			puts "Debug: #{x}"
-		end
-		def self.log x
-			puts "Log: #{x}"
-		end
-		def self.error x
-			puts "Error: #{x}"
-		end
-	end
-end
-
 class ExtronVideoSwitcher < Wescontrol::ManagedRS232Device
 	def save; puts "Saved"; end
 	configure do
@@ -71,6 +50,3 @@ class ExtronVideoSwitcher < Wescontrol::ManagedRS232Device
 		send :mute, "Z\r\n", 0.5
 	end
 end
-
-e = ExtronVideoSwitcher.new(:port => '/dev/master', :name => "extron")
-e.run

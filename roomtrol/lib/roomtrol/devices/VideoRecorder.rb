@@ -3,18 +3,22 @@ class VideoRecorder < Wescontrol::Device
 	
 	SERVER_URI = "drbunix:///tmp/god.17165.sock"
 	
-	state_var :recording, :kind => 'boolean'
-	state_var :recording_started, :kind => 'time', :editable => false
-	state_var :recording_stopped, :kind => 'time', :editable => false
+	state_var :recording,         :type => :boolean
+	state_var :recording_started, :type => :time, :editable => false
+	state_var :recording_stopped, :type => :time, :editable => false
 	
 	def initialize(options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
 		DaemonKit.logger.info "Initializing Video Recorder #{options[:name]} on #{options[:port]}"
 		DaemonKit.logger.info "starting god:"
+		super(options)
+	end
+	
+	def run
 		DaemonKit.logger.info `god`
 		@_god = DRbObject.new_with_uri(SERVER_URI)
-		super(options)
+		super
 	end
 		
 	def set_recording(on)

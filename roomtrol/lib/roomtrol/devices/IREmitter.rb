@@ -1,5 +1,7 @@
 require 'socket'
 
+#TODO: Rewrite using non-blocking socket library
+
 class IREmitter < Wescontrol::Device
 
 	command :pulse_command, :action => proc {|button|
@@ -37,8 +39,13 @@ class IREmitter < Wescontrol::Device
 		begin
 			@socket = UNIXSocket.open(@port)
 		rescue
+			throw "Failed to create socket: #{$!}"
 		end
+	end
+	
+	def run
 		read()
+		super
 	end
 	
 	def read

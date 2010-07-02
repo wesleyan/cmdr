@@ -3,27 +3,29 @@ require 'net/ssh'
 
 class Mac < Computer
 
-	config_var :username
-	config_var :password
+	configure do
+		username :type => :string
+		password :type => :password
+	end
 	
-	state_var :logged_in, 		:kind => :boolean, 	:editable => false
-	state_var :current_user, 	:kind => :string, 	:editable => false
-	state_var :current_app, 	:kind => :string, 	:editable => false
-	state_var :uptime, 			:kind => :integer, 	:editable => false
-	state_var :logged_in_time, 	:kind => :integer, 	:editable => false
-	state_var :idle_time,		:kind => :integer,	:editable => false
-	state_var :power,			:kind => :boolean
+	state_var :logged_in, 		:type => :boolean, 	:editable => false
+	state_var :current_user, 	:type => :string, 	:editable => false
+	state_var :current_app, 	:type => :string, 	:editable => false
+	state_var :uptime, 			:type => :integer, 	:editable => false
+	state_var :logged_in_time, 	:type => :integer, 	:editable => false
+	state_var :idle_time,		:type => :integer,	:editable => false
+	state_var :power,			:type => :boolean
 	
 	#computer information
-	state_var :name,			:kind => :string, 	:editable => false
-	state_var :model,			:kind => :string,	:editable => false
-	state_var :os,				:kind => :string, 	:editable => false
-	state_var :cpu,				:kind => :string, 	:editable => false
-	state_var :cpu_speed,		:kind => :decimal, 	:editable => false
-	state_var :cpu_number,		:kind => :integer,	:editable => false
-	state_var :hdd_size,		:kind => :decimal, 	:editable => false
-	state_var :memory_size,		:kind => :integer, 	:editable => false
-	state_var :mac_addr,		:kind => :string,	:editable => false
+	state_var :name,			:type => :string, 	:editable => false
+	state_var :model,			:type => :string,	:editable => false
+	state_var :os,				:type => :string, 	:editable => false
+	state_var :cpu,				:type => :string, 	:editable => false
+	state_var :cpu_speed,		:type => :decimal, 	:editable => false
+	state_var :cpu_number,		:type => :integer,	:editable => false
+	state_var :hdd_size,		:type => :decimal, 	:editable => false
+	state_var :memory_size,		:type => :integer, 	:editable => false
+	state_var :mac_addr,		:type => :string,	:editable => false
 	
 	def initialize(options)
 		DaemonKit.logger.info "Initializing Mac on #{self.ip_address}"
@@ -75,8 +77,10 @@ class Mac < Computer
 				rescue
 				end
 			}]
-		}
-		
+		}		
+	end
+	
+	def run
 		Thread.new {
 			while true
 				Net::SSH.start(self.ip_address, self.username, :password => self.password) do |ssh|
@@ -91,7 +95,7 @@ class Mac < Computer
 				ssh.loop
 			end
 		}
-		
+		super
 	end
 	
 	def process(call, ssh, source = @tasks)

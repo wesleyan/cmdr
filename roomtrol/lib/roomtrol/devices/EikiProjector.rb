@@ -1,3 +1,6 @@
+#Note: This class is old and does not work. Eventually,
+#I may get around to implementing it with the new scheme,
+#but for now it should not be used
 class EikiProjector < Projector
 	
 	attr_reader :power, :cooling, :input, :video_mute
@@ -10,6 +13,7 @@ class EikiProjector < Projector
 	
 
 	def initialize(name, port, bus)
+		throw "Driver needs to be rewritten; see comment"
 		puts "Initializing projector on port #{port} with name #{name}"
 		Thread.abort_on_exception = true
 	

@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
 	s.name = 'roomtrol'
-	s.version = '0.3.0'
+	s.version = '0.4.0'
 	s.summary = "Roomtrol daemon"
 	s.description = %{Roomtrol daemon and related classes}
 	s.files = [Dir['lib/**/*.rb'],
@@ -25,6 +25,7 @@ spec = Gem::Specification.new do |s|
 	s.add_dependency('daemons', ">= 1.0.10")
 	s.add_dependency('wol', ">= 0.3.3")
 	s.add_dependency('sinatra', ">= 1.0")
+	s.add_dependency('amqp', ">=0.6.7")
 
 	s.author = "Micah Wylde"
 	s.email = "mwylde@wesleyan.edu"

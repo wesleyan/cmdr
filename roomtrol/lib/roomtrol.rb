@@ -1,19 +1,20 @@
 require 'rubygems'
 require 'couchrest'
 require 'time'
-require "#{File.dirname(__FILE__)}/MAC.rb"
+require "#{File.dirname(__FILE__)}/roomtrol/MAC.rb"
 
-require "#{File.dirname(__FILE__)}/wescontrol_http"
+require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_http"
 #if RUBY_PLATFORM[/linux/]
 #	require "#{File.dirname(__FILE__)}/wescontrol_dbus"
 #end
-require "#{File.dirname(__FILE__)}/device"
-require "#{File.dirname(__FILE__)}/RS232Device"
-require "#{File.dirname(__FILE__)}/devices/Projector"
-require "#{File.dirname(__FILE__)}/devices/VideoSwitcher"
-require "#{File.dirname(__FILE__)}/devices/Computer"
+require "#{File.dirname(__FILE__)}/roomtrol/device"
+require "#{File.dirname(__FILE__)}/roomtrol/RS232Device"
+require "#{File.dirname(__FILE__)}/roomtrol/ManagedRS232Device"
+require "#{File.dirname(__FILE__)}/roomtrol/devices/Projector"
+require "#{File.dirname(__FILE__)}/roomtrol/devices/VideoSwitcher"
+require "#{File.dirname(__FILE__)}/roomtrol/devices/Computer"
 
-Dir.glob("#{File.dirname(__FILE__)}/devices/*.rb").each{|device|
+Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
 		require device
 	rescue
@@ -30,7 +31,15 @@ module Wescontrol
 
 			@devices = device_hashes.collect{|hash|
 				begin
-					Object.const_get(hash['value']['class']).from_couch(hash['value'])
+					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
+					Thread.new {
+						begin
+							device.run
+						rescue
+							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+							retry
+						end
+					}
 				rescue
 					DaemonKit.logger.error "Failed to create device: #{$!}"
 				end
@@ -72,5 +81,5 @@ module Wescontrol
 	end
 end
 
-require "#{File.dirname(__FILE__)}/wescontrol_room"
-require "#{File.dirname(__FILE__)}/wescontrol_lab"
+require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_room"
+require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_lab"

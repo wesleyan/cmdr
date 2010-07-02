@@ -2,10 +2,10 @@ require 'ping'
 require 'wol'
 
 class Computer < Wescontrol::Device
-	@interface = "Computer"
-	
-	config_var :ip_address
-	config_var :mac_address
+	configure do
+		ip_address :type => :string
+		macc_address :type => :string
+	end
 	#attempt to turn on the computer via WoL
 	command :start, :action => proc{
 		w = Wol::WakeOnLan.new(:address => self.ip_address, :mac => self.mac_address)
@@ -13,7 +13,7 @@ class Computer < Wescontrol::Device
 	}
 	
 	#current info
-	state_var :reachable, :kind => :boolean, :editable => false, :display_order => 1
+	state_var :reachable, :type => :boolean, :editable => false, :display_order => 1
 	
 	def initialize(options)
 		@ip_address = options[:ip_address]

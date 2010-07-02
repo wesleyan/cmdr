@@ -1,12 +1,14 @@
 class EVID70Camera < Wescontrol::RS232Device
 	
-	config_var :address
-	state_var :power, 				:kind => 'boolean'
-	state_var :zoom, 				:kind => 'percentage'
-	state_var :focus, 				:kind => 'percentage'
-	state_var :position, 			:kind => 'array'
-	state_var :auto_focus, 			:kind => 'boolean'
-	state_var :auto_white_balance, 	:kind => 'boolean'
+	configure do
+		address :type => :string
+	end
+	state_var :power, 				:type => :boolean
+	state_var :zoom, 				:type => :percentage
+	state_var :focus, 				:type => :percentage
+	state_var :position, 			:type => :array
+	state_var :auto_focus, 			:type => :boolean
+	state_var :auto_white_balance, 	:type => :boolean
 	
 	command :zoom_in
 	command :zoom_out
@@ -15,10 +17,10 @@ class EVID70Camera < Wescontrol::RS232Device
 	command :focus_far
 	command :trigger_auto_focus
 	command :trigger_auto_white_balance
-	command :move_up_left, :kind => 'array'
-	command :move_up_right, :kind => 'array'
-	command :move_down_left, :kind => 'array'
-	command :move_down_right, :kind => 'array'
+	command :move_up_left, :type => :array
+	command :move_up_right, :type => :array
+	command :move_down_left, :type => :array
+	command :move_down_right, :type => :array
 	command :move_stop
 	
 	ERRORS = {
@@ -123,10 +125,6 @@ class EVID70Camera < Wescontrol::RS232Device
 		@_last_sent_time = Time.now
 	
 		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
-		
-		Thread.new {
-			read
-		}
 				
 		ready_to_send = true
 	end
@@ -182,19 +180,19 @@ class EVID70Camera < Wescontrol::RS232Device
 	
 	def ready_to_send; @_ready_to_send; end
 
-	def read
-		buffer = []
-		while true do
-			buffer << @serial_port.getc
-			if buffer[-1] == 0xFF #0xFF terminates each packet
-				if buffer[1] >> 4 == 4 #ACK
+	def read data
+		@_buffer ||= []
+		data.each_byte{|byte|
+			@_buffer << byte
+			if @_buffer[-1] == 0xFF #0xFF terminates each packet
+				if @_buffer[1] >> 4 == 4 #ACK
 					#the last four bits tell us the socket number, so we move
 					#the current command (stored in -1) to there
-					@_last_command[buffer[1] & 0b00001111] = @_last_command[-1]
+					@_last_command[@_buffer[1] & 0b00001111] = @_last_command[-1]
 				 	this.ready_to_send = true
-				elsif buffer[1] >> 4 == 5 #completion
-					deferrable = @_last_command[buffer[1] & 0b00001111][1]
-					if buffer.size == 3 #command
+				elsif @_buffer[1] >> 4 == 5 #completion
+					deferrable = @_last_command[@_buffer[1] & 0b00001111][1]
+					if @_buffer.size == 3 #command
 						deferrable.set_deferred_status :succeeded
 					else #request
 						if deferrable.class == Proc
@@ -203,15 +201,16 @@ class EVID70Camera < Wescontrol::RS232Device
 							deferrable.set_deferred_status :succeeded, @buffer[2..-2]
 						end
 					end
-				elsif buffer[1] >> 4 == 6 #error
-					_error = ERRORS[buffer[2]]
+				elsif @_buffer[1] >> 4 == 6 #error
+					_error = ERRORS[@_buffer[2]]
 					DaemonKit.logger.error "Camera error: #{_error}"
 					deferrable = @_last_command[buffer[1] & 0b00001111][1]
 					deferrable.set_deferred_status :failed, _error if deferrable.class == EM::Deferrable
 				end
-				buffer = []
+				@_buffer = []
 			end
-		end
+			
+		}
 	end
 end
 
