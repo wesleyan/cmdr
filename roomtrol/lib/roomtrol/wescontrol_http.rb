@@ -2,9 +2,12 @@ require 'rubygems'
 require 'eventmachine'
 require 'evma_httpserver'
 require 'json'
+require 'amqp'
+require 'uuidtools'
 
 module Wescontrol 
 	class WescontrolHTTP < EventMachine::Connection
+		TIMEOUT = 2.0
 		include EventMachine::HttpServer
 		
 		@@kind_verifier = {
@@ -19,6 +22,18 @@ module Wescontrol
 			:time =>		proc {|a, options| begin; Time.at(a); rescue; nil; end}
 		}
 		
+		def initialize
+			@queue = "roomtrol:http:#{self.object_id}"
+			@deferred_responses = {}
+			@amq = MQ.new
+			@amq.queue(@queue).subscribe{|json|
+				msg = JSON.parse(json)
+				if @deferred_responses[msg["id"]]
+					@deferred_responses[msg["id"]].succeed(msg["result"])
+				end
+			}
+		end
+		
 		def process_http_request
 			resp = EventMachine::DelegatedHttpResponse.new( self )
 			resp.headers['content-type'] = "application/json"
@@ -26,13 +41,13 @@ module Wescontrol
 			
 			if @path[0] == 'devices'
 				devices resp
-			elsif @path[0] == 'watch'
-				watch resp
-			elsif @path[0] == 'controller'
-				controller resp
+			#elsif @path[0] == 'watch' Watch won't work with messagequeue
+			#	watch resp
+			#elsif @path[0] == 'controller'
+			#	controller resp
 			else
 				resp.status = 404
-				resp.content = {"error" => "resource_not_found"}
+				resp.content = {"error" => "resource_not_found"}.to_json() + "\n"
 				resp.send_response
 			end
 			# once download is complete, send it to client
@@ -42,6 +57,8 @@ module Wescontrol
 			#resp.send_response
 		end
 		
+		#TODO: Think about how to reimplement this with the new scheme
+		#for now, it's disabled
 		def watch resp
 			@method_table ||= self.class.instance_variable_get(:@method_table)
 			
@@ -86,83 +103,85 @@ module Wescontrol
 		def devices resp
 			@method_table ||= self.class.instance_variable_get(:@method_table)
 			
-			content = {}
-			
-			operation = proc {
-				if !@path[1]
-					resp.status = 200
-					content = @method_table
-				elsif @method_table[@path[1]]
-					case @http_request_method
-					when "GET"
-						content = get @path, resp
-					when "POST"
-						content = post @path, resp
-					end
-				else
-					resp.status = 404
-					content = {"error" => "device_not_found"}
+			if !@path[1]
+				resp.status = 200
+				content = @method_table
+				resp.content = content.to_json + "\n" 
+				resp.send_response
+			elsif !@path[2]
+				resp.status = 400
+				content = {:error => :must_provide_target}.to_json + "\n"
+				resp.send_response
+			elsif @method_table[@path[1]]
+				case @http_request_method
+				when "GET"
+					get (@path, resp)
+				when "POST"
+					post @path, resp
 				end
-				#resp.send_response
-			}
-			callback = proc {|res|
-				resp.content = content.to_json + "\n" if content
-				begin		
-					resp.send_response
-				rescue
-				end
-			}
-			
-			EM.defer(operation, callback)
-		end
-		
-		def get path, resp
-			content = {}
-			resp.status = 200
-			state_vars = @method_table[path[1]][:device].to_couch['state_vars']
-			if !path[2]
-				content = state_vars
-			elsif state_vars[path[2].to_sym]
-				content = state_vars[path[2].to_sym]
 			else
 				resp.status = 404
-				content = {"error" => "variable_not_found"}
+				content = {"error" => "device_not_found"}
+				resp.content = content.to_json + "\n" 
+				resp.send_response
 			end
-			content
+		end
+		
+		def defer_device_operation resp, device_req, device
+			deferrable = EM::DefaultDeferrable.new
+			deferrable.timeout = TIMEOUT
+			
+			deferrable.callback {|result|
+				resp.status = result[:error] ? 500 : 200
+				resp.content = result.delete(:id).to_json + "\n"
+				resp.send_response
+			}.errback {
+				resp.status = 500
+				resp.content = {:error => :timed_out}.to_json + "\n"
+				resp.send_response
+			}
+			@deferred_responses[device_req[:id]] = deferrable
+			amq.queue('roomtrol:dqueue:#{device}').publish(device_req.to_json)
+		end
+		
+		#A get request looks like this: GET /devices/Extron/power
+		#and returns something like this: {"result" => false}
+		def get path, resp
+			device_req = {
+				:id => UUIDTools::UUID.random_create.to_s,
+				:queue => @queue,
+				:type => :state_get,
+				:var => path[2]
+			}
+			defer_device_operation resp, device_req, path[1]
 		end
 	
+		#A post request looks like this: POST /devices/Extron/power -d {'value' => true}
+		#or like this: POST /devices/Extron/zoom -d {'args' => [2.0]}
+		#and returns something like this: {"result" => true}
 		def post path, resp
-			content = {}
 			begin
-				updates = JSON.parse(@http_post_content)
+				data = JSON.parse(@http_post_content)
 				device = @method_table[path[1]]
-				if !path[2]
-					#here are some hacks to integrate old-style modules with new-style
-					#(ie, those that use deferrables rather than threads). The problem
-					#is that we cant support request that update both kinds. This probably
-					#won't ever be an actual problem, but we should check for it.
-					updates.each{|k,v|
-						content_response = set_var device, k, v, resp
-						if !content_response
-							content = nil
-							break
-						end
-						content.merge!(content_response)
-					}
-				elsif path[2].to_sym == :command
-					content = send_command device, updates.keys[0], updates[updates.keys[0]], resp
+				device_req = {
+					:id => UUIDTools::UUID.random_create.to_s,
+					:queue => @queue
+				}
+				if data['value']
+					device_req[:type] = :state_set
+					device_req[:var] = path[2]
+					device_req[:value] = data['value']
 				else
-					content = set_var device, path[2].to_sym, updates, resp
+					device_req[:type] = :command
+					device_req[:method] = path[2]
+					device_req[:args] = data['args']
 				end
-				resp.status = 200
+				defer_device_operation resp, device_req, path[1]
 			rescue JSON::ParserError
 				resp.status = 400
 				content = {"error" => "bad_json"}
-			#rescue
-			#	resp.status = 500
-			#	content = {"error" => $!}
+				resp.send_response
 			end
-			content
 		end
 	
 		def set_var device, var, value, resp
@@ -177,31 +196,6 @@ module Wescontrol
 				content = {"error" => "#{var}_not_found"}
 			end
 			content
-		end
-		
-		def send_command device, command, value, resp
-			deal_with_device_feedback device[:device].send(command, value), :result, resp
-		end
-		
-		def deal_with_device_feedback feedback, name, resp
-			if feedback.is_a? EM::Deferrable
-				feedback.callback{|fb|
-					resp.status = 200
-					resp.content = {name => fb}.to_json + "\n"
-					resp.send_response
-				}
-				feedback.errback{|error|
-					resp.status = 400
-					resp.content = {:error => error}.to_json + "\n"
-					resp.send_response
-				}
-			else
-				resp.status = 200
-				resp.content = {name => feedback}.to_json + "\n"
-				resp.send_response
-				#sleep(0.1) #wait for value to update
-				#content[var] = device[:device].send("#{var}")
-			end
 		end
 	end
 end

@@ -47,9 +47,9 @@ module Wescontrol
 			
 			@method_table = {}
 			@devices.each{|device|
-				@method_table[device.name] = {:device => device, :methods => {}}
+				@method_table[device.name] = {}
 				device.state_vars.each{|name, options|
-					@method_table[device.name][:methods][name] = options
+					@method_table[device.name][name] = options
 					#this gives us the default behavior of editability
 					if options['editable'] == nil || options['editable']
 						@method_table[device.name]["set_#{name}"] = options
@@ -67,15 +67,7 @@ module Wescontrol
 		
 		def start
 			EventMachine::run {
-				EventMachine.epoll
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
-				
-				if defined? WescontrolDBus
-					Thread.abort_on_exception = true
-					Thread.new {
-						WescontrolDBus.new(@devices).start
-					}
-				end
 			}
 		end
 	end

@@ -26,6 +26,7 @@ spec = Gem::Specification.new do |s|
 	s.add_dependency('wol', ">= 0.3.3")
 	s.add_dependency('sinatra', ">= 1.0")
 	s.add_dependency('amqp', ">=0.6.7")
+	s.add_dependency('uuidtools', '>=2.1.1')
 
 	s.author = "Micah Wylde"
 	s.email = "mwylde@wesleyan.edu"
