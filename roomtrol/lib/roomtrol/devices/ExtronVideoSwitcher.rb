@@ -1,10 +1,10 @@
-class ExtronVideoSwitcher < Wescontrol::ManagedRS232Device
+class ExtronVideoSwitcher < VideoSwitcher
 	configure do
 		baud        9600
 		message_end "\r"
 	end
 	
-	state_var :input, 
+	managed_state_var :input, 
 		:type => :option, 
 		:display_order => 1, 
 		:options => ("1".."6").to_a,
@@ -12,14 +12,14 @@ class ExtronVideoSwitcher < Wescontrol::ManagedRS232Device
 		:action => proc{|input|
 			"#{input}!"
 		}
-	state_var :volume,
+	managed_state_var :volume,
 		:type => :percentage,
 		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
 			"#{(volume*100).to_i}V"
 		}
-	state_var :mute,
+	managed_state_var :mute,
 		:type => :boolean,
 		:display_order => 3,
 		:response => :mute,

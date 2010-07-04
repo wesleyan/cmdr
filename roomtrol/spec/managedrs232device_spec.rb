@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
 require File.dirname(__FILE__) + '/../lib/roomtrol/rs232device.rb'
-require File.dirname(__FILE__) + '/../lib/roomtrol/managedrs232device.rb'
+#require File.dirname(__FILE__) + '/../lib/roomtrol/managedrs232device.rb'
 
 # Time to add your specs!
 # http://rspec.info/
@@ -12,16 +12,16 @@ Spec::Runner.configure do |config|
 		#this creates a mock save method so that nothing actually gets
 		#saved to the database. There's probably a better way to do this,
 		#involving mocking frameworks or a testing db.
-		class MR232Device < Wescontrol::ManagedRS232Device
+		class MR232Device < Wescontrol::RS232Device
 			def save
 			end
 		end
 	}
 end
-describe "state_var enhancements" do	
-	it "shouldn't break state_vars" do
+describe "managed_state_var enhancements" do	
+	it "shouldn't break managed_state_vars" do
 		class MR232DeviceSubclass < MR232Device
-			state_var :input, 
+			managed_state_var :input, 
 				:type => :options, 
 				:display_order => 1, 
 				:options => ("1".."6").to_a,
@@ -35,7 +35,7 @@ describe "state_var enhancements" do
 	it "should create action methods that add the message to the send queue" do
 		class MR232DeviceSubclass < MR232Device
 			attr_accessor :_send_queue
-			state_var :input, 
+			managed_state_var :input, 
 				:type => :options, 
 				:display_order => 1, 
 				:options => ("1".."6").to_a,
@@ -82,7 +82,7 @@ describe "do responses" do
 	end
 	it "should properly match regexps" do
 		class MR232DeviceSubclass < MR232Device
-			state_var :input, 
+			managed_state_var :input, 
 				:type => 'option', 
 				:display_order => 1, 
 				:options => ("1".."6").to_a,
@@ -90,7 +90,7 @@ describe "do responses" do
 				:action => proc{|input|
 					"#{input}!\r\n"
 				}
-			state_var :volume,
+			managed_state_var :volume,
 				:type => 'percentage',
 				:display_order => 2,
 				:response => :volume,
@@ -155,7 +155,7 @@ describe "sending messages" do
 				@string_array = []
 				@power = true
 			end
-			state_var :power, 
+			managed_state_var :power, 
 				:type => :boolean,
 				:action => proc{|p| "power=#{p}\r\n"}
 			def send_string string

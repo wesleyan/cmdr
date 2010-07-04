@@ -4,7 +4,6 @@ require 'time'
 require "#{File.dirname(__FILE__)}/roomtrol/device"
 require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_http"
 require "#{File.dirname(__FILE__)}/roomtrol/RS232Device"
-require "#{File.dirname(__FILE__)}/roomtrol/ManagedRS232Device"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/Projector"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/VideoSwitcher"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/Computer"

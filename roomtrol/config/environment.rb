@@ -21,7 +21,7 @@ DaemonKit::Initializer.run do |config|
 
 	# Configure the safety net (see DaemonKit::Safety)
 	# config.safety_net.handler = :mail # (or :hoptoad )
-	config.safety_net.handler = :hoptoad
+	config.safety_net.handler = :mail
 	#config.safety_net.mail.host = 'localhost'
 	
 	if File.writable?("/var/log") #are we root?
