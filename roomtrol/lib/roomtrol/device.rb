@@ -14,12 +14,16 @@ end
 module Wescontrol
 	class Device
 		attr_accessor :_id, :_rev, :belongs_to, :controller
+		attr_reader :name
 				
-		def initialize(hash = {})
+		def initialize(name, hash = {})
 			#TODO: Maybe force name to be provided?
 			hash_s = hash.symbolize_keys
-			@name = hash_s[:name]
-			#TODO: The database uri should not be hard-coded
+			@name = name
+			hash.each{|var, value|
+				configuration[var.to_sym] = value
+			} if configuration
+			#TODO: The datab ase uri should not be hard-coded
 			@db = CouchRest.database("http://localhost:5984/rooms")
 		end
 		
@@ -43,15 +47,16 @@ module Wescontrol
 				}
 				
 				amq = MQ.new
+				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
 				amq.queue("roomtrol:dqueue:#{@name}").subscribe{ |msg|
-					#puts msg
+					DaemonKit.logger.debug("Received message: #{msg}")
 					req = JSON.parse(msg)
 					resp = {:id => req["id"]}
 					case req["type"]
 					when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
 					when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
 					when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
-					else puts "Didn't match: #{req["type"]}" 
+					else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
 					end
 				}
 			}
@@ -106,17 +111,24 @@ module Wescontrol
 		def configuration
 			self.class.instance_variable_get(:@configuration)
 		end
+		def config_vars
+			self.class.instance_variable_get(:@config_vars)
+		end
 		
 		class ConfigurationHandler
 			attr_reader :configuration
+			attr_reader :config_vars
 			def initialize
 				@configuration = {}
+				@config_vars = {}
 			end
 			def method_missing name, args = nil
-				if args.class == Hash
+				if args.is_a? Hash
 					@configuration[name] = args[:default]
+					@config_vars[name] = args
 				else
 					@configuration[name] = args
+					@config_vars[name] = {:value => args}
 				end
 			end
 		end
@@ -125,7 +137,9 @@ module Wescontrol
 			ch = ConfigurationHandler.new
 			ch.instance_eval(&block)
 			@configuration ||= {}
+			@config_vars ||= {}
 			@configuration = @configuration.merge ch.configuration
+			@config_vars = @config_vars.merge ch.config_vars
 		end
 		
 		def self.state_vars; @state_vars; end
@@ -215,8 +229,11 @@ module Wescontrol
 		def to_couch
 			hash = {:state_vars => {}, :config => {}, :commands => {}}
 			
-			if configuration
-				configuration.each{|var, value| hash[:config][var] = value}
+			if config_vars
+				config_vars.each{|var, options|
+					options[:value] = configuration[var]
+					hash[:config][var] = options
+				}
 			end
 			
 			self.class.state_vars.each{|var, options|
@@ -234,7 +251,11 @@ module Wescontrol
 			return hash
 		end
 		def self.from_couch(hash)
-			device = self.new(hash['attributes'])
+			config = {}
+			hash['attributes']['config'].each{|var, options|
+				config[var] = options['value']
+			}
+			device = self.new(hash['attributes']['name'], config)
 			device._id = hash['_id']
 			device._rev = hash['_rev']
 			device.belongs_to = hash['belongs_to']
@@ -293,10 +314,6 @@ module Wescontrol
 			@auto_register << block
 			register_for_changes.callback(&block)
 		end
-		
-		state_var :name, :type => :string
-		
-		
 	end
 end
 

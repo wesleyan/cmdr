@@ -1,3 +1,5 @@
+$eventmachine_library = :pure_ruby
+
 # Be sure to restart your daemon when you modify this file
 
 # Uncomment below to force your daemon into production mode

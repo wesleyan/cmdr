@@ -26,11 +26,11 @@ class IREmitter < Wescontrol::Device
 		next "Failed to communicate with IR emitter"
 	}
 
-	def initialize(options)
+	def initialize(name, options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
 		DaemonKit.logger.info "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"
-		super(options)
+		super(name, options)
 		@commands = {}
 		@remote = options[:remote]
 		throw "No remote specified" unless @remote

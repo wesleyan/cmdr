@@ -11,19 +11,20 @@ end
 #require File.dirname(__FILE__) + '/../config/environment'
 #DaemonKit::Application.running!
 
+DEBUG = 1
 class DaemonKit
 	def self.logger
 		return Logger
 	end
 	class Logger
 		def self.debug x
-			puts "Debug: #{x}"
+			puts "Debug: #{x}" if DEBUG > 2
 		end
-		def self.log x
-			puts "Log: #{x}"
+		def self.info x
+			puts "Log: #{x}" if DEBUG > 1
 		end
 		def self.error x
-			puts "Error: #{x}"
+			puts "Error: #{x}" if DEBUG > 0
 		end
 	end
 end

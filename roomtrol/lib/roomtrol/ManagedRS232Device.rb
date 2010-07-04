@@ -6,10 +6,10 @@ module Wescontrol
 			message_end "\r\n"
 		end
 		
-		def initialize options
+		def initialize name, options
 			@_send_queue = []
 			@_ready_to_send = true
-			super(options)
+			super(name, options)
 		end
 		
 		def run

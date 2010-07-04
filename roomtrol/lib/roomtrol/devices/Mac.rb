@@ -27,7 +27,7 @@ class Mac < Computer
 	state_var :memory_size,		:type => :integer, 	:editable => false
 	state_var :mac_addr,		:type => :string,	:editable => false
 	
-	def initialize(options)
+	def initialize(name, options)
 		DaemonKit.logger.info "Initializing Mac on #{self.ip_address}"
 		options = options.symbolize_keys
 
@@ -36,7 +36,7 @@ class Mac < Computer
 		@username = options[:username]
 		@password = options[:password]
 		
-		super(:ip_address => options[:ip_address])
+		super(name, :ip_address => options[:ip_address])
 		
 		@tasks = {
 			:current_user => ['who', proc{|response|

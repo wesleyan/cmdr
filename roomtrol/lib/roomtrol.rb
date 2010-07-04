@@ -1,18 +1,14 @@
 require 'rubygems'
 require 'couchrest'
 require 'time'
-require "#{File.dirname(__FILE__)}/roomtrol/MAC.rb"
-
-require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_http"
-#if RUBY_PLATFORM[/linux/]
-#	require "#{File.dirname(__FILE__)}/wescontrol_dbus"
-#end
 require "#{File.dirname(__FILE__)}/roomtrol/device"
+require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_http"
 require "#{File.dirname(__FILE__)}/roomtrol/RS232Device"
 require "#{File.dirname(__FILE__)}/roomtrol/ManagedRS232Device"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/Projector"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/VideoSwitcher"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/Computer"
+require "#{File.dirname(__FILE__)}/roomtrol/MAC.rb"
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
@@ -40,23 +36,12 @@ module Wescontrol
 							retry
 						end
 					}
+					device
 				rescue
 					DaemonKit.logger.error "Failed to create device: #{$!}"
 				end
 			}.compact
 			
-			@method_table = {}
-			@devices.each{|device|
-				@method_table[device.name] = {}
-				device.state_vars.each{|name, options|
-					@method_table[device.name][name] = options
-					#this gives us the default behavior of editability
-					if options['editable'] == nil || options['editable']
-						@method_table[device.name]["set_#{name}"] = options
-					end
-				}
-			}
-			WescontrolHTTP.instance_variable_set(:@method_table, @method_table)
 			#WescontrolHTTP.instance_variable_set(:@couchid, @couchid)
 			#WescontrolHTTP.instance_variable_set(:@controller, @controller)
 		end
@@ -66,6 +51,7 @@ module Wescontrol
 		end
 		
 		def start
+			WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 			}

@@ -53,7 +53,7 @@ class EVID70Camera < Wescontrol::RS232Device
 		18 => "4000"
 	}
 	
-	def initialize(options)
+	def initialize(name, options)
 		options = options.symbolize_keys
 		DaemonKit.logger.info "Initializing camera on port #{options[:port]} with name #{options[:name]}"
 		Thread.abort_on_exception = true
@@ -124,7 +124,7 @@ class EVID70Camera < Wescontrol::RS232Device
 		@_send_queue = []
 		@_last_sent_time = Time.now
 	
-		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
+		super(name, :port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
 				
 		ready_to_send = true
 	end

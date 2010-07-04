@@ -1,5 +1,4 @@
 class ExtronVideoSwitcher < Wescontrol::ManagedRS232Device
-	def save; puts "Saved"; end
 	configure do
 		baud        9600
 		message_end "\r"

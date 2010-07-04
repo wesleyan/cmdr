@@ -32,12 +32,12 @@ class NECProjector < Projector
 		["Lamp2 housing error", "Lamp2 data error", "High temperature due to dust pile-up", "A foreign object sensor error", "Pump error"]
 	]
 
-	def initialize(options)
+	def initialize(name, options)
 		options = options.symbolize_keys
-		DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{options[:name]}"
+		DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
 		Thread.abort_on_exception = true
 	
-		super(:port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
+		super(name, :port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1)
 
 		#@frames stores an array of messages that are currently being sent, indexed by id2 (which seems to be unique for each command--honestly, I have no
 		#clue how id1 and id2 are supposed to work, despite several hours of trying to figure out. For the input command (id2=3) any id1 in the format
@@ -243,10 +243,10 @@ class NECProjector < Projector
 		message.m_code = model_code
 
         if data
-			message.length = data.size
+			message.len = data.size
 			message.data = data
         else
-            message.length = 0
+            message.len = 0
 			message.data = ""
         end
         

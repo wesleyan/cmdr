@@ -15,9 +15,9 @@ class Computer < Wescontrol::Device
 	#current info
 	state_var :reachable, :type => :boolean, :editable => false, :display_order => 1
 	
-	def initialize(options)
+	def initialize(name, options)
 		@ip_address = options[:ip_address]
-		super(options)
+		super(name, options)
 		
 		Thread.new {
 			while true

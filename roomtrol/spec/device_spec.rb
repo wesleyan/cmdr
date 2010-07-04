@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
-require File.dirname(__FILE__) + '/../lib/device.rb'
+require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
 require 'eventmachine'
 require 'mq'
 # Time to add your specs!
@@ -103,66 +103,66 @@ end
 describe "deal with state_vars properly" do
 	it "should respond to state_var" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :power, :type => :boolean
 		end
 	end
 	
 	it "should require a :type field" do
 		proc {
 			class DeviceSubclass < DeviceTest
-				state_var :name
+				state_var :power
 			end
 		}.should raise_error
 		
 		proc {
 			class DeviceSubclass < DeviceTest
-				state_var :name, :someting => :else
+				state_var :power, :someting => :else
 			end
 		}.should raise_error
 	end
 
 	it "should create accessor methods for state_var" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :text, :type => :string
 		end
-		ds = DeviceSubclass.new
-		ds.name = "name"
-		ds.name.should == "name"
+		ds = DeviceSubclass.new("device")
+		ds.text = "name"
+		ds.text.should == "name"
 	end
 	
 	it "should inherit state_vars" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
 		end
-		dss = DeviceSubSubclass.new
-		dss.name = "name"
-		dss.name.should == "name"
+		dss = DeviceSubSubclass.new("device")
+		dss.text = "name"
+		dss.text.should == "name"
 		
-		dss.state_vars[:name].should == {:type => :string}
+		dss.state_vars[:text].should == {:type => :string}
 	end
 	
 	it "should not share state_var values between subclasses" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
 			state_var :another, :type => :string
 		end
-		ds = DeviceSubclass.new
-		ds.name = "name"
-		ds.name.should == "name"
+		ds = DeviceSubclass.new("d1")
+		ds.text = "name"
+		ds.text.should == "name"
 		
-		dss = DeviceSubSubclass.new
-		dss.state_vars[:name].should == {:type => :string}
-		dss.name = "another"
-		dss.name.should == "another"
-		ds.name.should == "name"
+		dss = DeviceSubSubclass.new("d2")
+		dss.state_vars[:text].should == {:type => :string}
+		dss.text = "another"
+		dss.text.should == "another"
+		ds.text.should == "name"
 		
-		ds.name = "something"
-		ds.name.should == "something"
-		dss.name.should == "another"
+		ds.text = "something"
+		ds.text.should == "something"
+		dss.text.should == "another"
 		
 		dss.another = "hello"
 		dss.another.should == "hello"
@@ -173,10 +173,10 @@ describe "deal with state_vars properly" do
 	
 	it "should set all state_vars in state_vars hash and allow access" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :text, :type => :string
 			state_var :something, :type => :option, :options => (1..6).to_a
 		end
-		DeviceSubclass.state_vars[:name].should == {:type => :string}
+		DeviceSubclass.state_vars[:text].should == {:type => :string}
 		DeviceSubclass.state_vars[:something].should == {
 			:type => :option,
 			:options => [1,2,3,4,5,6]
@@ -187,7 +187,7 @@ describe "deal with state_vars properly" do
 		class DeviceSubclass < DeviceTest
 			state_var :power, :type => :string, :action => proc {|x| "hello #{x}"}
 		end
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.set_power("micah").should == "hello micah"
 	end
 end
@@ -195,37 +195,37 @@ end
 describe "do virtual vars" do
 	it "should allow creation of virtual vars" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
-				:depends_on => [:name], 
+				:depends_on => [:text], 
 				:transformation => proc {
 					name.upcase
 				}
 		end
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.capital_name
 	end
 	it "should require a depends_on and transformation field" do
 		proc {
 			class DeviceSubclass < DeviceTest
-				state_var :name, :type => :string
+				state_var :text, :type => :string
 				virtual_var :capital_name, :type => :string
 			end
 		}.should raise_error
 	end
 	it "should recalculate virtual vars" do
 		class DeviceSubclass < DeviceTest
-			state_var :name, :type => :string
+			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
-				:depends_on => [:name], 
+				:depends_on => [:text], 
 				:transformation => proc {
-					name.upcase
+					text.upcase
 				}
 		end
-		ds = DeviceSubclass.new
-		ds.name = "micah"
+		ds = DeviceSubclass.new("device")
+		ds.text = "micah"
 		ds.capital_name.should == "MICAH"
 	end
 	it "should work with multiple depends_on vars" do
@@ -239,7 +239,7 @@ describe "do virtual vars" do
 					"#{first} #{last}"
 				}
 		end
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.first = "Micah"
 		ds.last = "Wylde"
 		ds.full_name.should == "Micah Wylde"
@@ -265,11 +265,11 @@ describe "do virtual vars" do
 				}
 		end
 		DeviceSubclass.state_vars[:first][:affects].should == [:full_name]
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.first = "Micah"
 		ds.last = "Wylde"
 		ds.full_name.should == "Micah Wylde"
-		dss = DeviceSubSubclass.new
+		dss = DeviceSubSubclass.new("device")
 		dss.first = "Micah"
 		dss.last = "Wylde"
 		dss.full_name.should == "Micah Wylde"
@@ -290,7 +290,7 @@ describe "deal with commands" do
 		class DeviceSubclass < DeviceTest
 			command :do_thing, :action => proc{"hello"}
 		end
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.do_thing.should == "hello"
 	end
 	it "should allow accessing commands" do
@@ -306,7 +306,7 @@ describe "deal with commands" do
 			command :do_thing, :type => "percentage", :action => proc{|p| (p*100).to_i}
 			
 		end
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.do_thing(0.1).should == 10
 	end
 end
@@ -315,18 +315,31 @@ describe "persist to couchdb database" do
 	it "should create hash representation of device" do
 		class DeviceSubclass < DeviceTest
 			configure do
-				baud 9600
+				data_bits 8
+				baud :type => :integer, :default => 9600
+				port :type => :port
 			end
 			state_var :name, :type => :string
 			state_var :brightness, :type => :percentage
 			command :focus, :type => :percentage
 		end
-		ds = DeviceSubclass.new
+		ds = DeviceSubclass.new("device")
 		ds.name = "Projector"
 		ds.brightness = 0.8
 		ds.to_couch.should == {
 			:config => {
-				:baud => 9600
+				:data_bits => {
+					:value => 8
+				},
+				:baud => {
+					:value => 9600,
+					:type => :integer,
+					:default => 9600
+				},
+				:port => {
+					:value => nil,
+					:type => :port
+				}
 			},
 			:state_vars => {
 				:name => {
@@ -349,7 +362,9 @@ describe "persist to couchdb database" do
 	it "should load a new device from hash" do
 		class DeviceSubclass < DeviceTest
 			configure do
-				baud 9600
+				data_bits 8
+				baud :type => :integer, :default => 9600
+				port :type => :port
 			end
 			state_var :name, :type => :string
 			state_var :brightness, :type => :percentage
@@ -360,14 +375,21 @@ describe "persist to couchdb database" do
 			"_id" => "0a2392bb27551acf35cdd1ca621ec26b",
 			"_rev" => "1654-ff63755fb7999e3d6fb97cc011575c38",
 			"attributes" => {
+				"name" => "Projector",
 				"config" => {
-					"baud" => 9600
+					"data_bits" => {
+						"value" => 8
+					},
+					"baud" => {
+						"value" => 9600,
+						"type" => "integer"
+					},
+					"port" => {
+						"value" => "/dev/null",
+						"type" => "port"
+					}
 				},
 				"state_vars" => {
-					"name" => {
-						"type" => "string",
-						"state" => "Projector"
-					},
 					"brightness" => {
 						"type" => "percentage",
 						"state" => 0.8
@@ -387,6 +409,9 @@ describe "persist to couchdb database" do
 		ds.name = "Extron"
 		ds.name.should == "Extron"
 		ds.state_vars[:name].should == {:type => :string}
+		ds.configuration[:data_bits].should == 8
+		ds.configuration[:port].should == "/dev/null"
+		ds.configuration[:baud].should == 9600
 		ds._id.should == "0a2392bb27551acf35cdd1ca621ec26b"
 		ds._rev.should == "1654-ff63755fb7999e3d6fb97cc011575c38"
 	end
@@ -401,8 +426,7 @@ describe "handling requests from amqp" do
 			end
 		end
 		
-		ds = DeviceSubclass.new
-		ds.name = "Extron"
+		ds = DeviceSubclass.new("Extron")
 		ds.power = false
 		ds.power.should == false
 		json = '{
@@ -442,8 +466,7 @@ describe "handling requests from amqp" do
 			command :power, :action => proc{|on| "power=#{on}"}
 		end
 		
-		ds = DeviceSubclass.new
-		ds.name = "Extron"
+		ds = DeviceSubclass.new("Extron")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -481,8 +504,7 @@ describe "handling requests from amqp" do
 			state_var :name, :type => :string
 		end
 		
-		ds = DeviceSubclass.new
-		ds.name = "Extron"
+		ds = DeviceSubclass.new("Extron")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -522,8 +544,7 @@ describe "handling requests from amqp" do
 			state_var :volume, :type => :integer, :action => proc{|v| self.volume = v}
 		end
 				
-		ds = DeviceSubclass.new
-		ds.name = "Extron"
+		ds = DeviceSubclass.new("Extron")
 		
 		@states = {:brightness => 1, :volume => 1}
 		

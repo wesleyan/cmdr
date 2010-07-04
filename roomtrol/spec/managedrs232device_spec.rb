@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
-require File.dirname(__FILE__) + '/../lib/device.rb'
-require File.dirname(__FILE__) + '/../lib/rs232device.rb'
-require File.dirname(__FILE__) + '/../lib/managedrs232device.rb'
+require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
+require File.dirname(__FILE__) + '/../lib/roomtrol/rs232device.rb'
+require File.dirname(__FILE__) + '/../lib/roomtrol/managedrs232device.rb'
 
 # Time to add your specs!
 # http://rspec.info/
@@ -44,7 +44,7 @@ describe "state_var enhancements" do
 					"#{input}!\r\n"
 				}
 		end
-		ds = MR232DeviceSubclass.new(:name => "Extron", :port => "/dev/null")
+		ds = MR232DeviceSubclass.new("Extron", :port => "/dev/null")
 		ds.set_input(4)
 		ds._send_queue[0][0].should == "4!\r\n"
 	end
@@ -102,7 +102,7 @@ describe "do responses" do
 				match :volume,   /Vol\d+/, proc{|r| self.volume = r.strip[3..-1].to_i/100.0}
 			end
 		end
-		ds = MR232DeviceSubclass.new(:name => "Extron", :port => '/dev/null')
+		ds = MR232DeviceSubclass.new("Extron", :port => '/dev/null')
 		ds.read "Chn4\r\n"
 		ds.read "Vol12\r\n"
 		ds.input.should == 4
@@ -114,8 +114,8 @@ describe "do requests" do
 	it "should properly send requests" do
 		class MR232DeviceSubclass < MR232Device
 			attr_reader :string_array
-			def initialize(options)
-				super(options)
+			def initialize(name, options)
+				super(name, options)
 				@string_array = []
 			end
 			configure do
@@ -133,7 +133,7 @@ describe "do requests" do
 				@string_array << string
 			end
 		end
-		ds = MR232DeviceSubclass.new(:name => "Extron", :port => "/dev/null")
+		ds = MR232DeviceSubclass.new("Extron", :port => "/dev/null")
 		EM::run {
 			EM::add_periodic_timer(3) {
 				AMQP.stop do
@@ -150,8 +150,8 @@ describe "sending messages" do
 	it "should respond to AMQP messages appropriately" do
 		class MR232DeviceSubclass < MR232Device
 			attr_reader :string_array
-			def initialize(options)
-				super(options)
+			def initialize(name, options)
+				super(name, options)
 				@string_array = []
 				@power = true
 			end
@@ -163,7 +163,7 @@ describe "sending messages" do
 			end
 		end
 		
-		ds = MR232DeviceSubclass.new(:name => 'Extron', :port => '/dev/null')
+		ds = MR232DeviceSubclass.new('Extron', :port => '/dev/null')
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
 			"queue": "roomtrol:test:3",

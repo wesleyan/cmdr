@@ -15,7 +15,7 @@ module Wescontrol
 		end
 				
 		def send_string(string)
-			@serialport.send_data(string)
+			@serialport.send_data(string) if @serialport
 		end
 		
 		def read data
@@ -32,7 +32,7 @@ module Wescontrol
 			
 		end
 	
-		def initialize(options)
+		def initialize(name, options)
 			options = options.symbolize_keys
 			@port = options[:port]
 			throw "Must supply serial port parameter" unless @port
@@ -42,7 +42,7 @@ module Wescontrol
 			@parity = options[:parity] ? options[:parity] : 0
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
-			super(options)
+			super(name, options)
 		end
 	end
 end

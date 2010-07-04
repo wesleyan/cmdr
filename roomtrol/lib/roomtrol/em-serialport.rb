@@ -1,6 +1,3 @@
-$eventmachine_library = :pure_ruby # need to force pure ruby
-
-require 'eventmachine'
 require 'serialport'
 
 module EventMachine

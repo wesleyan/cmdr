@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'eventmachine'
 require 'evma_httpserver'
 require 'json'
 require 'amqp'
@@ -23,13 +22,15 @@ module Wescontrol
 		}
 		
 		def initialize
+			DaemonKit.logger.info("Starting WescontrolHTTP")
 			@queue = "roomtrol:http:#{self.object_id}"
 			@deferred_responses = {}
 			@amq = MQ.new
 			@amq.queue(@queue).subscribe{|json|
 				msg = JSON.parse(json)
+				DaemonKit.logger.debug("Received HTTP response: #{msg}")
 				if @deferred_responses[msg["id"]]
-					@deferred_responses[msg["id"]].succeed(msg["result"])
+					@deferred_responses.delete(msg["id"]).succeed(msg)
 				end
 			}
 		end
@@ -41,112 +42,64 @@ module Wescontrol
 			
 			if @path[0] == 'devices'
 				devices resp
-			#elsif @path[0] == 'watch' Watch won't work with messagequeue
-			#	watch resp
-			#elsif @path[0] == 'controller'
-			#	controller resp
 			else
 				resp.status = 404
 				resp.content = {"error" => "resource_not_found"}.to_json() + "\n"
 				resp.send_response
 			end
-			# once download is complete, send it to client
-			#http.callback do |r|
-			#resp.status = 200
-			#resp.content = r[:content]
-			#resp.send_response
 		end
-		
-		#TODO: Think about how to reimplement this with the new scheme
-		#for now, it's disabled
-		def watch resp
-			@method_table ||= self.class.instance_variable_get(:@method_table)
-			
-			content = {}
-
-			devices = []
-			if !@path[1]
-				resp.status = 200
-				devices = @method_table.collect{|devices| devices[:device]}
-			elsif @method_table[@path[1]]
-				devices = [@method_table[@path[1]][:device]]
-			else
-				resp.status = 404
-				content = {"error" => "device_not_found"}
-				resp.content = content.to_json + "\n"
-				resp.send_response
-				return
-			end
-			
-			devices.each{|device|
-				device.register_for_changes.callback {|var, val|
-					content = {var => val}
-					resp.status = 200
-					resp.content = content.to_json + "\n"
-					resp.send_response
-				}
-			}
-		end
-		
-		#def controller resp
-		#	resp.status = 200
-		#	resp.content = {
-		#		"mac" 			=> MAC.addr,
-		#		"id" 			=> @couchid,
-		#		"attributes" 	=> @controller.attributes,
-		#		"belongs_to"	=> @controller.belongs_to,
-		#		"class"			=> @controller.class
-		#	}.to_json + "\n"
-		#	resp.send_response
-		#end
-		
+				
 		def devices resp
-			@method_table ||= self.class.instance_variable_get(:@method_table)
+			DaemonKit.logger.debug("Running devices")
+			@devices ||= self.class.instance_variable_get(:@devices)
 			
 			if !@path[1]
 				resp.status = 200
-				content = @method_table
-				resp.content = content.to_json + "\n" 
+				resp.content = {:devices => @devices}.to_json + "\n" 
 				resp.send_response
 			elsif !@path[2]
 				resp.status = 400
-				content = {:error => :must_provide_target}.to_json + "\n"
+				resp.content = {:error => :must_provide_target}.to_json + "\n"
 				resp.send_response
-			elsif @method_table[@path[1]]
+			elsif @devices.include? @path[1]
 				case @http_request_method
 				when "GET"
-					get (@path, resp)
+					get @path, resp
 				when "POST"
 					post @path, resp
 				end
 			else
 				resp.status = 404
-				content = {"error" => "device_not_found"}
-				resp.content = content.to_json + "\n" 
+				resp.content = {:error => :device_not_found}.to_json + "\n" 
 				resp.send_response
 			end
 		end
 		
 		def defer_device_operation resp, device_req, device
 			deferrable = EM::DefaultDeferrable.new
-			deferrable.timeout = TIMEOUT
+			deferrable.timeout TIMEOUT
 			
 			deferrable.callback {|result|
+				DaemonKit.logger.debug("Callback called with #{result}")
 				resp.status = result[:error] ? 500 : 200
-				resp.content = result.delete(:id).to_json + "\n"
+				result.delete("id")
+				resp.content = result.to_json + "\n"
 				resp.send_response
-			}.errback {
+			}
+			deferrable.errback {
 				resp.status = 500
 				resp.content = {:error => :timed_out}.to_json + "\n"
 				resp.send_response
+				@deferred_responses.delete(deferrable)
 			}
 			@deferred_responses[device_req[:id]] = deferrable
-			amq.queue('roomtrol:dqueue:#{device}').publish(device_req.to_json)
+			@amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
 		end
 		
 		#A get request looks like this: GET /devices/Extron/power
 		#and returns something like this: {"result" => false}
 		def get path, resp
+			DaemonKit.logger.debug("Running get on #{path}")
 			device_req = {
 				:id => UUIDTools::UUID.random_create.to_s,
 				:queue => @queue,
@@ -162,7 +115,6 @@ module Wescontrol
 		def post path, resp
 			begin
 				data = JSON.parse(@http_post_content)
-				device = @method_table[path[1]]
 				device_req = {
 					:id => UUIDTools::UUID.random_create.to_s,
 					:queue => @queue
@@ -182,20 +134,6 @@ module Wescontrol
 				content = {"error" => "bad_json"}
 				resp.send_response
 			end
-		end
-	
-		def set_var device, var, value, resp
-			content = nil
-			if device[:methods][var.to_sym]
-				if @@kind_verifier[device[:methods][var.to_sym][:kind].to_sym].call(value, device[:methods][var.to_sym])
-					deal_with_device_feedback device[:device].send("set_#{var}", value), var, resp
-				else
-					content = {"error" => "#{var}_invalid_data"}
-				end
-			else
-				content = {"error" => "#{var}_not_found"}
-			end
-			content
 		end
 	end
 end

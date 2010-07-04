@@ -7,12 +7,12 @@ class VideoRecorder < Wescontrol::Device
 	state_var :recording_started, :type => :time, :editable => false
 	state_var :recording_stopped, :type => :time, :editable => false
 	
-	def initialize(options)
+	def initialize(name, options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
 		DaemonKit.logger.info "Initializing Video Recorder #{options[:name]} on #{options[:port]}"
 		DaemonKit.logger.info "starting god:"
-		super(options)
+		super(name, options)
 	end
 	
 	def run
