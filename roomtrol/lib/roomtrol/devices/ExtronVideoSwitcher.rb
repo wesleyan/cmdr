@@ -1,7 +1,7 @@
 class ExtronVideoSwitcher < VideoSwitcher
 	configure do
 		baud        9600
-		message_end "\r"
+		message_end "\r\n"
 	end
 	
 	managed_state_var :input, 
@@ -10,21 +10,21 @@ class ExtronVideoSwitcher < VideoSwitcher
 		:options => ("1".."6").to_a,
 		:response => :channel,
 		:action => proc{|input|
-			"#{input}!"
+			"#{input}!\r\n"
 		}
 	managed_state_var :volume,
 		:type => :percentage,
 		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
-			"#{(volume*100).to_i}V"
+			"#{(volume*100).to_i}V\r\n"
 		}
 	managed_state_var :mute,
 		:type => :boolean,
 		:display_order => 3,
 		:response => :mute,
 		:action => proc{|on|
-			on ? "1Z\r\n" : "0Z"
+			on ? "1Z\r\n" : "0Z\r\n"
 		}
 	
 	state_var :model, :type => 'string', :editable => false
