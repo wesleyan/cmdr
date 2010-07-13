@@ -11,6 +11,11 @@ class String
 	end
 end
 
+post '/login' do
+	json = JSON.parse(request.body.read.to_s)
+	
+end
+
 post '/graph' do
 	#db = CouchRest.database("http://localhost:5984/rooms")
 	#room = db.get(params[:room])

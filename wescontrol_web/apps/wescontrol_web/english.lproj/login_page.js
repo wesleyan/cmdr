@@ -11,6 +11,7 @@ WescontrolWeb.login = SC.Page.design({
 		classNames: ['login-page'],
 
 		contentView: SC.View.design({
+			classNames: ['login-body'],
 			layout: { centerX: 0, centerY: 0, width:400, height: 200 },
 			childViews: "usernameField passwordField".w(),
 		
