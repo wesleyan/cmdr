@@ -2,7 +2,7 @@
 # already included in your load path, so no need to specify it.
 require 'eventmachine'
 require 'em-proxy'
-require 'em-redis'
+require 'couchrest'
 
 module RoomtrolServer
 	class ProxyServer
@@ -11,10 +11,15 @@ module RoomtrolServer
 			"Server: RoomtrolProxy (Ubuntu Linux)"].join("\r\n")
 			
 		HTTP_MATCHER = /(GET|POST|PUT|DELETE|HEAD) (.+?)(?= HTTP)/
+		COOKIE_MATCHER = /auth_token="(.+?)"/
+		
 		def initialize
+			@couch = CouchRest.database!("http://127.0.0.1:5984/roomtrol_server")
 		end
 		def authenticate data, server, conn
-			if authenticated
+			auth_token = data.split("Cookie:")[1].match(/auth_token="(.+?)"/)[1]
+			user = @couch.view("auth/auth_tokens", {:key => auth_token})["rows"][0]
+			if user && user["auth_expire"] > Time.now
 				[data, [server]]
 			else
 				conn.send_data UNAUTHORIZED_RESP

@@ -4,6 +4,10 @@ require 'tempfile'
 require 'couchrest'
 require 'json'
 require 'base64'
+require 'net/ldap'
+
+LOCAL_DEVEL = true
+COOKIE_EXPIRE = 24*60*60
 
 class String
 	def us
@@ -11,9 +15,34 @@ class String
 	end
 end
 
-post '/login' do
+post '/auth/login' do
 	json = JSON.parse(request.body.read.to_s)
-	
+	username = json["username"]
+	password = json["password"]
+	couch = CouchRest.database!("http://127.0.0.1:5984/roomtrol_server")
+	authenticated = false
+	if user = couch.view("auth/users", {:key => username})["rows"][0]
+		if LOCAL_DEVEL
+			authenticated = password == "pleasedon'tusethis"
+		else
+			ldap = Net::LDAP.new
+			ldap.host = "gwaihir.wesad.wesleyan.edu"
+			ldap.auth "#{username}@wesad.wesleyan.edu", password
+			authenticated = username && password && username != "" && password != "" && ldap.bind
+		end
+	end
+	if authenticated
+		#TODO: Figure out a more secure way of generating the token
+		token = Digest::SHA1.hexdigest("#{Time.now + Time.now.usec + (rand * 1000-500)}")
+		set_cookie("auth_token", token, :expires => Time.now+COOKIE_EXPIRE)
+		user["auth_token"] = token
+		user["auth_expire"] = (Time.now+COOKIE_EXPIRE).to_i
+		couch.save!(user)
+		{"auth" => "success"}.to_json
+	else
+		status 401
+		{"auth" => "failed"}.to_json
+	end
 end
 
 post '/graph' do
