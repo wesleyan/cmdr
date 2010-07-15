@@ -13,15 +13,14 @@ module RoomtrolServer
 			@couch = CouchRest.database!("http://127.0.0.1:5984/roomtrol_server")
 		end
 		def authenticate data, server, conn
-			if cookie = data.split("Cookie:")[1]
-				matched = cookie.match(COOKIE_MATCHER)
+			begin
+				matched = data.split("Cookie:")[1].match(COOKIE_MATCHER)
 				auth_token = matched[1] if matched
-				puts "AuthToken: '#{matched}'"
-				user = @couch.view("auth/tokens", {:key => auth_token.strip})["rows"][0]
-				puts "EXPIRES: #{user["auth_expire"]}"
-				if user && user["auth_expire"] > Time.now.to_i
+				user = @couch.view("auth/tokens", {:key => auth_token.strip})["rows"][0]["value"]
+				if user["auth_expire"] > Time.now.to_i
 					return [data, [server]]
 				end
+			rescue
 			end
 			conn.send_data "HTTP/1.1 401 User is not authorized\r\n"
 			conn.unbind
