@@ -16,6 +16,7 @@ class String
 end
 
 post '/auth/login' do
+	puts "Doing login"
 	json = JSON.parse(request.body.read.to_s)
 	username = json["username"]
 	password = json["password"]
@@ -23,7 +24,8 @@ post '/auth/login' do
 	authenticated = false
 	if user = couch.view("auth/users", {:key => username})["rows"][0]
 		if LOCAL_DEVEL
-			authenticated = password == "pleasedon'tusethis"
+			puts "LocalDevel"
+			authenticated = password == "apassword"
 		else
 			ldap = Net::LDAP.new
 			ldap.host = "gwaihir.wesad.wesleyan.edu"
@@ -32,16 +34,17 @@ post '/auth/login' do
 		end
 	end
 	if authenticated
+		puts "Authenticated!"
 		#TODO: Figure out a more secure way of generating the token
 		token = Digest::SHA1.hexdigest("#{Time.now + Time.now.usec + (rand * 1000-500)}")
-		set_cookie("auth_token", token, :expires => Time.now+COOKIE_EXPIRE)
-		user["auth_token"] = token
-		user["auth_expire"] = (Time.now+COOKIE_EXPIRE).to_i
-		couch.save!(user)
-		{"auth" => "success"}.to_json
+		response.set_cookie "auth_token", {:value => token, :expires => Time.now+COOKIE_EXPIRE}
+		user["value"]["auth_token"] = token
+		user["value"]["auth_expire"] = (Time.now+COOKIE_EXPIRE).to_i
+		couch.save_doc(user["value"])
+		{"auth" => "success"}.to_json + "\n"
 	else
 		status 401
-		{"auth" => "failed"}.to_json
+		{"auth" => "failed"}.to_json + "\n"
 	end
 end
 

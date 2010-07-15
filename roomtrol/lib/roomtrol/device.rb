@@ -293,7 +293,7 @@ module Wescontrol
 					doc["_id"] = @_id
 					doc["_rev"] = @_rev
 				end
-				#@_rev = @db.save_doc(doc)['rev']
+				@_rev = @db.save_doc(doc)['rev']
 			rescue => e
 				if !retried
 					retried = true
