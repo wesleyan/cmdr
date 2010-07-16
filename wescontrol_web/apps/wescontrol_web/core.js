@@ -22,7 +22,16 @@ WescontrolWeb = SC.Application.create(
 	// to any fixtures you define.
 	
 	//store: SC.Store.create().from(SC.Record.fixtures)
-	store: SC.Store.create().from('WescontrolWeb.CouchDataSource')
+	store: null,
+	
+	onAuthenticationChanged: function(){
+		if(WescontrolWeb.authController.authenticated && !this.store)
+		{
+			this.store = SC.Store.create().from('WescontrolWeb.CouchDataSource');
+			WescontrolWeb.buildingController.refreshSources();
+			WescontrolWeb.driverController.refreshSources();
+		}
+	}.observes("WescontrolWeb.authController.authenticated")
 	// TODO: Add global constants or singleton objects needed by your app here.
 	
 }) ;

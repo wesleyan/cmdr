@@ -28,33 +28,41 @@ module RoomtrolServer
 		end
 		def run
 			Proxy.start(:host => "0.0.0.0", :port => 2352, :debug => true){|conn|
-				conn.server :couch, :host => "127.0.0.1", :port => 5984
-				conn.server :roomtrol, :host => "127.0.0.1", :port => 4567
-				#conn.server :http, :host => "127.0.0.1", :port => 81
+				begin
+					conn.server :couch, :host => "127.0.0.1", :port => 5984
+					conn.server :roomtrol, :host => "127.0.0.1", :port => 4567
+					#conn.server :http, :host => "127.0.0.1", :port => 81
 
-				conn.on_data do |data|
-					action, path = data.match(HTTP_MATCHER)[1..2]
-					result = case path.split("/")[1]
-					when "rooms"
-						authenticate data, :couch, conn
-					when "device"
-						authenticate data, :roomtrol, conn
-					when "auth"
-						puts "Doing auth"
-						[data, [:roomtrol]]
-					else
-						[data, [:http]]
+					conn.on_data do |data|
+						begin
+							action, path = data.match(HTTP_MATCHER)[1..2]
+							result = case path.split("/")[1]
+							when "rooms"
+								authenticate data, :couch, conn
+							when "device"
+								authenticate data, :roomtrol, conn
+							when "auth"
+								puts "Doing auth"
+								[data, [:roomtrol]]
+							else
+								[data, [:http]]
+							end
+							result
+						rescue
+							DaemonKit.logger.error("Error: #{$!}")
+						end
 					end
-					result
-				end
 
-				conn.on_response do |server, resp|
-					resp
-				end
+					conn.on_response do |server, resp|
+						resp
+					end
 
-				conn.on_finish do |name|
+					conn.on_finish do |name|
+					end
+				rescue
+					conn.send_data "HTTP/1.1 500 Unknown error occurred\r\n"
+					conn.unbind
 				end
-			  
 			}
 		end
 	end

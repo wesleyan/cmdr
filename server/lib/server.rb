@@ -34,14 +34,13 @@ post '/auth/login' do
 		end
 	end
 	if authenticated
-		puts "Authenticated!"
 		#TODO: Figure out a more secure way of generating the token
 		token = Digest::SHA1.hexdigest("#{Time.now + Time.now.usec + (rand * 1000-500)}")
 		response.set_cookie "auth_token", {:value => token, :expires => Time.now+COOKIE_EXPIRE}
 		user["value"]["auth_token"] = token
 		user["value"]["auth_expire"] = (Time.now+COOKIE_EXPIRE).to_i
 		couch.save_doc(user["value"])
-		{"auth" => "success"}.to_json + "\n"
+		{"auth" => "success", "auth_token" => token}.to_json + "\n"
 	else
 		status 401
 		{"auth" => "failed"}.to_json + "\n"
