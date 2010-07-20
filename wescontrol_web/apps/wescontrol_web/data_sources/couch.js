@@ -38,5 +38,36 @@ WescontrolWeb.CouchDataSource = CouchDataSource.extend({
 	
 	fetchedDriversCallback: function(response){
 		WescontrolWeb.driverController.refreshSources();
+	},
+	
+	updateRecord: function(store, storeKey) {
+		/*console.log("Create record");
+		var hash = store.readDataHash(storeKey);
+		if (SC.kindOf(store.recordTypeFor(storeKey), this.appObject.Device)) {
+			console.log("Creating record: %s", hash.name);
+			SC.Request.putUrl('/rooms/' + this.randomUUID).json()
+				.notify(this, this.didCreateDoc, store, storeKey)
+				.send({
+					belongs_to: hash.room,
+					attributes: {
+						state_vars: {},
+						name: hash.name
+					},
+					device: YES,
+					"class": hash.driver
+				});
+			return YES;
+		}*/
+		
+		WW.log("updating record");
+		var hash = store.readDataHash(storeKey);
+		if(SC.kindOf(store.recordTypeFor(storeKey), WW.device())){
+			WW.log("Updating device: %s", hash.name);
+			WW.log(hash);
+		}
+		// TODO: Add handlers to submit modified record to the data source
+		// call store.dataSourceDidComplete(storeKey) when done.
+
+		return NO ; // return YES if you handled the storeKey
 	}
 });

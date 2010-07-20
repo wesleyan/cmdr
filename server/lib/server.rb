@@ -47,7 +47,18 @@ post '/auth/login' do
 	end
 end
 
+#Expects json like this:
+#{
+#	'room': 'asdf23jlkj34nas',
+#	'record': {couchdb record update goes here}
+#}
+post '/config' do
+	json = JSON.parse(request.body.read.to_s)
+	json["room"]
+end
+
 post '/graph' do
+	puts "Doing graph"
 	#db = CouchRest.database("http://localhost:5984/rooms")
 	#room = db.get(params[:room])
 	#sources = db.get("_design/wescontrol_web").view("sources", :key => params[:room])		
@@ -113,6 +124,8 @@ graph = %Q\digraph F {
 	f.close
 	f.path
 	content_type 'application/json'
-	svg = `dot -Tsvg #{f.path}`
-	JSON.dump({:data => Base64.encode64(svg)})
+	puts "Waiting for graph generation"
+	#svg = `dot -Tsvg #{f.path}`
+	#JSON.dump({:data => Base64.encode64(svg)})
+	JSON.dump({:data => "hello"})
 end

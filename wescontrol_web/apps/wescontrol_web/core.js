@@ -31,10 +31,18 @@ WescontrolWeb = SC.Application.create(
 			WescontrolWeb.buildingController.refreshSources();
 			WescontrolWeb.driverController.refreshSources();
 		}
-	}.observes("WescontrolWeb.authController.authenticated")
+	}.observes("WescontrolWeb.authController.authenticated"),
 	// TODO: Add global constants or singleton objects needed by your app here.
 	
+	debugging: true,
+	
+	log: function(){
+		if(this.debugging)console.log.apply(console, arguments);
+	}
+	
 }) ;
+
+WC = WescontrolWeb;
 
 SC.Binding.isEqualTo = function(thing){
 	return this.transform(function(value, binding) {

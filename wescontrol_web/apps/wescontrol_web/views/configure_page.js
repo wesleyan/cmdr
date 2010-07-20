@@ -17,7 +17,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 /** @scope WescontrolWeb.ConfigurePage.prototype */ {
 
 	classNames: ["configure-page"],
-	childViews: "leftBar tabBar mainView".w(),
+	childViews: "leftBar tabBar mainView confirmReminder".w(),
 	
 	leftBar: SC.View.design({
 		childViews: 'roomsLabel scrollView'.w(),
@@ -47,7 +47,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 	
 		
 	tabBar: SC.View.design({
-		childViews: 'general devices sources actions preview'.w(),
+		childViews: 'general devices sources actions preview confirm'.w(),
 		layout: {top: 0, left: 300, right: 0, height: 47},
 
 		general: WescontrolWeb.TabButton.design({
@@ -84,12 +84,50 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 			action: "function(){SC.RunLoop.begin(); WescontrolWeb.configurationController.set('currentTab', 'preview'); SC.RunLoop.end();}",
 			isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.configurationController.currentTab").isEqualTo("preview")
 			
+		}),
+		confirm: WescontrolWeb.TabButton.design({
+			displayTitle: 'Confirm',
+			layout: {bottom: 0, left: 500, width:100, height:38},
+			action: "function(){SC.RunLoop.begin(); WescontrolWeb.configurationController.set('currentTab', 'confirm'); SC.RunLoop.end();}",
+			isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.configurationController.currentTab").isEqualTo("confirm")
 		})
 	}).classNames('tab-bar'),
 	
-	mainView: SC.ContainerView.design({
+	mainView: SC.ContainerView.design(SC.Animatable, {
 		layout: {left: 300, top: 47, bottom:0, right: 0},
+		transitions: {
+			bottom: { duration: 0.25 } // with custom timing curve
+		},
 		//scenes: 'general devices sources actions preview'.w(),
 		contentViewBinding: "WescontrolWeb.configurationController.currentView"
+	}),
+	
+	confirmReminder: SC.View.design(SC.Animatable, {
+		height: 50,
+		showing: NO,
+		layout: {left:300, right:0, bottom:0, height: 0},
+		backgroundColor: "orange",
+		transitions: {
+			height: { duration: 0.25 } // with custom timing curve
+		},
+		
+		childViews: ['confirmLabel'],
+		confirmLabel: SC.LabelView.design({
+			layout: {centerX: 0, centerY: 0, height: 30, width: 570},
+			value: "Click confirm to save your changes to the device"
+		}),
+		
+		recordsDirtied: function(){
+			if(WescontrolWeb.configurationController.get('configDirty')) {
+				this.parentView.mainView.adjust("bottom", this.height);
+				this.adjust("height", this.height);
+				this.showing = YES;
+			}
+			else {
+				this.parentView.mainView.adjust("bottom", 0);
+				this.adjust("height", 0);
+				this.showing = NO;
+			}
+		}.observes("WescontrolWeb.configurationController.configDirty")
 	})
 });

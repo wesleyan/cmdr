@@ -64,7 +64,7 @@ WescontrolWeb.GeneralConfigurationView = SC.View.extend(
 		childViews: ["image"],
 		
 		image: SC.ImageView.design({
-			valueBinding: "WescontrolWeb.configurationController.graphValue"
+			//valueBinding: "WescontrolWeb.configurationController.graphValue"
 		})
 	}).classNames("graph-image")
 

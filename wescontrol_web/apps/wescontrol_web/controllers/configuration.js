@@ -21,9 +21,25 @@ WescontrolWeb.configurationController = SC.Object.create(
 	
 	graphValue: "",
 	
+	configDirty: NO,
+	
 	init: function(){
 		this.onCurrentTabChange();
 	},
+	
+	updateDirty: function(){
+		var dirty = 0;
+		dirty += WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY;
+		dirty += WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY;
+		dirty += WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY;
+		if(dirty != 0){
+			this.set("configDirty", YES);
+		}
+	}.observes(
+		"WescontrolWeb.deviceController.status",
+		"WescontrolWeb.sourceSelectionController.status",
+		"WescontrolWeb.roomListController.status"
+	),
 	
 	onCurrentTabChange: function(){
 		console.log("Current view: %s", this.currentTab.capitalize() + "ConfigurationView");
@@ -44,10 +60,9 @@ WescontrolWeb.configurationController = SC.Object.create(
 				})
 			}));
 		}
-	}.observes("currentTab"),
+	}.observes("currentTab")
 	
-	generateGraph: function(){
-		console.log("Something changed");
+	/*generateGraph: function(){
 		if(WescontrolWeb.roomController.get('content') && WescontrolWeb.sourceController.get('content'))
 		{
 			SC.Request.postUrl('/graph').json()
@@ -64,7 +79,7 @@ WescontrolWeb.configurationController = SC.Object.create(
 	
 	graphGenerated: function(response){
 		this.set('graphValue', "data:image/svg+xml;base64," + response.get('body')["data"]);
-	}
+	}*/
 	
 
 }) ;

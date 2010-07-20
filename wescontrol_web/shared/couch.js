@@ -340,9 +340,14 @@ CouchDataSource = SC.DataSource.extend(
 	},
 	
 	updateRecord: function(store, storeKey) {
-		
 		// TODO: Add handlers to submit modified record to the data source
 		// call store.dataSourceDidComplete(storeKey) when done.
+		WW.log("updating record");
+		var hash = store.readDataHash(storeKey);
+		if(SC.kindOf(store.recordTypeFor(storeKey), WW.device())){
+			WW.log("Updating device: %s", hash.name);
+			WW.log(hash);
+		}
 
 		return NO ; // return YES if you handled the storeKey
 	},
