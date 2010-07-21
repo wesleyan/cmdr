@@ -210,12 +210,15 @@ CouchDataSource = SC.DataSource.extend(
 	},
 	didFetchSources: function(response, store, query){
 		if (SC.ok(response)) {
+			console.log("SOURCEFETCH");
+			console.log(response.get("body"));
 			var sources = [];
 			response.get('body').rows.forEach(function(row){
 				var icon_name = "";
 				for(var prop in row.value._attachments)icon_name = prop;
 				var source = {
 					guid: row.id,
+					_rev: row.value._rev,
 					name: row.value.name,
 					input: row.value.input,
 					icon: "/rooms/" + row.id + "/" + icon_name,
@@ -240,6 +243,7 @@ CouchDataSource = SC.DataSource.extend(
 				for(var prop in row.value._attachments)icon_name = prop;
 				var action = {
 					guid: row.id,
+					_rev: row.value._rev,
 					name: row.value.name,
 					settings: row.value.settings,
 					icon: "/rooms/" + row.id + "/" + icon_name,
@@ -262,6 +266,7 @@ CouchDataSource = SC.DataSource.extend(
 			response.get('body').rows.forEach(function(row){
 				var driver = {
 					guid: row.id,
+					_rev: row.value._rev,
 					name: row.value.name,
 					type: row.value.type
 				};
@@ -342,12 +347,6 @@ CouchDataSource = SC.DataSource.extend(
 	updateRecord: function(store, storeKey) {
 		// TODO: Add handlers to submit modified record to the data source
 		// call store.dataSourceDidComplete(storeKey) when done.
-		WW.log("updating record");
-		var hash = store.readDataHash(storeKey);
-		if(SC.kindOf(store.recordTypeFor(storeKey), WW.device())){
-			WW.log("Updating device: %s", hash.name);
-			WW.log(hash);
-		}
 
 		return NO ; // return YES if you handled the storeKey
 	},

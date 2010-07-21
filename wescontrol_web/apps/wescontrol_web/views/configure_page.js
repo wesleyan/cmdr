@@ -88,6 +88,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 		confirm: WescontrolWeb.TabButton.design({
 			displayTitle: 'Confirm',
 			layout: {bottom: 0, left: 500, width:100, height:38},
+			isVisibleBinding: "WescontrolWeb.configurationController.configDirty",
 			action: "function(){SC.RunLoop.begin(); WescontrolWeb.configurationController.set('currentTab', 'confirm'); SC.RunLoop.end();}",
 			isSelectedBinding: SC.Binding.oneWay("WescontrolWeb.configurationController.currentTab").isEqualTo("confirm")
 		})

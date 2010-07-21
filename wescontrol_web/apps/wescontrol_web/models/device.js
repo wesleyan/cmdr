@@ -62,6 +62,24 @@ WescontrolWeb.Device = SC.Record.extend(
 		if(this.get('driver')){
 			return WescontrolWeb.store.find(SC.Query.local(WescontrolWeb.Driver, 'name = {name}', {name: this.get('driver')})).firstObject();
 		}
-	}.property('driver').cacheable()
-
+	}.property('driver').cacheable(),
+	
+	couchHash: function(){
+		var hash = {
+			_id: this.get('guid'),
+			_rev: this.get('_rev'),
+			belongs_to: this.get('room'),
+			device: YES,
+			"class": this.get('driver'),
+			attributes: {}
+		};
+		for(var key in this.attributes()){
+			hash.attributes[key] = this.attributes()[key];
+		}
+		delete hash.attributes["room"];
+		delete hash.attributes["_rev"];
+		delete hash.attributes["guid"];
+		delete hash.attributes["driver"];
+		return hash;
+	}
 }) ;

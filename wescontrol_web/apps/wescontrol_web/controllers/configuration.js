@@ -14,6 +14,7 @@ sc_require("views/general_configuration");
 sc_require("views/devices_configuration");
 sc_require("views/sources_configuration");
 sc_require("views/preview_configuration");
+sc_require("views/confirm_configuration");
 WescontrolWeb.configurationController = SC.Object.create(
 /** @scope WescontrolWeb.configurationController.prototype */ {
 
@@ -32,9 +33,8 @@ WescontrolWeb.configurationController = SC.Object.create(
 		dirty += WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY;
 		dirty += WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY;
 		dirty += WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY;
-		if(dirty != 0){
-			this.set("configDirty", YES);
-		}
+		console.log("Updating dirty: %d", dirty);
+		this.set("configDirty", dirty!=0);
 	}.observes(
 		"WescontrolWeb.deviceController.status",
 		"WescontrolWeb.sourceSelectionController.status",
@@ -60,7 +60,17 @@ WescontrolWeb.configurationController = SC.Object.create(
 				})
 			}));
 		}
-	}.observes("currentTab")
+	}.observes("currentTab"),
+	
+	saveConfiguration: function(){
+		console.log("Saving configuration");
+		if(WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY){
+			WescontrolWeb.deviceController.get('content').commitRecord();
+		}
+		if(WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY){
+			WescontrolWeb.roomListController.get('content').commitRecord();
+		}
+	}
 	
 	/*generateGraph: function(){
 		if(WescontrolWeb.roomController.get('content') && WescontrolWeb.sourceController.get('content'))

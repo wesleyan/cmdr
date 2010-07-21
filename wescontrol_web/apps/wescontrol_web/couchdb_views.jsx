@@ -6,7 +6,7 @@ function(doc) {
 	}
 	if(doc.class && doc.class == "Room" && doc.belongs_to)
 	{
-		var room = {guid: doc._id, building: doc.belongs_to, devices: []};
+		var room = {guid: doc._id, _rev: doc._rev, building: doc.belongs_to, devices: []};
 		for(var attr in doc.attributes){
 			room[attr] = doc.attributes[attr];
 		}
@@ -16,21 +16,23 @@ function(doc) {
 	{
 		//the [0] in the key makes sure all of the devices are sorted after the other docs
 		var device = {
-			guid: doc._id, 
+			guid: doc._id,
+			_rev: doc._rev,
 			name: doc.attributes.name, 
 			room: doc.belongs_to, 
 			state_vars: doc.attributes.state_vars,
 			driver: doc.class
 		};
-		device["config"] = {};
+		
 		for(var config in doc.attributes.config)
 		{
-			device["config"][config] = doc.attributes.config[config];
+			device[config] = doc.attributes.config[config];
 		}
 		
 		emit([[0], 2], device); 		
 	}
 }
+
 //Device
 function(doc) {
 	if(doc.device && doc.attributes)
