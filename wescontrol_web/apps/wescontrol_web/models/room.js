@@ -39,6 +39,10 @@ WescontrolWeb.Room = SC.Record.extend(
 	sources: function(){
 		return WescontrolWeb.store.find(SC.Query.local(WescontrolWeb.Source, {conditions: "belongs_to = {room}", room: this.get("guid")}));
 	}.property("guid").cacheable(),
+	
+	actions: function(){
+		return WescontrolWeb.store.find(SC.Query.local(WescontrolWeb.Action, {conditions: "belongs_to = {room}", room: this.get("guid")}));
+	}.property("guid").cacheable(),
 		
 	couchHash: function(){
 		var hash = {

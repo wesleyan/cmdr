@@ -14,6 +14,17 @@
 WescontrolWeb.Action = SC.Record.extend(
 /** @scope WescontrolWeb.Action.prototype */ {
 
-  // TODO: Add your own code here.
+	couchHash: function(){
+		var hash = {
+			_id: this.get('guid'),
+			source: true
+		};
+		for(var key in this.attributes()){
+			hash[key] = this.attributes()[key];
+		};
+		delete hash["guid"];
+		delete hash["icon"];
+		return hash;
+	}
 
 }) ;

@@ -15,6 +15,7 @@ sc_require("views/devices_configuration");
 sc_require("views/sources_configuration");
 sc_require("views/preview_configuration");
 sc_require("views/confirm_configuration");
+sc_require("views/action_configuration");
 WescontrolWeb.configurationController = SC.Object.create(
 /** @scope WescontrolWeb.configurationController.prototype */ {
 
@@ -44,12 +45,14 @@ WescontrolWeb.configurationController = SC.Object.create(
 	onCurrentTabChange: function(){
 		console.log("Current view: %s", this.currentTab.capitalize() + "ConfigurationView");
 		this.set("whatever", true);
-		try {
+		//try {
 			this.set('currentView', WescontrolWeb[this.currentTab.capitalize() + "ConfigurationView"].create({
 				layout: {left: 0, right: 0, top: 0, bottom: 0}
 			}));
-		}
+		/*}
 		catch (e){
+			console.log("Loading tab failed");
+			console.log(e);
 			this.set('currentView', SC.View.create({
 				layout: {left: 0, right: 0, top: 0, bottom: 0},
 				childViews: "notImplementedLabel".w(),
@@ -59,7 +62,7 @@ WescontrolWeb.configurationController = SC.Object.create(
 					color: "black"
 				})
 			}));
-		}
+		}*/
 	}.observes("currentTab"),
 	
 	saveConfiguration: function(){
