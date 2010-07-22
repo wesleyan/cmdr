@@ -45,7 +45,8 @@ WescontrolWeb.CouchDataSource = CouchDataSource.extend({
 		var hash = store.readDataHash(storeKey);
 		var rt = store.recordTypeFor(storeKey);
 		if(SC.kindOf(rt, WescontrolWeb.Device) ||
-			SC.kindOf(rt, WescontrolWeb.Room))
+			SC.kindOf(rt, WescontrolWeb.Room) ||
+			SC.kindOf(rt, WescontrolWeb.Source))
 		{
 			SC.Request.putUrl('/rooms/' + hash.guid).json()
 				.notify(this, this.didCommitRecord, store, storeKey)
@@ -64,7 +65,7 @@ WescontrolWeb.CouchDataSource = CouchDataSource.extend({
 			store.dataSourceDidComplete(storeKey);
 		}
 		else {
-			
+			console.log("Commit failed");
 		}
 		
 	}

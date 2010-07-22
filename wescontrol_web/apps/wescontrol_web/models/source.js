@@ -20,12 +20,10 @@ WescontrolWeb.Source = SC.Record.extend(
 			source: true
 		};
 		for(var key in this.attributes()){
-			hash.attributes[key] = this.attributes()[key];
+			hash[key] = this.attributes()[key];
 		};
-		delete hash.attributes["room"];
-		delete hash.attributes["_rev"];
-		delete hash.attributes["guid"];
-		delete hash.attributes["driver"];
+		delete hash["guid"];
+		delete hash["icon"];
 		return hash;
 	}
 

@@ -56,7 +56,7 @@ WescontrolWeb.SourcesConfigurationView = SC.View.extend(
 					value: "Input"
 				}),
 				
-				inputField: SC.SelectView.design({
+				inputField: SC.SelectFieldView.design({
 					layout: {left: 120, height: 20, width: 200, top: 0},
 					objects: [{name:"RGB1"}, {name:"RGB2"}, {name:"VIDEO"}, {name:"SVIDEO"}],
 					nameKey: "name",

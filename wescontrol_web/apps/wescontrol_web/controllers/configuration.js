@@ -70,6 +70,9 @@ WescontrolWeb.configurationController = SC.Object.create(
 		if(WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.roomListController.get('content').commitRecord();
 		}
+		if(WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY){
+			WescontrolWeb.sourceSelectionController.get('content').commitRecord();
+		}
 	}
 	
 	/*generateGraph: function(){
