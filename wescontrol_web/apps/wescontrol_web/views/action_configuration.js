@@ -30,7 +30,7 @@ WescontrolWeb.ActionsConfigurationView = SC.View.extend(
 		
 		deviceForm: SC.View.design({
 			layout: {centerX: 0, width: 320, top: 40, bottom: 40},
-			childViews: "name source prompProjection".w(),
+			childViews: "name source promptProjection".w(),
 			
 			name: SC.View.design({
 				layout: {left: 0, right: 0, top: 0, height: 40},
@@ -50,39 +50,57 @@ WescontrolWeb.ActionsConfigurationView = SC.View.extend(
 				layout: {left: 0, right: 0, top: 50, height: 40},
 				childViews: "sourceLabel sourceField".w(),
 				sourceLabel: SC.LabelView.design({
-					layout: {left:0, width: 100, height: 30, top: 0},
+					layout: {left:0, width: 100, height: 30, centerY: 0},
 					value: "Source"
 				}),
 				
 				sourceField: SC.SelectFieldView.design({
-					layout: {left: 120, height: 20, width: 200, top: 0},
+					layout: {left: 120, height: 20, width: 200, centerY: 0},
 					objects: function(){
-						WescontrolWeb.sourceController.content.map(function(x){ 
+						return WescontrolWeb.sourceController.map(function(x){ 
 							return {name: x.get("name"), value: x.get("guid")};
 						});
-					}.observes("WescontrolWeb.sourceController.content").property(),
+					}.property("WescontrolWeb.sourceController.content"),
 					nameKey: "name",
 					valueKey: "value",
 					disableSort: true,
 					emptyName: false,
 					theme: 'square',
 					updateValue: function(){
-						if(WescontrolWeb.actionSelectionController.get('source'))
+						if(WescontrolWeb.actionSelectionController.get('settings').source)
 						{
-							this.set('value', WescontrolWeb.actionSelectionController.get('source'));
+							this.set('value', WescontrolWeb.actionSelectionController
+								.get('settings').source);
 						}
-					}.observes("WescontrolWeb.actionSelectionController.input")
+					}.observes("WescontrolWeb.actionSelectionController.settings"),
+					changed: function(){
+						if(WescontrolWeb.actionSelectionController.content){
+							WescontrolWeb.actionSelectionController
+								.content.setSource(this.value);
+						}
+					}.observes('value')
 				})				
 			}),
-			prompProjection: SC.View.design({
+			promptProjection: SC.View.design({
 				layout: {left: 0, right: 0, top: 100, height: 40},
 				childViews: "promptLabel promptField".w(),
 				promptLabel: SC.LabelView.design({
-					layout: {left:0, width: 100, height: 30, top: 0},
+					layout: {left:0, width: 300, height: 30, centerY: 0},
 					value: "Prompt Projector?"
 				}),
 				promptField: SC.CheckboxView.design({
-					layout: {left: 120, height: 20, width: 200, top:0}
+					layout: {left: 240, height: 20, width: 30, centerY: 0},
+					updateValue: function(){
+						var prompt = WescontrolWeb.actionSelectionController
+							.get('settings').prompt_projector;
+						if(prompt)this.set('value', prompt);
+					}.observes("WescontrolWeb.actionSelectionController.settings"),
+					changed: function(){
+						if(WescontrolWeb.actionSelectionController.content){
+							WescontrolWeb.actionSelectionController.content
+								.setPromptProjector(this.value);
+						}
+					}.observes('value')
 				})
 			})
 		})

@@ -17,14 +17,29 @@ WescontrolWeb.Action = SC.Record.extend(
 	couchHash: function(){
 		var hash = {
 			_id: this.get('guid'),
-			source: true
+			action: true
 		};
 		for(var key in this.attributes()){
 			hash[key] = this.attributes()[key];
 		};
 		delete hash["guid"];
-		delete hash["icon"];
 		return hash;
+	},
+	
+	setPromptProjector: function(value){
+		if(this.get("settings") && this.get("settings").promptProjector != value){
+			console.log("Setting promptProjector to");
+			console.log(value);
+			this.get("settings").prompt_projector = value;
+			this.recordDidChange("settings");
+		}
+	},
+	
+	setSource: function(value){
+		if(this.get("settings") && this.get("settings").source != value){
+			this.get("settings").source = value;
+			this.recordDidChange("settings");
+		}
 	}
 
 }) ;

@@ -24,8 +24,10 @@ WescontrolWeb.actionController = SC.ArrayController.create(
 			name: "unnamed",
 			displayNameBinding: "name",
 			belongs_to: this.get('room').get('guid'),
-			promptProjector: true,
-			source: null
+			settings: {
+				promptProjector: true,
+				source: null
+			}
 		});
 
 		this.selectObject(action);

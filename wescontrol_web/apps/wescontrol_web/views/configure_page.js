@@ -48,7 +48,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 		
 	tabBar: SC.View.design({
 		childViews: 'general devices sources actions preview confirm'.w(),
-		layout: {top: 0, left: 300, right: 0, height: 47},
+		layout: {top: 0, left: 300, right: 0, height: 48},
 
 		general: WescontrolWeb.TabButton.design({
 			displayTitle: "General",
@@ -95,7 +95,7 @@ WescontrolWeb.ConfigurePage = SC.View.extend(
 	}).classNames('tab-bar'),
 	
 	mainView: SC.ContainerView.design(SC.Animatable, {
-		layout: {left: 300, top: 47, bottom:0, right: 0},
+		layout: {left: 300, top: 48, bottom:0, right: 0},
 		transitions: {
 			bottom: { duration: 0.25 } // with custom timing curve
 		},

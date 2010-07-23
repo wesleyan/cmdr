@@ -34,12 +34,14 @@ WescontrolWeb.configurationController = SC.Object.create(
 		dirty += WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY;
 		dirty += WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY;
 		dirty += WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY;
+		dirty += WescontrolWeb.actionSelectionController.get('status') & SC.Record.DIRTY;
 		console.log("Updating dirty: %d", dirty);
 		this.set("configDirty", dirty!=0);
 	}.observes(
 		"WescontrolWeb.deviceController.status",
 		"WescontrolWeb.sourceSelectionController.status",
-		"WescontrolWeb.roomListController.status"
+		"WescontrolWeb.roomListController.status",
+		"WescontrolWeb.actionSelectionController.status"
 	),
 	
 	onCurrentTabChange: function(){
@@ -75,6 +77,9 @@ WescontrolWeb.configurationController = SC.Object.create(
 		}
 		if(WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.sourceSelectionController.get('content').commitRecord();
+		}
+		if(WescontrolWeb.actionSelectionController.get('status') & SC.Record.DIRTY){
+			WescontrolWeb.actionSelectionController.get('content').commitRecord();
 		}
 	}
 	
