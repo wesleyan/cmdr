@@ -18,25 +18,42 @@ sc_require("views/confirm_configuration");
 sc_require("views/action_configuration");
 WescontrolWeb.configurationController = SC.Object.create(
 /** @scope WescontrolWeb.configurationController.prototype */ {
+	
+	CLEAN_STATE: 0,
+	DIRTY_STATE: 1,
+	COMMITTING_STATE: 2,
+	ERROR_STATE: 3,
 
-	currentTab: "sources",
+	currentTab: 'sources',
 	
-	graphValue: "",
+	graphValue: '',
 	
-	configDirty: NO,
+	viewCache: {},
+	
+	commitCount: 0,
+	
+	configDirty: function(){
+		return this.state == this.DIRTY_STATE || this.state == this.COMMITTING_STATE;
+	}.property('state'),
+	
+	state: 0,
+	
+	commitError: '',
 	
 	init: function(){
 		this.onCurrentTabChange();
 	},
 	
 	updateDirty: function(){
-		var dirty = 0;
-		dirty += WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY;
-		dirty += WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY;
-		dirty += WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY;
-		dirty += WescontrolWeb.actionSelectionController.get('status') & SC.Record.DIRTY;
-		console.log("Updating dirty: %d", dirty);
-		this.set("configDirty", dirty!=0);
+		if(this.get('state') == this.CLEAN_STATE)
+		{
+			var dirty = 0;
+			dirty += WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY;
+			dirty += WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY;
+			dirty += WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY;
+			dirty += WescontrolWeb.actionSelectionController.get('status') & SC.Record.DIRTY;
+			if(dirty != 0)this.set("state", this.DIRTY_STATE);
+		}
 	}.observes(
 		"WescontrolWeb.deviceController.status",
 		"WescontrolWeb.sourceSelectionController.status",
@@ -45,12 +62,14 @@ WescontrolWeb.configurationController = SC.Object.create(
 	),
 	
 	onCurrentTabChange: function(){
-		console.log("Current view: %s", this.currentTab.capitalize() + "ConfigurationView");
-		this.set("whatever", true);
 		//try {
-			this.set('currentView', WescontrolWeb[this.currentTab.capitalize() + "ConfigurationView"].create({
-				layout: {left: 0, right: 0, top: 0, bottom: 0}
-			}));
+			var tabName = this.currentTab.capitalize() + "ConfigurationView";
+			if(!this.viewCache[tabName]){
+				this.viewCache[tabName] = WescontrolWeb[tabName].create({
+					layout: {left: 0, right: 0, top: 0, bottom: 0}
+				});
+			}
+			this.set('currentView', this.viewCache[tabName]);
 		/*}
 		catch (e){
 			console.log("Loading tab failed");
@@ -71,17 +90,28 @@ WescontrolWeb.configurationController = SC.Object.create(
 		console.log("Saving configuration");
 		if(WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.deviceController.get('content').commitRecord();
+			this.commitCount++;
 		}
 		if(WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.roomListController.get('content').commitRecord();
+			this.commitCount++;
 		}
 		if(WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.sourceSelectionController.get('content').commitRecord();
+			this.commitCount++;
 		}
 		if(WescontrolWeb.actionSelectionController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.actionSelectionController.get('content').commitRecord();
+			this.commitCount++;
 		}
-	}
+		if(this.commitCount != 0)this.set('state', this.COMMITTING_STATE);
+	},
+	
+	watchCommitCount: function(){
+		if(this.state == this.COMMITTING_STATE && this.commitCount == 0){
+			this.set('state', this.CLEAN_STATE);
+		}
+	}.observes('commitCount')
 	
 	/*generateGraph: function(){
 		if(WescontrolWeb.roomController.get('content') && WescontrolWeb.sourceController.get('content'))

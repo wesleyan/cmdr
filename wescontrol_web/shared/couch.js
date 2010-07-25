@@ -248,6 +248,7 @@ CouchDataSource = SC.DataSource.extend(
 					name: row.value.name,
 					settings: row.value.settings,
 					icon: "/rooms/" + row.id + "/" + icon_name,
+					_attachments: row.value._attachments,
 					belongs_to: row.value.belongs_to
 				};
 				actions.push(action);

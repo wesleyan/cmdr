@@ -46,7 +46,8 @@ WescontrolWeb.CouchDataSource = CouchDataSource.extend({
 		var rt = store.recordTypeFor(storeKey);
 		if(SC.kindOf(rt, WescontrolWeb.Device) ||
 			SC.kindOf(rt, WescontrolWeb.Room) ||
-			SC.kindOf(rt, WescontrolWeb.Source))
+			SC.kindOf(rt, WescontrolWeb.Source) ||
+			SC.kindOf(rt, WescontrolWeb.Action))
 		{
 			SC.Request.putUrl('/rooms/' + hash.guid).json()
 				.notify(this, this.didCommitRecord, store, storeKey)
@@ -58,14 +59,15 @@ WescontrolWeb.CouchDataSource = CouchDataSource.extend({
 	
 	didCommitRecord: function(response, store, storeKey){
 		var body = response.get('body');
-		console.log(body);
+		WescontrolWeb.configurationController.set('commitCount', 
+			WescontrolWeb.configurationController.get('commitCount')-1);
 		if(SC.ok(response) && body["ok"]){
 			var attrs = store.materializeRecord(storeKey);
 			attrs["_rev"] = body.rev;
 			store.dataSourceDidComplete(storeKey);
 		}
 		else {
-			console.log("Commit failed");
+			WescontrolWeb.configurationController.set("commitError", "conflict");
 		}
 		
 	}

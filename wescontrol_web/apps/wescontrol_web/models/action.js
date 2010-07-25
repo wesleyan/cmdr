@@ -23,11 +23,12 @@ WescontrolWeb.Action = SC.Record.extend(
 			hash[key] = this.attributes()[key];
 		};
 		delete hash["guid"];
+		delete hash["icon"];
 		return hash;
 	},
 	
 	setPromptProjector: function(value){
-		if(this.get("settings") && this.get("settings").promptProjector != value){
+		if(this.get("settings") && this.get("settings").prompt_projector != value){
 			console.log("Setting promptProjector to");
 			console.log(value);
 			this.get("settings").prompt_projector = value;

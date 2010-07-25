@@ -67,12 +67,12 @@ WescontrolWeb.ActionsConfigurationView = SC.View.extend(
 					emptyName: false,
 					theme: 'square',
 					updateValue: function(){
-						if(WescontrolWeb.actionSelectionController.get('settings').source)
+						if(WescontrolWeb.actionSelectionController.get('settings'))
 						{
 							this.set('value', WescontrolWeb.actionSelectionController
 								.get('settings').source);
 						}
-					}.observes("WescontrolWeb.actionSelectionController.settings"),
+					}.observes("WescontrolWeb.actionSelectionController.content"),
 					changed: function(){
 						if(WescontrolWeb.actionSelectionController.content){
 							WescontrolWeb.actionSelectionController
@@ -91,10 +91,10 @@ WescontrolWeb.ActionsConfigurationView = SC.View.extend(
 				promptField: SC.CheckboxView.design({
 					layout: {left: 240, height: 20, width: 30, centerY: 0},
 					updateValue: function(){
-						var prompt = WescontrolWeb.actionSelectionController
-							.get('settings').prompt_projector;
-						if(prompt)this.set('value', prompt);
-					}.observes("WescontrolWeb.actionSelectionController.settings"),
+						var settings = WescontrolWeb.actionSelectionController
+							.get('settings');
+						if(settings)this.set('value', settings.prompt_projector);
+					}.observes("WescontrolWeb.actionSelectionController.content"),
 					changed: function(){
 						if(WescontrolWeb.actionSelectionController.content){
 							WescontrolWeb.actionSelectionController.content
