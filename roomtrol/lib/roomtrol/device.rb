@@ -231,8 +231,7 @@ module Wescontrol
 			
 			if config_vars
 				config_vars.each{|var, options|
-					options[:value] = configuration[var]
-					hash[:config][var] = options
+					hash[:config][var] = configuration[var]
 				}
 			end
 			
@@ -252,8 +251,8 @@ module Wescontrol
 		end
 		def self.from_couch(hash)
 			config = {}
-			hash['attributes']['config'].each{|var, options|
-				config[var] = options['value']
+			hash['attributes']['config'].each{|var, value|
+				config[var] = value
 			}
 			device = self.new(hash['attributes']['name'], config)
 			device._id = hash['_id']

@@ -328,18 +328,9 @@ describe "persist to couchdb database" do
 		ds.brightness = 0.8
 		ds.to_couch.should == {
 			:config => {
-				:data_bits => {
-					:value => 8
-				},
-				:baud => {
-					:value => 9600,
-					:type => :integer,
-					:default => 9600
-				},
-				:port => {
-					:value => nil,
-					:type => :port
-				}
+				:data_bits => 8,
+				:baud => 9600,
+				:port => nil
 			},
 			:state_vars => {
 				:name => {
@@ -377,17 +368,9 @@ describe "persist to couchdb database" do
 			"attributes" => {
 				"name" => "Projector",
 				"config" => {
-					"data_bits" => {
-						"value" => 8
-					},
-					"baud" => {
-						"value" => 9600,
-						"type" => "integer"
-					},
-					"port" => {
-						"value" => "/dev/null",
-						"type" => "port"
-					}
+					"data_bits" => 8,
+					"baud" => 9600,
+					"port" => "/dev/null",
 				},
 				"state_vars" => {
 					"brightness" => {
