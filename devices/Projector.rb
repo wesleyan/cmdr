@@ -1,10 +1,18 @@
-#require "#{File.dirname(__FILE__)}/wescontrol/RS232Device"
+#---
+#{
+#	"name": "Projector",
+#	"depends_on": "RS232Device",
+#	"description": "Generic projector class.",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
 
 class Projector < Wescontrol::RS232Device
 
 	@interface = "Projector"
 
-	state_var :power, 		:type => 'boolean', :display_order => 1#, :on_change => proc{|on|
+	state_var :power,       :type => :boolean, :display_order => 1#, :on_change => proc{|on|
 	#	if on
 	#		turned_on = Time.now
 	#	else

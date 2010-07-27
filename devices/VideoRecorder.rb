@@ -1,3 +1,13 @@
+#---
+#{
+#	"name": "VideoRecorder",
+#	"depends_on": "Device",
+#	"description": "Controls the video recording service",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 require 'drb/drb'
 class VideoRecorder < Wescontrol::Device
 	

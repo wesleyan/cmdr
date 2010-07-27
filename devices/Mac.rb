@@ -1,3 +1,13 @@
+#---
+#{
+#	"name": "Mac",
+#	"depends_on": "Computer",
+#	"description": "Macintosh control class; provides lots of information about current status",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 require 'chronic'
 require 'net/ssh'
 

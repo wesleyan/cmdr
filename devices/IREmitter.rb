@@ -1,5 +1,14 @@
-require 'socket'
+#---
+#{
+#	"name": "IREmitter",
+#	"depends_on": "Device",
+#	"description": "Controls any IR device with a LIRC configuration",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
 
+require 'socket'
 #TODO: Rewrite using non-blocking socket library
 
 class IREmitter < Wescontrol::Device

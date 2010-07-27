@@ -15,6 +15,43 @@ class String
 	end
 end
 
+post '/setup-db' do
+	roomtrol_server = CouchRest.database!("http://127.0.0.1:5984/roomtrol_server")
+	doc = {
+		"_id" => "_design/auth",
+		:language => "javascript",
+		:views => {
+			:users => {
+				:map => "function(doc){ if(doc.is_user)emit(doc.username, doc); }"
+			},
+			:tokens => {
+				:map => "function(doc) { if(doc.is_user)emit(doc.auth_token, doc); }"
+			}
+		}
+	}
+	begin 
+		doc["_rev"] = roomtrol_server.get("_design/auth").rev
+	rescue
+	end
+	roomtrol_server.save_doc(doc)
+	drivers = CouchRest.database!("http://127.0.0.1:5984/drivers")
+	doc = {
+		"_id" => "_design/drivers",
+		:language => "javascript",
+		:views => {
+			:by_name => {
+				:map => "function(doc) { if(doc.driver)emit(doc.name, doc); }"
+			}
+		}
+	}
+	begin 
+		doc["_rev"] = drivers.get("_design/drivers").rev
+	rescue
+	end
+	drivers.save_doc(doc).to_json + "\n"
+	
+end
+
 post '/auth/login' do
 	puts "Doing login"
 	json = JSON.parse(request.body.read.to_s)
@@ -46,6 +83,41 @@ post '/auth/login' do
 		{"auth" => "failed"}.to_json + "\n"
 	end
 end
+
+post '/update_devices' do
+	require "#{File.dirname(__FILE__)}/server/device.rb"
+	require "#{File.dirname(__FILE__)}/server/device_lib/RS232Device"
+	require "#{File.dirname(__FILE__)}/server/devices/Projector"
+	require "#{File.dirname(__FILE__)}/server/devices/VideoSwitcher"
+	require "#{File.dirname(__FILE__)}/server/devices/Computer"
+
+	errors = []
+	couch = CouchRest.database!("http://127.0.0.1:5984/drivers")
+	Dir.glob("#{File.dirname(__FILE__)}/server/devices/*.rb").each{|device|
+		begin
+			require device
+			device_string = File.open(device).read
+			data = JSON.load device_string.split("\n").collect{|line| line[1..-1]}.join("") \
+			                                   .match(/---(.*)?---/)[1]
+			puts "#{device}:"
+			#puts data.inspect
+			if record = couch.view("drivers/by_name", {:key => data["name"]})["rows"][0]
+				data["_id"] = record["value"]["_id"]
+				data["_rev"] = record["value"]["_rev"]
+			end
+			data["driver"] = true
+			data["config"] = Object.const_get(data["name"]).configuration
+			puts data.inspect
+			couch.save_doc(data)
+		rescue
+			errors << "Failed to load #{device}: #{$!}"
+		rescue LoadError
+			errors << "Failed to load #{device}: syntax error"
+		end
+	}
+	"<pre>\n" + errors.join("\n") + "\n</pre>"
+end
+	
 
 #Expects json like this:
 #{

@@ -1,3 +1,13 @@
+#---
+#{
+#	"name": "EVID70Camera",
+#	"depends_on": "RS232Device",
+#	"description": "Controls the Sony EVID70 camera, and probably other similar devices",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 class EVID70Camera < Wescontrol::RS232Device
 	
 	configure do

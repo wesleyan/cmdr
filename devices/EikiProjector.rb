@@ -1,3 +1,13 @@
+#---
+#{
+#	"name": "EikiProjector",
+#	"depends_on": "Projector",
+#	"description": "Eiki projector class; doesn't currently work",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 #Note: This class is old and does not work. Eventually,
 #I may get around to implementing it with the new scheme,
 #but for now it should not be used

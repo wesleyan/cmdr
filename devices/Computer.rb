@@ -1,5 +1,35 @@
-require 'ping'
+#---
+#{
+#	"name": "Computer",
+#	"depends_on": "Device",
+#	"description": "A generic computer class, providing reachability monitoring",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 require 'wol'
+
+require 'timeout'
+require "socket"
+
+module Ping
+	def pingecho(host, timeout=5, service="echo")
+		begin
+			timeout(timeout) do
+				s = TCPSocket.new(host, service)
+				s.close
+			end
+		rescue Errno::ECONNREFUSED
+			return true
+		rescue Timeout::Error, StandardError
+			return false
+		end
+		return true
+	end
+	module_function :pingecho
+end
+
 
 class Computer < Wescontrol::Device
 	configure do

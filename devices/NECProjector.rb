@@ -1,3 +1,13 @@
+#---
+#{
+#	"name": "NECProjector",
+#	"depends_on": "Projector",
+#	"description": "Controls most NEC projectors",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 class NECProjector < Projector
 	
 	class NECBitStruct < BitStruct

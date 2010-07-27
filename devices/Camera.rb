@@ -1,3 +1,14 @@
+#---
+#{
+#	"name": "Camera",
+#	"inherits": "RS232Device",
+#	"description": "The base class for all camera devices; never instantiated",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu",
+#	"abstract": true
+#}
+#---
+
 class Camera < Wescontrol::RS232Device
 	
 	state_var :power, 		:type => :boolean, :display_order => 1

@@ -1,3 +1,13 @@
+#---
+#{
+#	"name": "VideoSwitcher",
+#	"depends_on": "RS232Device",
+#	"description": "Generic class for videoswitchers.",
+#	"author": "Micah Wylde",
+#	"email": "mwylde@wesleyan.edu"
+#}
+#---
+
 class VideoSwitcher < Wescontrol::RS232Device
 	state_var :input, :type => :option, :display_order => 1, :options => ("1".."6").to_a
 	state_var :volume, :type => :percentage, :display_order => 2
