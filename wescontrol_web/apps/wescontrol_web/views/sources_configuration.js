@@ -21,7 +21,7 @@ WescontrolWeb.SourcesConfigurationView = SC.View.extend(
 	childViews: "sourcesList sourcesEdit".w(),
 	
 	sourcesList: WescontrolWeb.CrudList.design({
-		layout: {top: 0, bottom: 0, left: 0, width: 200},
+		layout: {top: 0, bottom: 0, left: 0, width: 199},
 		contentBinding: "WescontrolWeb.sourceController"
 	}),
 	

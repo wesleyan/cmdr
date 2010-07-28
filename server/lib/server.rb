@@ -27,10 +27,10 @@ post '/auth/login' do
 	password = json["password"]
 	couch = CouchRest.database!("http://127.0.0.1:5984/roomtrol_server")
 	authenticated = false
+
 	if user = couch.view("auth/users", {:key => username})["rows"][0]
 		if LOCAL_DEVEL
-			puts "LocalDevel"
-			authenticated = password == "apassword"
+			authenticated = (password == "apassword")
 		else
 			ldap = Net::LDAP.new
 			ldap.host = "gwaihir.wesad.wesleyan.edu"
@@ -39,6 +39,7 @@ post '/auth/login' do
 		end
 	end
 	if authenticated
+		puts "Authenticated"
 		#TODO: Figure out a more secure way of generating the token
 		token = Digest::SHA1.hexdigest("#{Time.now + Time.now.usec + (rand * 1000-500)}")
 		response.set_cookie "auth_token", {:value => token, :expires => Time.now+COOKIE_EXPIRE}
@@ -83,7 +84,7 @@ post '/update_devices' do
 			errors << "Failed to load #{device}: syntax error"
 		end
 	}
-	"<pre>\n" + errors.join("\n") + "\n</pre>"
+	"<pre>\n" + errors.join("\n") + "\n</pre>\n"
 end
 	
 

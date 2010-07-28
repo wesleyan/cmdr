@@ -145,7 +145,7 @@ CouchDataSource = SC.DataSource.extend(
 			return YES;
 		}
 		else if(this.appObject.Driver && query.recordType == this.appObject.Driver){
-			SC.Request.getUrl('/drivers/_design/drivers/_view/drivers').json()
+			SC.Request.getUrl('/drivers/_design/drivers/_view/by_name').json()
 				.notify(this, 'didFetchDrivers', store, query)
 				.send();
 			return YES;
@@ -266,6 +266,8 @@ CouchDataSource = SC.DataSource.extend(
 		if (SC.ok(response)) {
 			var drivers = [];
 			response.get('body').rows.forEach(function(row){
+				row.value.guid = row.value._id;
+				delete row.value._id;
 				drivers.push(row.value);
 			});
 			store.loadRecords(this.appObject.Driver, drivers);

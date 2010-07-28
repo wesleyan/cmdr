@@ -19,20 +19,31 @@ WescontrolWeb.driverController = SC.TreeController.create(
 	refreshSources: function(){
 		var type_hash = {};
 		var type_array = []; //this is stupid, but it's JS's fault
-		WescontrolWeb.store.find(WescontrolWeb.Driver).forEach(function(driver, index){
-			if(!type_hash[driver.get('type')])
-			{
-				type_hash[driver.get('type')] = [];
-				type_array.pushObject(driver.get('type'));
+		var drivers = WescontrolWeb.store.find(WescontrolWeb.Driver);
+		drivers.forEach(function(driver, index){
+			var type = driver.get('type');
+			if(!type){
+				type = drivers.find(function(parent){
+					return parent.get('name') == driver.get('depends_on');
+				});
+				type = type ? type.get('type') : null;
 			}
-			type_hash[driver.get('type')].pushObject(driver);
+			if(type && !type_hash[type]){
+				type_hash[type] = [];
+				type_array.pushObject(type);
+			}
+			if(type && !driver.get('abstract')){
+				type_hash[type].pushObject(driver);
+			}
 		});
 		this.set('typeHash', type_hash);
 		var types = SC.Object.create({
 			treeItemIsExpanded: YES,
 			hasContentIcon: NO,
 			isType: YES,
-			treeItemChildren: type_array.map(function(type){
+			treeItemChildren: type_array.filter(function(type){
+				return type_hash[type].get('length') > 0;
+			}).map(function(type){
 				return SC.Object.create({
 					name: type,
 					contentValueKey: 'name',

@@ -5,7 +5,8 @@
 #	"description": "Generic class for printer monitoring.",
 #	"author": "Micah Wylde",
 #	"email": "mwylde@wesleyan.edu",
-#	"abstract": true
+#	"abstract": true,
+#	"type": "Printer"
 #}
 #---
 

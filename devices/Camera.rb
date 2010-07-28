@@ -5,7 +5,8 @@
 #	"description": "The base class for all camera devices; never instantiated",
 #	"author": "Micah Wylde",
 #	"email": "mwylde@wesleyan.edu",
-#	"abstract": true
+#	"abstract": true,
+#	"type": "Camera"
 #}
 #---
 

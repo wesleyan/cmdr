@@ -4,7 +4,8 @@
 #	"depends_on": "Device",
 #	"description": "A generic computer class, providing reachability monitoring",
 #	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+#	"email": "mwylde@wesleyan.edu",
+#	"type": "Computer"
 #}
 #---
 
