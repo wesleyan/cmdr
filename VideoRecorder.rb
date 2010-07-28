@@ -4,7 +4,8 @@
 #	"depends_on": "Device",
 #	"description": "Controls the video recording service",
 #	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+#	"email": "mwylde@wesleyan.edu",
+#	"type": "Video Recorder"
 #}
 #---
 

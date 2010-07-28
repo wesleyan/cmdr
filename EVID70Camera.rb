@@ -4,6 +4,7 @@
 #	"depends_on": "RS232Device",
 #	"description": "Controls the Sony EVID70 camera, and probably other similar devices",
 #	"author": "Micah Wylde",
+#	"type": "Camera",
 #	"email": "mwylde@wesleyan.edu"
 #}
 #---

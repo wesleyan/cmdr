@@ -4,7 +4,8 @@
 #	"depends_on": "Device",
 #	"description": "Controls any IR device with a LIRC configuration",
 #	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+#	"email": "mwylde@wesleyan.edu",
+#	"type": "IR"
 #}
 #---
 

@@ -4,7 +4,9 @@
 #	"depends_on": "RS232Device",
 #	"description": "Generic class for videoswitchers.",
 #	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+#	"email": "mwylde@wesleyan.edu",
+#	"abstract": true,
+#	"type": "Video Switcher"
 #}
 #---
 
