@@ -48,7 +48,7 @@ module RoomtrolServer
 						begin
 							action, path = data.match(HTTP_MATCHER)[1..2]
 							result = case path.split("/")[1]
-							when "rooms"
+							when "rooms", "drivers"
 								authenticate data, :couch, conn
 							when "device"
 								authenticate data, :roomtrol, conn
@@ -64,10 +64,8 @@ module RoomtrolServer
 									[data.gsub(path, new_path), [server]]
 								end
 							when "auth"
-								puts "Doing auth"
 								[data, [:roomtrol]]
 							when "graph"
-								puts "Graph"
 								authenticate data, :roomtrol, conn
 							else
 								[data, [:http]]

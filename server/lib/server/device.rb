@@ -16,7 +16,8 @@ module Wescontrol
 		end
 		
 		def self.inherited(subclass)
-			subclass.instance_variable_set(:@configuration, @configuration)						
+			subclass.instance_variable_set(:@configuration, @configuration)		
+			subclass.instance_variable_set(:@config_vars, @config_vars)				
 		end
 		
 			
@@ -38,8 +39,8 @@ module Wescontrol
 			end
 		end
 		
-		def self.configuration
-			@configuration
+		def self.config_vars
+			@config_vars
 		end
 		
 		def self.configure &block

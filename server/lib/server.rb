@@ -5,6 +5,7 @@ require 'couchrest'
 require 'json'
 require 'base64'
 require 'net/ldap'
+require "#{File.dirname(__FILE__)}/server/database"
 
 LOCAL_DEVEL = true
 COOKIE_EXPIRE = 24*60*60
@@ -15,41 +16,8 @@ class String
 	end
 end
 
-post '/setup-db' do
-	roomtrol_server = CouchRest.database!("http://127.0.0.1:5984/roomtrol_server")
-	doc = {
-		"_id" => "_design/auth",
-		:language => "javascript",
-		:views => {
-			:users => {
-				:map => "function(doc){ if(doc.is_user)emit(doc.username, doc); }"
-			},
-			:tokens => {
-				:map => "function(doc) { if(doc.is_user)emit(doc.auth_token, doc); }"
-			}
-		}
-	}
-	begin 
-		doc["_rev"] = roomtrol_server.get("_design/auth").rev
-	rescue
-	end
-	roomtrol_server.save_doc(doc)
-	drivers = CouchRest.database!("http://127.0.0.1:5984/drivers")
-	doc = {
-		"_id" => "_design/drivers",
-		:language => "javascript",
-		:views => {
-			:by_name => {
-				:map => "function(doc) { if(doc.driver)emit(doc.name, doc); }"
-			}
-		}
-	}
-	begin 
-		doc["_rev"] = drivers.get("_design/drivers").rev
-	rescue
-	end
-	drivers.save_doc(doc).to_json + "\n"
-	
+post '/setup_db' do
+	Database.setup_database
 end
 
 post '/auth/login' do
@@ -106,7 +74,7 @@ post '/update_devices' do
 				data["_rev"] = record["value"]["_rev"]
 			end
 			data["driver"] = true
-			data["config"] = Object.const_get(data["name"]).configuration
+			data["config"] = Object.const_get(data["name"]).config_vars
 			puts data.inspect
 			couch.save_doc(data)
 		rescue
