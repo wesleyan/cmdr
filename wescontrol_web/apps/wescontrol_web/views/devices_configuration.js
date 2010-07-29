@@ -48,25 +48,6 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 				})
 			}),
 			
-			port: SC.View.design({
-				layout: {left: 0, right: 0, top: 50, height: 40},
-				childViews: "portLabel portField".w(),
-				portLabel: SC.LabelView.design({
-					layout: {left:0, width: 100, height: 30, top: 0},
-					value: "Port"
-				}),
-				
-				portField: SC.SelectFieldView.design({
-					layout: {left: 120, height: 20, width: 200, top: 0},
-					valueBinding: "WescontrolWeb.deviceController.port",
-					objectsBinding: "WescontrolWeb.roomListController.ports",
-					nameKey: "name",
-					valueKey: "value",
-					disableSort: true,
-					emptyName: false,
-					theme: 'square'
-				})				
-			}),
 			type: SC.View.design({
 				layout: {left: 0, right: 0, top: 100, height: 40},
 				childViews: "typeLabel typeField".w(),
@@ -85,7 +66,8 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 					theme: 'square',
 					driverChanged: function(){
 						var dr = WescontrolWeb.deviceController.get('driverRecord');
-						if(dr)this.set('value', dr.get('type'));
+						console.log(dr.get('realType'));
+						if(dr)this.set('value', dr.get('realType'));
 					}.observes('WescontrolWeb.deviceController.driverRecord'),
 					changed: function(){
 						WescontrolWeb.driverController.set('currentType', this.get('value'));
@@ -110,9 +92,26 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 					emptyName: false,
 					theme: 'square'
 				})				
+			}),
+			port: SC.View.design({
+				layout: {left: 0, right: 0, top: 50, height: 40},
+				childViews: "portLabel portField".w(),
+				portLabel: SC.LabelView.design({
+					layout: {left:0, width: 100, height: 30, top: 0},
+					value: "Port"
+				}),
+				
+				portField: SC.SelectFieldView.design({
+					layout: {left: 120, height: 20, width: 200, top: 0},
+					valueBinding: "WescontrolWeb.deviceController.port",
+					objectsBindingDefault: "WescontrolWeb.roomListController.ports",
+					nameKey: "name",
+					valueKey: "value",
+					disableSort: true,
+					emptyName: false,
+					theme: 'square'
+				})				
 			})
-			
-			
 		})
 		
 	})

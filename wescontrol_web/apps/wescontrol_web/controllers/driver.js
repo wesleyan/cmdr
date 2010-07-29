@@ -50,7 +50,8 @@ WescontrolWeb.driverController = SC.TreeController.create(
 					treeItemChildren: type_hash[type].map(function(driver){
 						return driver.mixin({
 							isDriver: YES,
-							contentValueKey: "name"
+							contentValueKey: "name",
+							realType: type
 						});
 					})
 				});
