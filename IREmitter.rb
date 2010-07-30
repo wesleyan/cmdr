@@ -13,6 +13,10 @@ require 'socket'
 #TODO: Rewrite using non-blocking socket library
 
 class IREmitter < Wescontrol::Device
+	
+	configure do
+		remote :type => :string
+	end
 
 	command :pulse_command, :action => proc {|button|
 		_command = "send_once #{@remote} #{button}"
