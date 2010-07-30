@@ -35,7 +35,7 @@ end
 class Computer < Wescontrol::Device
 	configure do
 		ip_address :type => :string
-		macc_address :type => :string
+		mac_address :type => :string
 	end
 	#attempt to turn on the computer via WoL
 	command :start, :action => proc{
