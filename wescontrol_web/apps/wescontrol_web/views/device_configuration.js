@@ -27,7 +27,19 @@ WescontrolWeb.DeviceConfigurationView = SC.View.extend(
 		var heightCounter = 0;
 		console.log("Updating with %s", driver.get('name'));
 		_(driver.get('config')).each(function(c_var, name){
-			name = name.humanize().titleize();
+			displaName = name.humanize().titleize();
+			var valueChanged = function(){
+				var config = WescontrolWeb.deviceController.get('config');
+				if(!config)config = {};
+				if(config[name] != this.get('value')){
+					config[name] = this.get('value');
+					WescontrolWeb.deviceController.set('config', config);
+				}
+			};
+			var configChanged = function(){
+				var config = WescontrolWeb.deviceController.get('config');
+				if(config)this.set('value', config[name]);
+			};
 			if(c_var.type == "port")
 			{
 				childViews.push(newThis.createChildView(SC.View.design({
@@ -35,18 +47,19 @@ WescontrolWeb.DeviceConfigurationView = SC.View.extend(
 					childViews: "label field".w(),
 					label: SC.LabelView.design({
 						layout: {left:0, width: 200, height: 30, top: 0},
-						value: name.capitalize()
+						value: displaName.capitalize()
 					}),
 
 					field: SC.SelectFieldView.design({
 						layout: {left: 220, height: 20, width: 200, top: 0},
-						valueBinding: "WescontrolWeb.deviceController.config." + name,
 						objectsBinding: "WescontrolWeb.roomListController.ports",
 						nameKey: "name",
 						valueKey: "value",
 						disableSort: true,
 						emptyName: false,
-						theme: 'square'
+						theme: 'square',
+						valueChanged: valueChanged.observes('value'),
+						configChanged: configChanged.observes('WescontrolWeb.deviceController.config')
 					})				
 				})));
 			}
@@ -57,20 +70,21 @@ WescontrolWeb.DeviceConfigurationView = SC.View.extend(
 					childViews: "label field".w(),
 					label: SC.LabelView.design({
 						layout: {left:0, width: 200, height: 30, top: 0},
-						value: name.capitalize()
+						value: displaName.capitalize()
 					}),
 
 					field: SC.TextFieldView.design({
 						layout: {left: 220, height: 20, width: 200, top: 0},
-						valueBinding: "WescontrolWeb.deviceController.config." + name,
 						isPassword: c_var.type == "password",
-						validator: c_var.type == "integer" ? "Number" : null
+						validator: c_var.type == "integer" ? "Number" : null,
+						valueChanged: valueChanged.observes('value'),
+						configChanged: configChanged.observes('WescontrolWeb.deviceController.config')
 					})				
 				})));
 			}
 		});
 		this.replaceAllChildren(childViews);
-	}.observes('hasContent', 'content', 'WescontrolWeb.deviceController.driver', 'WescontrolWeb.deviceController.currentType')
+	}.observes('hasContent', 'content', 'WescontrolWeb.deviceController.driver', 'WescontrolWeb.driverController.currentType')
 	
 
 

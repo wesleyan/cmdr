@@ -89,8 +89,10 @@ WescontrolWeb.DevicesConfigurationView = SC.View.extend(
 					nameKey: "name",
 					valueKey: "name",
 					disableSort: true,
-					emptyName: false,
-					theme: 'square'
+					theme: 'square',
+					typeChanged: function(){
+						this.set('emptyName', WescontrolWeb.deviceController.get('driver'));
+					}.observes("WescontrolWeb.driverController.arrangedDrivers")
 				})				
 			}),
 			driverConfig: WescontrolWeb.DeviceConfigurationView.design({
