@@ -25,7 +25,6 @@ WescontrolWeb.DeviceConfigurationView = SC.View.extend(
 		var driver = this.get('content').get('driverRecord');
 		if(!driver || !driver.get('config'))return;
 		var heightCounter = 0;
-		console.log("Updating with %s", driver.get('name'));
 		_(driver.get('config')).each(function(c_var, name){
 			displaName = name.humanize().titleize();
 			var valueChanged = function(){
@@ -74,6 +73,10 @@ WescontrolWeb.DeviceConfigurationView = SC.View.extend(
 					}),
 
 					field: SC.TextFieldView.design({
+						didCreateLayer: function(){
+							sc_super();
+							this.configChanged();
+						},
 						layout: {left: 220, height: 20, width: 200, top: 0},
 						isPassword: c_var.type == "password",
 						validator: c_var.type == "integer" ? "Number" : null,
