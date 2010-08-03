@@ -28,6 +28,8 @@ WescontrolWeb.configurationController = SC.Object.create(
 	
 	graphValue: '',
 	
+	graphDirty: true,
+	
 	viewCache: {},
 	
 	commitCount: 0,
@@ -45,6 +47,11 @@ WescontrolWeb.configurationController = SC.Object.create(
 	},
 	
 	updateDirty: function(){
+		if(WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY || 
+			WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY)
+		{
+				this.set('graphDirty', true);
+		}
 		if(this.get('state') == this.CLEAN_STATE)
 		{
 			var dirty = 0;
@@ -52,7 +59,9 @@ WescontrolWeb.configurationController = SC.Object.create(
 			dirty += WescontrolWeb.sourceSelectionController.get('status') & SC.Record.DIRTY;
 			dirty += WescontrolWeb.roomListController.get('status') & SC.Record.DIRTY;
 			dirty += WescontrolWeb.actionSelectionController.get('status') & SC.Record.DIRTY;
-			if(dirty != 0)this.set("state", this.DIRTY_STATE);
+			if(dirty != 0){
+				this.set("state", this.DIRTY_STATE);
+			}
 		}
 	}.observes(
 		"WescontrolWeb.deviceController.status",
@@ -87,7 +96,6 @@ WescontrolWeb.configurationController = SC.Object.create(
 	}.observes("currentTab"),
 	
 	saveConfiguration: function(){
-		console.log("Saving configuration");
 		if(WescontrolWeb.deviceController.get('status') & SC.Record.DIRTY){
 			WescontrolWeb.deviceController.get('content').commitRecord();
 			this.commitCount++;
@@ -111,26 +119,29 @@ WescontrolWeb.configurationController = SC.Object.create(
 		if(this.state == this.COMMITTING_STATE && this.commitCount == 0){
 			this.set('state', this.CLEAN_STATE);
 		}
-	}.observes('commitCount')
+	}.observes('commitCount'),
 	
-	/*generateGraph: function(){
-		if(WescontrolWeb.roomController.get('content') && WescontrolWeb.sourceController.get('content'))
+	generateGraph: function(){
+		if(this.currentTab == 'general' && 
+			this.graphDirty && 
+			WescontrolWeb.roomController.get('content') && 
+			WescontrolWeb.sourceController.get('content'))
 		{
+			console.log("Updating graph");
 			SC.Request.postUrl('/graph').json()
 				.notify(this, "graphGenerated")
 				.send({
 					devices: WescontrolWeb.roomController.get('content').mapProperty('attributes'),
 					sources: WescontrolWeb.sourceController.get('content').mapProperty('attributes')
 				});
+			this.set('graphValue', sc_static('graph_loader.gif'));
 		}
-	}.observes("WescontrolWeb.deviceController.content", 
-		"WescontrolWeb.sourceSelectionController.content",
-		"WescontrolWeb.sourceController.hasContent",
-		"WescontrolWeb.roomController.hasContent"),
+	}.observes('currentTab'),
 	
 	graphGenerated: function(response){
 		this.set('graphValue', "data:image/svg+xml;base64," + response.get('body')["data"]);
-	}*/
+		this.set('graphDirty', false);
+	}
 	
 
 }) ;

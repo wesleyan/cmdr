@@ -131,7 +131,7 @@ graph = %Q\digraph F {
 	#{
 		devices.collect{|device|
 			name = device["name"]
-			projector = name if device["Driver"] == "NECProjector"
+			projector = name if device["driver"] == "NECProjector"
 			if device["driver"] == "ExtronVideoSwitcher"
 				extron = name
 				%Q&#{name.us} [label = "<top>#{name.capitalize}|<i1>Input 1|<i2>Input 2|<i3>Input 3|<i4>Input 4|<i5>Input 5|<i6>Input 6",fontcolor=white]&
@@ -145,8 +145,8 @@ graph = %Q\digraph F {
 		sources.collect{|source|
 			name = source["name"]
 			input = source["input"]
-			if input["switcher"]
-				"sources:#{name.us} -> extron:i#{input["switcher"]} [label = \"#{input["projector"]}\",fontcolor=white, color=white]"
+			if input["switcher"] && extron
+				"sources:#{name.us} -> #{extron.us}:i#{input["switcher"]} [label = \"#{input["projector"]}\",fontcolor=white, color=white]"
 			else
 				"sources:#{name.us} -> projector [label = \"#{input["projector"]}\",fontcolor=white,color=white]"
 			end
@@ -155,7 +155,7 @@ graph = %Q\digraph F {
 	
 	#{
 		if projector && extron
-			"#{extron} -> #{projector}"
+			"#{extron.us} -> #{projector} [color=white]"
 		end
 	}
 }
@@ -166,7 +166,6 @@ graph = %Q\digraph F {
 	f.path
 	content_type 'application/json'
 	puts "Waiting for graph generation"
-	#svg = `dot -Tsvg #{f.path}`
-	#JSON.dump({:data => Base64.encode64(svg)})
-	JSON.dump({:data => "hello"})
+	svg = `dot -Tsvg #{f.path}`
+	JSON.dump({:data => Base64.encode64(svg)})
 end
