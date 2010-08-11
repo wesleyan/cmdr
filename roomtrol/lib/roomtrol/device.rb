@@ -37,9 +37,14 @@ module Wescontrol
 	# those that are mutable (e.g., the aforementioned power state var).
 	# Mutability is specified when the state var is created by the :editable
 	# parameter, which defaults to true. Note that even an immutable state var
-	# can be changed programatically by calling its device.state_var= method,
-	# but controls for it will not be created in the web interface. State vars
-	# can be created by placing a line like this in your class body:
+	# can be changed programatically by calling its `device.varname=` method,
+	# but controls for it will not be created in the web interface. For mutable
+	# vars you are responsible for creating a method called set_varname, which
+	# takes in one argument of the type specified and which should affect the 
+	# device in such a way as to transition it to the state described by the argument.
+	# Alternatively, by passing a Proc to the :action parameter, state_var will
+	# create the set method for you. State vars can be created by placing a line 
+	# like this in your class body:
 	# 
 	# 	state_var power, :type => :boolean
 	# 
@@ -55,8 +60,10 @@ module Wescontrol
 	# 
 	# 	command zoom_in
 	# 
-	# Command also has many options, which can be found in the {Device::command}
-	# method definition.
+	# In addition, you should create a method with the same name as the command
+	# (zoom_in in this case) which does the actual work of sending the command
+	# to the device. Command also has many options, which can be found in the 
+	# {Device::command} method definition.
 	# 
 	# Rounding out the trio of variable types, we have virtual_var. Virtual var is
 	# in some ways the opposite of command: instead of providing only control, it
@@ -196,10 +203,24 @@ module Wescontrol
 	# to write Device subclasses. More information can also be found in the tests, which
 	# define exactly what the device class must do and not do.
 	class Device
+		# The AMQP queue on which to send events
 		EVENT_QUEUE = "roomtrol:events"
-		attr_accessor :_id, :_rev, :belongs_to, :controller
+		# The id in CouchDB for this device
+		attr_accessor :_id
+		# The rev in CouchDB for this device
+		attr_accessor :_rev
+		# The id of the room this device is in
+		attr_accessor :belongs_to
+		# The id of the controller that controls this device
+		attr_accessor :controller
+		# The name of the device
 		attr_reader :name
-				
+		
+		# Creates a new Device instance
+		# @param [String, Symbol] name The name of the device, which is stored in the database
+		# 	and used to communicate with it over AMQP
+		# @param [Hash{String, Symbol => Object}] hash A hash of configuration definitions, from
+		# 	the name of the config var to its value
 		def initialize(name, hash = {})
 			hash_s = hash.symbolize_keys
 			@name = name
@@ -210,6 +231,9 @@ module Wescontrol
 			@db = CouchRest.database("http://localhost:5984/rooms")
 		end
 		
+		# Run is a blocking call that starts the device. While run is running, the device will
+		# watch for AMQP events as well as whatever communication channels the device uses and
+		# react appropriately to events.
 		def run
 			AMQP.start(:host => '127.0.0.1'){
 				@amq_responder = MQ.new
@@ -245,9 +269,10 @@ module Wescontrol
 			}
 		end
 
-		#this is a hook that gets called when the class is subclassed.
-		#we need to do this because otherwise subclasses don't get a parent
-		#class's state_vars
+		# @private
+		# This is a hook that gets called when the class is subclassed.
+		# we need to do this because otherwise subclasses don't get a parent
+		# class's state_vars
 		def self.inherited(subclass)
 			subclass.instance_variable_set(:@state_vars, {})
 			self.instance_variable_get(:@state_vars).each{|name, options|
@@ -265,17 +290,28 @@ module Wescontrol
 			} if self.instance_variable_get(:@command_vars)
 		end
 		
+		# @return [Hash{Symbol => Object}] A map from config var name to value
 		def self.configuration
 			@configuration
 		end
 		
+		# @return [Hash{Symbol => Object}] A map from config var name to value
 		def configuration
 			self.class.instance_variable_get(:@configuration)
 		end
+		
+		# @return [Hash{Symbol => Hash}] A map from config var name to a hash containing
+		# 	information about the config var, as passed in to config when the var was
+		# 	created.
 		def config_vars
 			self.class.instance_variable_get(:@config_vars)
 		end
 		
+		# @private
+		# A simple class which has no methods defined and therefore is good
+		# for parsing configuration. Basically, by having this class eval
+		# the configuration block, we can implement a blanket method_missing
+		# which will catch everything.
 		class ConfigurationHandler
 			attr_reader :configuration
 			attr_reader :config_vars
@@ -294,6 +330,36 @@ module Wescontrol
 			end
 		end
 		
+		# Starts a configuration block, wherein you can define config vars. Inside of the block 
+		# should be lines describing the configuration of the device. There are two kinds of 
+		# config variables you can define: user defined and system defined. User defined 
+		# config vars are intended to be set by the user in the web interface, whereas system
+		# defined config variables are given a value when created and cannot be modified by the
+		# user. This should be used for defining things that are intrinsic to the device, like
+		# RS232 connection parameters (i.e., data bits, stop bits, parity). Defining a system
+		# defined config variable is very simple: all it takes is the name and the value, on the
+		# same line. A user defined config variable has two options, which are given as parameters:
+		# the type and an optional default value. The type parameter is a hint to the web interface
+		# about what kind of control to show and what kind of validation to do on the input. For
+		# example, setting a type of :port will display a drop-down of the serial ports defined for
+		# the system. A type of :integer will display a text box whose input is restricted to
+		# numbers. Other possibilities are :password, :string, :decimal, :boolean and :percentage. If
+		# you supply a type that is not defined in the system, a simple text box will be used.
+		# 
+		# You can add whatever configuration variables you need, though they should be named using 
+		# lowercase letters connected by underscores. Configuration information is accessible through the
+		# {Device#configuration} method, which returns a hash mapping between a symbol of the name
+		# to the value.
+		# 
+		# @example
+		# 	configure do
+		# 		port :type => :port
+		# 		baud :type => :integer, :default => 9600
+		# 		data_bits 8
+		# 		stop_bits 1
+		# 		parity 0
+		# 		message_end "\r\n"
+		# 	end
 		def self.configure &block
 			ch = ConfigurationHandler.new
 			ch.instance_eval(&block)
@@ -303,8 +369,63 @@ module Wescontrol
 			@config_vars = @config_vars.merge ch.config_vars
 		end
 		
+		# @return [Hash{Symbol => Hash}] A map from state var name to a hash containing
+		# 	information about the state var, as passed in to state_var when the var was
+		# 	created.
 		def self.state_vars; @state_vars; end
 		
+		# This method, when called in a class definition, defines a new state variable for the
+		# device class. State vars are—as their name suggests—variables that track the state
+		# of something about the device. For example, a projector device might
+		# have have a state var "power," which is true if the projector is on
+		# and false if the projector is off. There are two kinds of state vars:
+		# those that are immutable (e.g., the model number of the projector) and
+		# those that are mutable (e.g., the aforementioned power state var).
+		# Mutability is specified when the state var is created by the :editable
+		# parameter, which defaults to true. Note that even an immutable state var
+		# can be changed programatically by calling its device.state_var= method,
+		# but controls for it will not be created in the web interface.
+		# 
+		# Calling state_var can do a number of things. In every case, it will create
+		# a getter method for the variable with the name passed in, so that instances
+		# of your class will respond to #var_name. It will also create a setter method
+		# `#varname=` which should be used to update the state. You should always use 
+		# the setter to change state rather than access the instance variable directly
+		# because the setter will report changes to the database, which is neccessary
+		# for any user interface to update. It also forces recalculation on any virtual
+		# variables that are defined in terms of a particular state var. In addition to
+		# creating accessor methods, if supplied an :action parameter state_var will
+		# create a set_varname method using the proc supplied.
+		# @param [Symbol] name The name for the state var. Should follow the general
+		# 	naming conventions: all lowercase, with multiple words connected by underscores.
+		# @param [Hash] options Options for configuring the state_var
+		# @option options [Symbol] :type [mandatory] the type of the variable; this is
+		# 	used by the web interface to decide what kind of interface to show. Possible
+		# 	values are :boolean, :string, :percentage, :number, :decimal, :option, and
+		# 	:array.
+		# @option options [Boolean] :editable (true) whether or not this variable can be set
+		# 	by the user.
+		# @option options [Integer] :display_order Used by the web interface to decide which
+		# 	variables are visible and in which order they are displayed. For a particular
+		# 	device, the var with the lowest :display_order is ranked highest, followed by
+		# 	the next lowest up to 6. Leave out if the variable should not be shown.
+		# @option options [Array<#to_json>] :options If :option is select for type, the
+		# 	elements in this array serve as the allowable options.
+		# @option options [Proc] :action If a proc is supplied to :action, then state_var
+		# 	will automatically create a set_varname method (where varname is the name of
+		# 	the state variable) which executes the code provided. The difference between the
+		# 	set_varname method and `#varname=` method is this: the former is used to actually
+		# 	change the state of the device (i.e., it sends a command to the device that ideally
+		# 	results in it entering the desired state) whereas the latter informs roomtrol
+		# 	the actual state of the device.
+		# @example
+		# 	state_var :input, 
+		# 		:type => :option, 
+		# 		:display_order => 1, 
+		# 		:options => ("1".."6").to_a,
+		# 		:action => proc{|input|
+		# 			send "{input}!\r\n"
+		# 		}
 		def self.state_var name, options
 			sym = name.to_sym
 			self.class_eval do
@@ -346,7 +467,7 @@ module Wescontrol
 								}
 							end
 						end
-						self.save("#{sym}", old_val)
+						self.save('#{sym}', old_val)
 					end
 					val
 				end
@@ -360,6 +481,33 @@ module Wescontrol
 			end
 		end
 		
+		# This method, when called in a class definition, creates a new virtual variable. A virtual
+		# variable is one that cannot be set directly, but which is composed automatically from one
+		# or more other variables (either virtual or not). The purpose of this is primarily
+		# to provide useful information for the web interface to display. For example,
+		# a projector may report the number of hours a lamp has been in use as well as
+		# the percentage of the lamp's life that is gone. However, the more useful metric
+		# for somebody evaluating when the lamp needs to be replaced is the number of
+		# hours that are left before the lamp dies. We can use simple algebra and a virtual
+		# var to compute this information, as seen in the example. Virtual vars are updated whenever 
+		# the variables they depend on either state vars or other virtual vars) are updated.
+		# @param [Symbol] name The name for the virtual var. Should follow the general
+		# 	naming convention: all lowercase, with multiple words connected by underscores.
+		# @param [Hash] options Options for configuring the virtual var
+		# @option options [Array<Symbol>] :depends_on [mandatory] An array of the variables' names that
+		# 	this one depends on. Note that these must have been defined already.
+		# @option options [Proc] :transformation [mandatory] A proc with arity 0 which is run in the context
+		# 	of the device instance (which means you have access to instance variables and methods). This proc
+		# 	will be called whenever one of the constituent variables changes, and should return the new value
+		# 	of the virtual variable.
+		# @option options [Integer] :display_order Used by the web interface to decide which
+		# 	variables are visible and in which order they are displayed. For a particular
+		# 	device, the var with the lowest :display_order is ranked highest, followed by
+		# 	the next lowest up to 6. Leave out if the variable should not be shown.
+		# @example
+		# 	virtual_var :lamp_remaining, :type => :string, :depends_on => [:lamp_hours, :percent_lamp_used], :transformation => proc {
+		# 		"#{((lamp_hours/percent_lamp_used - lamp_hours)/(60*60.0)).round(1)} hours"
+		# 	}
 		def self.virtual_var name, options
 			raise "must have :depends_on field" unless options[:depends_on]
 			raise "must have :transformation field" unless options[:transformation].class == Proc
@@ -415,7 +563,7 @@ module Wescontrol
 			config = {}
 			hash['attributes']['config'].each{|var, value|
 				config[var] = value
-			}
+			} if hash['attributes']['config']
 			device = self.new(hash['attributes']['name'], config)
 			device._id = hash['_id']
 			device._rev = hash['_rev']
@@ -520,8 +668,8 @@ module Wescontrol
 	end
 end
 
-#Thes methods dup all objects inside the hash/array as well as the data structure itself
-#However, because we don't check for cycles, they will cause an infinite loop if present
+# These methods dup all objects inside the hash/array as well as the data structure itself
+# However, because we don't check for cycles, they will cause an infinite loop if present.
 class Object
 	def deep_dup
 		begin

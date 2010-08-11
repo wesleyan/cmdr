@@ -36,7 +36,7 @@ Spec::Runner.configure do |config|
 		#saved to the database. There's probably a better way to do this,
 		#involving mocking frameworks or a testing db.
 		class DeviceTest < Wescontrol::Device
-			def save
+			def save changed = nil, old_val = nil
 			end
 		end
 	}

@@ -10,8 +10,8 @@ end
 begin
 	desc "Generate the docs"
 	YARD::Rake::YardocTask.new do |t|
-		t.files   = ['lib/**/*.rb', "lib/**/**/.rb"]   # optional
-		t.options = ['--markup', 'markdown'] # optional
+		t.files   = ['lib/**/*.rb', 'lib/**/**/.rb']   # optional
+		t.options = ['--markup', 'markdown', '--no-private'] # optional
 	end
 rescue NameError
 	# No loss, warning printed already
