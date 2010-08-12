@@ -3,9 +3,10 @@ require 'couchrest'
 require 'mq'
 require 'json'
 
+#@private
 module EventMachine
 	class Connection
-		def associate_callback_target(sig) #:nodoc:
+		def associate_callback_target(sig)
 		# For reasons unknown, this method was commented out
 		# in recent version of EM. We need it, though, for AMQP.
 		end
@@ -203,8 +204,6 @@ module Wescontrol
 	# to write Device subclasses. More information can also be found in the tests, which
 	# define exactly what the device class must do and not do.
 	class Device
-		# The AMQP queue on which to send events
-		EVENT_QUEUE = "roomtrol:events"
 		# The id in CouchDB for this device
 		attr_accessor :_id
 		# The rev in CouchDB for this device
@@ -521,9 +520,12 @@ module Wescontrol
 			}
 		end
 		
+		# @return [Hash{Symbol => Object}] A map from command name to options
 		def self.commands; @command_vars; end
+		# @return [Hash{Symbol => Object}] A map from command name to options
 		def commands; self.class.commands; end
 		
+		# 
 		def self.command name, options = {}
 			if options[:action].class == Proc
 				define_method name, &options[:action]
@@ -618,6 +620,7 @@ module Wescontrol
 			message[:room] = @belongs_to
 			message[:update] = true
 			message[:severity] ||= 0.1
+			message[:time] ||= Time.now
 			
 			@amq_responder.queue(EVENT_QUEUE, :durable => true).publish(update.to_json, :persistent => true)
 		end

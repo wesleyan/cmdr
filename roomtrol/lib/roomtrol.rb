@@ -1,7 +1,9 @@
 require 'rubygems'
 require 'couchrest'
 require 'time'
+require "#{File.dirname(__FILE__)}/roomtrol/constants"
 require "#{File.dirname(__FILE__)}/roomtrol/device"
+require "#{File.dirname(__FILE__)}/roomtrol/event_monitor"
 require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_http"
 require "#{File.dirname(__FILE__)}/roomtrol/RS232Device"
 require "#{File.dirname(__FILE__)}/roomtrol/devices/Projector"
@@ -53,6 +55,7 @@ module Wescontrol
 			WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
+				EventMonitor.run
 			}
 		end
 	end
