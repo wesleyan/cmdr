@@ -14,6 +14,7 @@ spec = Gem::Specification.new do |s|
 	s.require_path = 'lib'
 	s.executables = ["roomtrol", "start-recording"]
 
+	s.add_dependency('daemon-kit', '>= 0.1.8.1')
 	s.add_dependency('macaddr', '>= 1.0.0')
 	s.add_dependency('json', '>= 1.2.0')
 	s.add_dependency('serialport', '>= 0.8.0')
