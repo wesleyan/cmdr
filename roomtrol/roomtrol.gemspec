@@ -4,6 +4,7 @@ spec = Gem::Specification.new do |s|
 	s.summary = "Roomtrol daemon"
 	s.description = %{Roomtrol daemon and related classes}
 	s.files = [Dir['lib/**/*.rb'],
+		Dir['lib/roomtrol/devices/*.rb'],
 		Dir['spec/**/*.rb'], 
 		Dir['bin/*.rb'],
 		Dir['config/**/*.rb'],
