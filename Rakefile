@@ -23,8 +23,8 @@ end
 
 desc "installs gems needed for this Rakefile to run"
 task :install_gems do
-	puts "sudo gem install highline net-ssh net-scp sproutit-sproutcore"
-	puts `sudo gem install highline net-ssh net-scp sproutit-sproutcore`
+	puts "sudo gem install highline net-ssh net-scp sproutit-sproutcore git"
+	puts `sudo gem install highline net-ssh net-scp sproutit-sproutcore git`
 end
 
 desc "collects the login password from the operator"
@@ -176,3 +176,29 @@ task :deploy => [:collect_password, :build, :deploy_assets, :link_current]
 desc "first cleans, then deploys the files"
 task :deploy_clean => [:clean, :deploy]
 
+desc "Update wiki with newest docs"
+task :wiki_docs do
+	begin
+		require 'git'
+		require 'yard'
+	rescue LoadError => e
+		puts "\n ~ FATAL: ruby-git gem is required.\n          Try: rake install_gems"
+		exit(1)
+	end
+	
+	#If the wiki is not checked out, check it out
+	unless Dir.exists? "wescontrol.wiki"
+		Git.clone('git@github.com:mwylde/wescontrol.wiki.git', 'wescontrol.wiki')
+	end
+
+	File.open "wescontrol.wiki/Device.md", "w+" do |f|
+		YARD.parse('roomtrol/lib/roomtrol/device.rb')
+		f.write YARD::Registry.objects["Wescontrol::Device"].docstring
+	end
+	
+	g = Git.open('wescontrol.wiki')
+	g.add('Device.md')
+	g.commit("Updated Device")
+	g.push
+	puts "Updated device on wiki"
+end
