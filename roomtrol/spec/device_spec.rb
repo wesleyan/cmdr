@@ -1,25 +1,31 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
+require File.dirname(__FILE__) + '/../lib/roomtrol/constants.rb'
 require 'eventmachine'
 require 'mq'
+require 'couchrest'
 # Time to add your specs!
 # http://rspec.info/
 
+TEST_DB = "http://localhost:5984/rooms_test"
 
 Spec::Runner.configure do |config|
 	config.before(:each) {
-		#this creates a mock save method so that nothing actually gets
-		#saved to the database. There's probably a better way to do this,
-		#involving mocking frameworks or a testing db.
+		# Clear the test DB
+		CouchRest.database!(TEST_DB).delete!
+		CouchRest.database!(TEST_DB)
 		class DeviceTest < Wescontrol::Device
-			def save changed = nil, old_val = nil
+			# We change the default db_uri to the test database, so that we don't
+			# insert fake data into the real database
+			def initialize name, hash = {}, db_uri = TEST_DB, dqueue = nil
+				dqueue ||= "roomtrol:test:dqueue:#{@name}"
+				super(name, hash, db_uri, dqueue)
 			end
 		end
 	}
 end
 
 describe "allow configuration" do
-  
 	it "should respond to configure" do
 		class DeviceSubclass < DeviceTest
 			configure do
@@ -140,7 +146,7 @@ describe "deal with state_vars properly" do
 		dss.text = "name"
 		dss.text.should == "name"
 		
-		dss.state_vars[:text].should == {:type => :string}
+		dss.state_vars[:text].should == {:type => :string, :state => "name"}
 	end
 	
 	it "should not share state_var values between subclasses" do
@@ -391,12 +397,11 @@ describe "persist to couchdb database" do
 		ds.brightness.should == 0.8
 		ds.name = "Extron"
 		ds.name.should == "Extron"
-		ds.state_vars[:name].should == {:type => :string}
+		ds.state_vars[:name].should == {:type => :string, :state => "Extron"}
 		ds.configuration[:data_bits].should == 8
 		ds.configuration[:port].should == "/dev/null"
 		ds.configuration[:baud].should == 9600
 		ds._id.should == "0a2392bb27551acf35cdd1ca621ec26b"
-		ds._rev.should == "1654-ff63755fb7999e3d6fb97cc011575c38"
 	end
 end	
 describe "handling requests from amqp" do
@@ -409,7 +414,7 @@ describe "handling requests from amqp" do
 			end
 		end
 		
-		ds = DeviceSubclass.new("Extron")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:1")
 		ds.power = false
 		ds.power.should == false
 		json = '{
@@ -420,9 +425,11 @@ describe "handling requests from amqp" do
 			"value": true
 		}'
 		AMQP.start(:host => '127.0.0.1') do
-			ds.run
 			amq = MQ.new
-			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue(ds.dqueue).purge
+			amq.queue('roomtrol:test:3').purge
+			ds.run
+			amq.queue(ds.dqueue).publish(json)
 			amq.queue('roomtrol:test:3').subscribe{|msg|
 				@msg = msg
 				AMQP.stop do
@@ -449,7 +456,7 @@ describe "handling requests from amqp" do
 			command :power, :action => proc{|on| "power=#{on}"}
 		end
 		
-		ds = DeviceSubclass.new("Extron")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:2")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -459,9 +466,11 @@ describe "handling requests from amqp" do
 			"args": [true]
 		}'
 		AMQP.start(:host => '127.0.0.1') do
-			ds.run
 			amq = MQ.new
-			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue(ds.dqueue).purge
+			amq.queue('roomtrol:test:2').purge
+			ds.run
+			amq.queue(ds.dqueue).publish(json)
 			amq.queue('roomtrol:test:2').subscribe{|msg|
 				@msg = msg
 				AMQP.stop do
@@ -487,7 +496,7 @@ describe "handling requests from amqp" do
 			state_var :name, :type => :string
 		end
 		
-		ds = DeviceSubclass.new("Extron")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:3")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -496,9 +505,11 @@ describe "handling requests from amqp" do
 			"var": "name"
 		}'
 		AMQP.start(:host => '127.0.0.1') do
-			ds.run
 			amq = MQ.new
-			amq.queue('roomtrol:dqueue:Extron').publish(json)
+			amq.queue(ds.dqueue).purge
+			amq.queue('roomtrol:test:1').purge
+			ds.run
+			amq.queue(ds.dqueue).publish(json)
 			amq.queue('roomtrol:test:1').subscribe{|msg|
 				@msg = msg
 				AMQP.stop do
@@ -527,7 +538,7 @@ describe "handling requests from amqp" do
 			state_var :volume, :type => :integer, :action => proc{|v| self.volume = v}
 		end
 				
-		ds = DeviceSubclass.new("Extron")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:4")	
 		
 		@states = {:brightness => 1, :volume => 1}
 		
@@ -536,13 +547,15 @@ describe "handling requests from amqp" do
 		@recv = 0
 		srand(124209350982)
 		AMQP.start(:host => '127.0.0.1') do
-			EM::add_periodic_timer(5) do
+			EM::add_periodic_timer(10) do
 				AMQP.stop do
 					EM.stop
 				end
 			end
-			ds.run
 			amq = MQ.new
+			amq.queue(ds.dqueue).purge
+			amq.queue('roomtrol:test:4').purge
+			ds.run
 			amq.queue('roomtrol:test:4').subscribe{|json|
 				msg = JSON.parse(json)
 				if @messages[msg["id"]].is_a? Symbol
@@ -576,10 +589,56 @@ describe "handling requests from amqp" do
 					msg[:args] = rand(100)
 					@messages[i] = "zoom=#{msg[:args]}"
 				end
-				amq.queue('roomtrol:dqueue:Extron').publish(msg.to_json)
+				amq.queue(ds.dqueue).publish(msg.to_json)
 			}
 		end
 		@recv.should == @times
 	end
-
+	describe "Event handling" do
+		it "should send events when device state vars change" do
+			class DeviceSubclass < DeviceTest
+				state_var :text, :type => :string
+			end
+			
+			ds = DeviceSubclass.new("Extron")
+			ds._id = "device_id"
+			ds.belongs_to = "room_id"
+			@recv = 5
+			ds.text = "model#{@recv}"
+			AMQP.start(:host => '127.0.0.1') do
+				EM::add_periodic_timer(5) do
+					AMQP.stop do
+						EM.stop
+					end
+				end
+				EM::add_periodic_timer(0.1) do
+					ds.text = "model#{ds.text[-1].to_i-1}"
+				end
+				amq = MQ.new
+				amq.queue(Wescontrol::EVENT_QUEUE).purge
+				ds.run
+				amq.queue(Wescontrol::EVENT_QUEUE).subscribe{|json|
+					msg = JSON.parse(json)
+					Time.at(msg.delete('time')).hour.should == Time.now.hour
+					msg.should == {
+						'state_update' => true,
+						'var' => 'text',
+						'now' => "model#{@recv-1}",
+						'was' => "model#{@recv}",
+						'device' => ds._id,
+						'room' => ds.belongs_to,
+						'update' => true,
+						'severity' => 0.1
+					}
+					@recv -= 1
+					if @recv == 0
+						AMQP.stop do
+							EM.stop
+						end
+					end
+				}
+			end
+			@recv.should == 0
+		end
+	end
 end

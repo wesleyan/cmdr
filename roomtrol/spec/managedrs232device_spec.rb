@@ -9,11 +9,11 @@ require File.dirname(__FILE__) + '/../lib/roomtrol/rs232device.rb'
 Spec::Runner.configure do |config|
 
 	config.before(:each) {
-		#this creates a mock save method so that nothing actually gets
-		#saved to the database. There's probably a better way to do this,
-		#involving mocking frameworks or a testing db.
 		class MR232Device < Wescontrol::RS232Device
-			def save changed = nil, old_val = nil
+			# We change the default db_uri to the test database, so that we don't
+			# insert fake data into the real database
+			def initialize name, hash = {}, db_uri = "http://localhost:5984/rooms_test"
+				super(name, hash, db_uri)
 			end
 		end
 	}

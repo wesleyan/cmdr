@@ -214,20 +214,25 @@ module Wescontrol
 		attr_accessor :controller
 		# The name of the device
 		attr_reader :name
+		# The queue that the device watches for messages
+		attr_reader :dqueue
 		
 		# Creates a new Device instance
 		# @param [String, Symbol] name The name of the device, which is stored in the database
 		# 	and used to communicate with it over AMQP
 		# @param [Hash{String, Symbol => Object}] hash A hash of configuration definitions, from
 		# 	the name of the config var to its value
-		def initialize(name, hash = {})
+		# @param [String] db_uri The URI of the CouchDB database where updates should be saved
+		# @param [String] dqueue The AMQP queue that the device watches for messages
+		def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms", dqueue = nil)
 			hash_s = hash.symbolize_keys
 			@name = name
 			hash.each{|var, value|
 				configuration[var.to_sym] = value
 			} if configuration
 			#TODO: The database uri should not be hard-coded
-			@db = CouchRest.database("http://localhost:5984/rooms")
+			@db = CouchRest.database(db_uri)
+			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
 		end
 		
 		# Run is a blocking call that starts the device. While run is running, the device will
@@ -254,7 +259,7 @@ module Wescontrol
 				
 				amq = MQ.new
 				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
-				amq.queue("roomtrol:dqueue:#{@name}").subscribe{ |msg|
+				amq.queue(@dqueue).subscribe{ |msg|
 					DaemonKit.logger.debug("Received message: #{msg}")
 					req = JSON.parse(msg)
 					resp = {:id => req["id"]}
@@ -620,9 +625,11 @@ module Wescontrol
 			message[:room] = @belongs_to
 			message[:update] = true
 			message[:severity] ||= 0.1
-			message[:time] ||= Time.now
-			
-			@amq_responder.queue(EVENT_QUEUE, :durable => true).publish(update.to_json, :persistent => true)
+			message[:time] ||= Time.now.to_i
+			@amq_responder.queue(EVENT_QUEUE, :durable => true).publish(
+				message.to_json,
+				:persistent => true
+			) if @amq_responder
 		end
 		
 		def self.from_doc(id)
@@ -648,10 +655,11 @@ module Wescontrol
 				end
 			end
 			if changed
+				DaemonKit.logger.debug("Changed running")
 				update = {
+					'state_update' => true,
 					'var' => changed,
-					'now' => self.instance_variable_get(changed),
-					'importance' => self.state_vars
+					'now' => self.instance_variable_get("@#{changed}")
 				}
 				update['was'] = old_val if old_val
 				register_event update

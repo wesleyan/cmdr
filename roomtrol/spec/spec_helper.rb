@@ -2,6 +2,7 @@ DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 
 begin
 	require 'spec'
+	require 'mq'
 rescue LoadError
 	require 'rubygems'
 	gem 'rspec'
@@ -26,20 +27,13 @@ class DaemonKit
 		def self.error x
 			puts "Error: #{x}" if DEBUG > 0
 		end
+		def self.exception x
+			puts "Exception: #{x}"
+		end
 	end
 end
 
 Spec::Runner.configure do |config|
-
-	config.before(:each) {
-		#this creates a mock save method so that nothing actually gets
-		#saved to the database. There's probably a better way to do this,
-		#involving mocking frameworks or a testing db.
-		class DeviceTest < Wescontrol::Device
-			def save changed = nil, old_val = nil
-			end
-		end
-	}
 	
 	# == Mock Framework
 	#
