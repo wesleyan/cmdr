@@ -1,8 +1,14 @@
+$eventmachine_library = :pure_ruby
+require 'eventmachine'
+
+TEST_DB = "http://localhost:5984/rooms_test"
 DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 
 begin
 	require 'spec'
 	require 'mq'
+	require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
+	require File.dirname(__FILE__) + '/../lib/roomtrol/constants.rb'
 rescue LoadError
 	require 'rubygems'
 	gem 'rspec'
@@ -33,7 +39,27 @@ class DaemonKit
 	end
 end
 
+class Wescontrol::Device
+	# We change the default db_uri to the test database, so that we don't
+	# insert fake data into the real database
+	def new_initialize name, hash = {}, db_uri = TEST_DB, dqueue = nil
+		if dqueue
+			old_initialize(name, hash, db_uri, dqueue)
+		else
+			old_initialize(name, hash, db_uri)
+		end
+	end
+	alias_method :old_initialize, :initialize
+	alias_method :initialize, :new_initialize
+end
+
 Spec::Runner.configure do |config|
+	config.before(:each) {
+		# Clear the test DB
+		CouchRest.database!(TEST_DB).delete!
+		CouchRest.database!(TEST_DB)
+	}
+	
 	
 	# == Mock Framework
 	#

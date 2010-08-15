@@ -7,34 +7,16 @@ require 'couchrest'
 # Time to add your specs!
 # http://rspec.info/
 
-TEST_DB = "http://localhost:5984/rooms_test"
-
-Spec::Runner.configure do |config|
-	config.before(:each) {
-		# Clear the test DB
-		CouchRest.database!(TEST_DB).delete!
-		CouchRest.database!(TEST_DB)
-		class DeviceTest < Wescontrol::Device
-			# We change the default db_uri to the test database, so that we don't
-			# insert fake data into the real database
-			def initialize name, hash = {}, db_uri = TEST_DB, dqueue = nil
-				dqueue ||= "roomtrol:test:dqueue:#{@name}"
-				super(name, hash, db_uri, dqueue)
-			end
-		end
-	}
-end
-
 describe "allow configuration" do
 	it "should respond to configure" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 			end
 		end
 	end
 	
 	it "should set configuration info" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -45,7 +27,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow variable configuration" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				port :type => :string
 			end
@@ -55,7 +37,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow default values for variable configuration" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				baud :type => :integer, :default => 9600
 			end
@@ -65,7 +47,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow multiple configuration blocks" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -81,7 +63,7 @@ describe "allow configuration" do
 	
 	it "should not allow multiple values in configuration" do
 		proc {
-			class DeviceSubclass < DeviceTest
+			class DeviceSubclass < Wescontrol::Device
 				configure do
 					baud 9600, 400, "no"
 				end
@@ -90,7 +72,7 @@ describe "allow configuration" do
 	end
 	
 	it "should share configuration with subclasses" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -108,27 +90,27 @@ end
 
 describe "deal with state_vars properly" do
 	it "should respond to state_var" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :power, :type => :boolean
 		end
 	end
 	
 	it "should require a :type field" do
 		proc {
-			class DeviceSubclass < DeviceTest
+			class DeviceSubclass < Wescontrol::Device
 				state_var :power
 			end
 		}.should raise_error
 		
 		proc {
-			class DeviceSubclass < DeviceTest
+			class DeviceSubclass < Wescontrol::Device
 				state_var :power, :someting => :else
 			end
 		}.should raise_error
 	end
 
 	it "should create accessor methods for state_var" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :text, :type => :string
 		end
 		ds = DeviceSubclass.new("device")
@@ -137,7 +119,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should inherit state_vars" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -150,7 +132,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should not share state_var values between subclasses" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -178,7 +160,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should set all state_vars in state_vars hash and allow access" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :text, :type => :string
 			state_var :something, :type => :option, :options => (1..6).to_a
 		end
@@ -190,7 +172,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should create set_ methods if :action is provided" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :power, :type => :string, :action => proc {|x| "hello #{x}"}
 		end
 		ds = DeviceSubclass.new("device")
@@ -200,7 +182,7 @@ end
 
 describe "do virtual vars" do
 	it "should allow creation of virtual vars" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -214,14 +196,14 @@ describe "do virtual vars" do
 	end
 	it "should require a depends_on and transformation field" do
 		proc {
-			class DeviceSubclass < DeviceTest
+			class DeviceSubclass < Wescontrol::Device
 				state_var :text, :type => :string
 				virtual_var :capital_name, :type => :string
 			end
 		}.should raise_error
 	end
 	it "should recalculate virtual vars" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -235,7 +217,7 @@ describe "do virtual vars" do
 		ds.capital_name.should == "MICAH"
 	end
 	it "should work with multiple depends_on vars" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -251,7 +233,7 @@ describe "do virtual vars" do
 		ds.full_name.should == "Micah Wylde"
 	end
 	it "should inherit virtual_vars properly" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -288,19 +270,19 @@ end
 
 describe "deal with commands" do
 	it "should allow setting commands" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :do_thing
 		end
 	end
 	it "should allow settings command with actions" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :do_thing, :action => proc{"hello"}
 		end
 		ds = DeviceSubclass.new("device")
 		ds.do_thing.should == "hello"
 	end
 	it "should allow accessing commands" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :something
 			command :another, :type => :array
 		end
@@ -308,7 +290,7 @@ describe "deal with commands" do
 		DeviceSubclass.commands[:another].should == {:type => :array}
 	end
 	it "should allow commands with arguments" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :do_thing, :type => "percentage", :action => proc{|p| (p*100).to_i}
 			
 		end
@@ -319,7 +301,7 @@ end
 
 describe "persist to couchdb database" do
 	it "should create hash representation of device" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				data_bits 8
 				baud :type => :integer, :default => 9600
@@ -357,7 +339,7 @@ describe "persist to couchdb database" do
 	end
 	
 	it "should load a new device from hash" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			configure do
 				data_bits 8
 				baud :type => :integer, :default => 9600
@@ -407,7 +389,7 @@ end
 describe "handling requests from amqp" do
 	it "should work for setting vars" do
 		Thread.abort_on_exception = true
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :power, :type => :boolean
 			def set_power state
 				self.power = state
@@ -452,7 +434,7 @@ describe "handling requests from amqp" do
 	end
 	it "should work for commands" do
 		Thread.abort_on_exception = true
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :power, :action => proc{|on| "power=#{on}"}
 		end
 		
@@ -492,7 +474,7 @@ describe "handling requests from amqp" do
 	end
 	it "should return requested data" do
 		Thread.abort_on_exception = true
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :name, :type => :string
 		end
 		
@@ -531,7 +513,7 @@ describe "handling requests from amqp" do
 	it "should work under stressful situations" do
 		Thread.abort_on_exception = true
 		@times = 1000
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :zoom, :action => proc{|zoom| "zoom=#{zoom}"}
 			#state_var :power, :type => :boolean, :action => proc{|on| this.power = on}
 			state_var :brightness, :type => :integer, :action => proc{|v| self.brightness = v}
@@ -596,7 +578,16 @@ describe "handling requests from amqp" do
 	end
 	describe "Event handling" do
 		it "should send events when device state vars change" do
-			class DeviceSubclass < DeviceTest
+			AMQP.start(:host => '127.0.0.1') do
+				amq = MQ.new
+				amq.queue(Wescontrol::EVENT_QUEUE).purge
+				EM::add_periodic_timer(0.5) do
+					AMQP.stop do
+						EM.stop
+					end
+				end
+			end
+			class DeviceSubclass < Wescontrol::Device
 				state_var :text, :type => :string
 			end
 			
@@ -606,17 +597,16 @@ describe "handling requests from amqp" do
 			@recv = 5
 			ds.text = "model#{@recv}"
 			AMQP.start(:host => '127.0.0.1') do
+				ds.run
+				@recv.times{|i|
+					ds.text = "model#{ds.text[-1].to_i-1}"
+				}
 				EM::add_periodic_timer(5) do
 					AMQP.stop do
 						EM.stop
 					end
 				end
-				EM::add_periodic_timer(0.1) do
-					ds.text = "model#{ds.text[-1].to_i-1}"
-				end
 				amq = MQ.new
-				amq.queue(Wescontrol::EVENT_QUEUE).purge
-				ds.run
 				amq.queue(Wescontrol::EVENT_QUEUE).subscribe{|json|
 					msg = JSON.parse(json)
 					Time.at(msg.delete('time')).hour.should == Time.now.hour

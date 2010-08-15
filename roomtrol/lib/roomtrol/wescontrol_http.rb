@@ -86,7 +86,7 @@ module Wescontrol
 				resp.content = result.to_json + "\n"
 				resp.send_response
 			}
-			deferrable.errback {
+			deferrable.errback {|error|
 				resp.status = 500
 				resp.content = {:error => :timed_out}.to_json + "\n"
 				resp.send_response

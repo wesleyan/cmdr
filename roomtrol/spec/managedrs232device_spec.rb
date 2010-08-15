@@ -6,21 +6,9 @@ require File.dirname(__FILE__) + '/../lib/roomtrol/rs232device.rb'
 # Time to add your specs!
 # http://rspec.info/
 
-Spec::Runner.configure do |config|
-
-	config.before(:each) {
-		class MR232Device < Wescontrol::RS232Device
-			# We change the default db_uri to the test database, so that we don't
-			# insert fake data into the real database
-			def initialize name, hash = {}, db_uri = "http://localhost:5984/rooms_test"
-				super(name, hash, db_uri)
-			end
-		end
-	}
-end
 describe "managed_state_var enhancements" do	
 	it "shouldn't break managed_state_vars" do
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			managed_state_var :input, 
 				:type => :options, 
 				:display_order => 1, 
@@ -33,7 +21,7 @@ describe "managed_state_var enhancements" do
 		MR232DeviceSubclass.state_vars[:input][:type] == :option
 	end
 	it "should create action methods that add the message to the send queue" do
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			attr_accessor :_send_queue
 			managed_state_var :input, 
 				:type => :options, 
@@ -52,7 +40,7 @@ end
 
 describe "do responses" do
 	it "should respond to responses" do
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			responses do
 			end
 		end
@@ -60,7 +48,7 @@ describe "do responses" do
 
 	it "should allow setting responses with match" do
 		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			responses do
 				match :channel,  /Chn\d/, $proc
 			end
@@ -69,7 +57,7 @@ describe "do responses" do
 	end
 	it "should allow setting multiple matches" do
 		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			responses do
 				match :channel,  /Chn\d/, $proc
 				match :volume, /Vol\d/, $proc
@@ -81,7 +69,7 @@ describe "do responses" do
 		]
 	end
 	it "should properly match regexps" do
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			managed_state_var :input, 
 				:type => 'option', 
 				:display_order => 1, 
@@ -112,7 +100,7 @@ end
 
 describe "do requests" do
 	it "should properly send requests" do
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			attr_reader :string_array
 			def initialize(name, options)
 				super(name, options)
@@ -148,7 +136,7 @@ end
 
 describe "sending messages" do
 	it "should respond to AMQP messages appropriately" do
-		class MR232DeviceSubclass < MR232Device
+		class MR232DeviceSubclass < Wescontrol::RS232Device
 			attr_reader :string_array
 			def initialize(name, options)
 				super(name, options)

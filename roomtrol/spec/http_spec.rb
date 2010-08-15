@@ -5,23 +5,11 @@ require File.dirname(__FILE__) + '/../lib/roomtrol/wescontrol_http'
 # http://rspec.info/
 
 
-Spec::Runner.configure do |config|
-	config.before(:each) {
-		#this creates a mock save method so that nothing actually gets
-		#saved to the database. There's probably a better way to do this,
-		#involving mocking frameworks or a testing db.
-		class DeviceTest < Wescontrol::Device
-			def save
-			end
-		end
-		Thread.abort_on_exception = true
-	}
-end
 
 describe "HTTP API" do
   
 	it "should respond to a GET request" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :volume, :type => :percentage
 		end
 		
@@ -47,7 +35,7 @@ describe "HTTP API" do
 		@called.should == true
 	end
 	it "should respond to a setting state_vars" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			state_var :volume, :type => :percentage, :action => proc {|v|
 				self.volume = v
 			}
@@ -78,7 +66,7 @@ describe "HTTP API" do
 		@called.should == true
 	end
 	it "should respond to a command" do
-		class DeviceSubclass < DeviceTest
+		class DeviceSubclass < Wescontrol::Device
 			command :play, :action => proc {|arg|
 				arg.upcase
 			}
