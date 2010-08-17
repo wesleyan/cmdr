@@ -47,25 +47,25 @@ describe "do responses" do
 	end
 
 	it "should allow setting responses with match" do
-		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
+		$proc = proc{|m| self.input = m[1]}
 		class MR232DeviceSubclass < Wescontrol::RS232Device
 			responses do
-				match :channel,  /Chn\d/, $proc
+				match :channel,  /Chn(\d)/, $proc
 			end
 		end
-		MR232DeviceSubclass.instance_variable_get(:@_matchers)[0].should == [:channel, /Chn\d/, $proc]
+		MR232DeviceSubclass.instance_variable_get(:@_matchers)[0].should == [:channel, /Chn(\d)/, $proc]
 	end
 	it "should allow setting multiple matches" do
-		$proc = proc{|r| self.input = r.strip[-1].to_i.to_s}
+		$proc = proc{|m| self.input = m[1]}
 		class MR232DeviceSubclass < Wescontrol::RS232Device
 			responses do
-				match :channel,  /Chn\d/, $proc
-				match :volume, /Vol\d/, $proc
+				match :channel,  /Chn(\d)/, $proc
+				match :volume, /Vol(\d)/, $proc
 			end
 		end
 		MR232DeviceSubclass.instance_variable_get(:@_matchers).should == [
-			[:channel, /Chn\d/, $proc],
-			[:volume, /Vol\d/, $proc],
+			[:channel, /Chn(\d)/, $proc],
+			[:volume, /Vol(\d)/, $proc],
 		]
 	end
 	it "should properly match regexps" do
@@ -86,8 +86,8 @@ describe "do responses" do
 					"#{(volume*100).to_i}V\r\n"
 				}
 			responses do
-				match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i}
-				match :volume,   /Vol\d+/, proc{|r| self.volume = r.strip[3..-1].to_i/100.0}
+				match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i}
+				match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
 			end
 		end
 		ds = MR232DeviceSubclass.new("Extron", :port => '/dev/null')

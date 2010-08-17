@@ -136,13 +136,15 @@ module Wescontrol
 			while msg = s.scan(/.+?#{configuration[:message_end]}/) do
 				msg.gsub!(configuration[:message_end], "")
 				m = matchers.find{|matcher|
-					result = case matcher[1].class.to_s
+					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
 						when "Proc" then matcher[1].call(msg)
 						when "String" then matcher[1] == msg
 					end
 				} if matchers
 				if m
+					arg = msg
+					arg = msg.match(m[1]) if m[1].is_a? Regexp
 					if @_message_handler
 						case m[0]
 							when :ack then
@@ -150,14 +152,14 @@ module Wescontrol
 							when :nack then
 								@_message_handler.fail
 							when :error then
-								resp = m[2].is_a? Proc ? m[2].call(msg) : m[2]
+								resp = m[2].is_a? Proc ? m[2].call(arg) : m[2]
 								@_message_handler.fail resp
 							else
-								@_message_handler.succeed instance_exec(msg, &m[2])
+								@_message_handler.succeed instance_exec(arg, &m[2])
 						end
 						@_message_handler = nil
 					else
-						instance_exec(msg, &m[2])
+						instance_exec(arg, &m[2])
 					end
 				end
 			end
