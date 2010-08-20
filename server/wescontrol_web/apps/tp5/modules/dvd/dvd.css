@@ -1,7 +1,0 @@
-.button {
-  width: 57px;
-  height: 57px;
-  position: absolute;
-  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#BABABA), to(#FFFFFF));
-  -webkit-box-shadow: 0 0 3px #000;
-  -webkit-border-radius: 5px; }
