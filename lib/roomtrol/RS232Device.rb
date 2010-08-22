@@ -4,10 +4,77 @@ require "#{File.dirname(__FILE__)}/em-serialport"
 require 'bit-struct'
 
 module Wescontrol
+	# RS232Device is a subclass of {Wescontrol::Device} that makes the job of controlling
+	# devices that communicate over RS232 serial ports easier. At its most basic level, it
+	# will handle communication through a serial port (using the
+	# [ruby-serialport](http://ruby-serialport.rubyforge.org/) library) for you, providing
+	# {#send_string} and {#read}, which respectively send and receive 
+	# strings to and from the device. However, most devices should be able to take advatange
+	# of the various "managed" features, which can greatly simplify the task of writing drivers
+	# for RS232 devices. In fact, using this class it is possible to write drivers without any
+	# real code at all besides some string handling.
+	# 
+	# There are several abstractions provided which can take over a part of device handling.
+	# Perhaps the most widely applicable is the {RS232Device::requests requests} abstraction.
+	# Many devices will not send messages to notify a state change and must be constantly
+	# polled to maintain correct state in the Roomtrol system (i.e., if a projector is turned
+	# off manually, you must request its power state in order to display that fact on the
+	# touchscreen). You can use `request` to do such polling automatically. You can provide
+	# as many requests as you'd like, and each can have an associated priority which informs
+	# how often is should be sent. Look at the {RS232Device::requests} documentation for more
+	# information.
+	# 
+	# The next abstraction is {RS232Device::responses responses}. Responses provide automatic
+	# handling of incoming data from the device. Each response has a "matcher," which can be
+	# a string, regular expression or a function. When a message comes over the wire from the
+	# device, it is matched against all of the responses. If one matches, the message is passed
+	# to the handler function provided, which will generally update one or more state_vars based
+	# on the information provided.
+	# 
+	# The final abstraction is {RS232Device::managed_state_var}. A managed state var is like a 
+	# normal {Device::state_var} except that the set_ method is created automatically based on
+	# a string function provided to :action.
+	# 
+	# Using these three abstractions, you can write device drivers using very little code. For
+	# example, here's a subset of the ExtronVideoSwitcher driver (the full source can be found
+	# [here](https://github.com/mwylde/roomtrol-devices/blob/master/ExtronVideoSwitcher.rb)).
+	# 
+	# 	configure do
+	# 		baud        9600
+	# 		message_end "\r\n"
+	# 	end
+	# 
+	# 	managed_state_var :input, 
+	# 		:type => :option, 
+	# 		:display_order => 1, 
+	# 		:options => ("1".."6").to_a,
+	# 		:response => :channel,
+	# 		:action => proc{|input|
+	# 			"#{input}!\r\n"
+	# 		}
+	# 
+	# 	responses do
+	# 		match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i.to_s}
+	# 		match :volume,   /Vol\d+/, proc{|r| self.volume = r.strip[3..-1].to_i/100.0}
+	# 		match :mute,     /Amt\d+/, proc{|r| self.mute = r[-1] == "1"}
+	# 		match :status,   /Vid\d+ Aud\d+ Clp\d/, proc{|r|
+	# 			input = r.scan(/Vid\d+/).join("")[3..-1].to_i
+	# 			self.input = input if input > 0
+	# 			self.clipping = r.scan(/Clp\d+/).join("")[3..-1] == "1"
+	# 		}
+	# 	end
+	# 
+	# 	requests do
+	# 		send :input, "I\r\n", 0.5
+	# 		send :volume, "V\r\n", 0.5
+	# 		send :mute, "Z\r\n", 0.5
+	# 	end
 	class RS232Device < Device
-		TIMEOUT = 0.5 #number of seconds to wait for a reply
+		# The number of seconds to way for a reply before transmitting the next message
+		TIMEOUT = 0.5
+		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
-		
+
 		configure do
 			port :type => :port
 			baud :type => :integer, :default => 9600
@@ -16,7 +83,7 @@ module Wescontrol
 			parity 0
 			message_end "\r\n"
 		end
-						
+
 		def send_string(string)
 			@serialport.send_data(string) if @serialport
 		end
