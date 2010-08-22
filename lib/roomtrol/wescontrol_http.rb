@@ -97,7 +97,7 @@ module Wescontrol
 		end
 		
 		#A get request looks like this: GET /devices/Extron/power
-		#and returns something like this: {"result" => false}
+		#and returns something like this: `{"result" => false}`
 		def get path, resp
 			DaemonKit.logger.debug("Running get on #{path}")
 			device_req = {
@@ -109,9 +109,9 @@ module Wescontrol
 			defer_device_operation resp, device_req, path[1]
 		end
 	
-		#A post request looks like this: POST /devices/Extron/power -d {'value' => true}
-		#or like this: POST /devices/Extron/zoom -d {'args' => [2.0]}
-		#and returns something like this: {"result" => true}
+		#A post request looks like this: `POST /devices/Extron/power -d {'value' => true}`
+		#or like this: `POST /devices/Extron/zoom -d {'args' => [2.0]}`
+		#and returns something like this: `{"result" => true}`
 		def post path, resp
 			begin
 				data = JSON.parse(@http_post_content)

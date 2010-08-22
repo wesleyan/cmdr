@@ -10,7 +10,7 @@ end
 begin
 	desc "Generate the docs"
 	YARD::Rake::YardocTask.new do |t|
-		t.files   = ['lib/**/*.rb', 'lib/**/**/.rb']   # optional
+		t.files   = ['lib/**/*.rb']  # optional
 		t.options = ['--markup', 'markdown', '--no-private'] # optional
 	end
 	
