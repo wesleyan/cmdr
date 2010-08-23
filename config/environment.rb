@@ -6,7 +6,7 @@ $eventmachine_library = :pure_ruby
 #ENV['DAEMON_ENV'] ||= 'production'
 
 # Boot up
-require File.join(File.dirname(__FILE__), 'boot')
+require_relative 'boot'
 
 DaemonKit::Initializer.run do |config|
 

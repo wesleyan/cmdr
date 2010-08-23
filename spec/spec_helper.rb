@@ -7,8 +7,8 @@ DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 begin
 	require 'spec'
 	require 'mq'
-	require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
-	require File.dirname(__FILE__) + '/../lib/roomtrol/constants.rb'
+	require_relative '../lib/roomtrol/device.rb'
+	require_relative '../lib/roomtrol/constants.rb'
 rescue LoadError
 	require 'rubygems'
 	gem 'rspec'
