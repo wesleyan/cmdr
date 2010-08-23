@@ -2,6 +2,6 @@
 #
 # Stub executable for roomtrol
 
-require File.dirname(__FILE__) + '/../config/environment'
+require_relative '../config/environment'
 
 DaemonKit::Application.exec( DAEMON_ROOT + '/libexec/roomtrol-daemon.rb' )

@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/spec_helper.rb'
-require File.dirname(__FILE__) + '/../lib/roomtrol/device.rb'
-require File.dirname(__FILE__) + '/../lib/roomtrol/wescontrol_http'
+require_relative 'spec_helper.rb'
+require_relative '../lib/roomtrol/device.rb'
+require_relative '../lib/roomtrol/wescontrol_http'
 # Time to add your specs!
 # http://rspec.info/
 

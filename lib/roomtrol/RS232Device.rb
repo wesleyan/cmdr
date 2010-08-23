@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'strscan'
-require "#{File.dirname(__FILE__)}/em-serialport"
+require 'roomtrol/em-serialport'
 require 'bit-struct'
 
 module Wescontrol
