@@ -1,15 +1,18 @@
+libdir = File.dirname(__FILE__)
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+
 require 'rubygems'
 require 'couchrest'
 require 'time'
-require "#{File.dirname(__FILE__)}/roomtrol/constants"
-require "#{File.dirname(__FILE__)}/roomtrol/device"
-require "#{File.dirname(__FILE__)}/roomtrol/event_monitor"
-require "#{File.dirname(__FILE__)}/roomtrol/wescontrol_http"
-require "#{File.dirname(__FILE__)}/roomtrol/RS232Device"
-require "#{File.dirname(__FILE__)}/roomtrol/devices/Projector"
-require "#{File.dirname(__FILE__)}/roomtrol/devices/VideoSwitcher"
-require "#{File.dirname(__FILE__)}/roomtrol/devices/Computer"
-require "#{File.dirname(__FILE__)}/roomtrol/MAC.rb"
+require 'roomtrol/constants'
+require 'roomtrol/device'
+require 'roomtrol/event_monitor'
+require 'roomtrol/wescontrol_http'
+require 'roomtrol/RS232Device'
+require 'roomtrol/devices/Projector'
+require 'roomtrol/devices/VideoSwitcher'
+require 'roomtrol/devices/Computer'
+require 'roomtrol/MAC.rb'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
