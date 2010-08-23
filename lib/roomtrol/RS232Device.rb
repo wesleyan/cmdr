@@ -53,13 +53,12 @@ module Wescontrol
 	# 		}
 	# 
 	# 	responses do
-	# 		match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i.to_s}
-	# 		match :volume,   /Vol\d+/, proc{|r| self.volume = r.strip[3..-1].to_i/100.0}
-	# 		match :mute,     /Amt\d+/, proc{|r| self.mute = r[-1] == "1"}
-	# 		match :status,   /Vid\d+ Aud\d+ Clp\d/, proc{|r|
-	# 			input = r.scan(/Vid\d+/).join("")[3..-1].to_i
-	# 			self.input = input if input > 0
-	# 			self.clipping = r.scan(/Clp\d+/).join("")[3..-1] == "1"
+	# 		match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i.to_s}
+	# 		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
+	# 		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
+	# 		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
+	# 			self.input = m[1].to_i if m[1].to_i > 0
+	# 			self.clipping = (m[2] == "1")
 	# 		}
 	# 	end
 	# 
@@ -79,7 +78,24 @@ module Wescontrol
 	# until a response is received or {RS232Device::TIMEOUT TIMEOUT} seconds have passed before
 	# sending the next message in the queue. Devices with more complex message handling (for example,
 	# those with multiple message queues) may not work optimally with this strategy. In those cases,
-	# writing the message handling system yourself may be preferable. 
+	# writing the message handling system yourself may be preferable. It is also very important that
+	# devices are synchronous; i.e., they always send responses in the order that requests or commands
+	# are received. If this assumption does not hold, users may get incorrect responses.
+	# 
+	# ##Configuration
+	# RS232Devices have addition configuration parameters, which can be placed in the normal {Device::configure}
+	# block.
+	# 
+	# + *port*: the serial port the device is connected to. You shouldn't set this directly, because it
+	# 	should be modifiable by the user
+	# + *baud*: the baud rate at which communication occurs. You can either set this, if the device uses a
+	# 	fixed baud rate, or let the user set it if the device supports variable baud rates
+	# + *data_bits*: the number of data bits used by the device (usually 7 or 8)
+	# + *stop_bits*: the number of stop bits used by the device (either 1 or 2)
+	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
+	# + *message_end*: the character(s) which demarcate the end of a message; for ASCII-based protocols usually
+	# 	a newline ("\n") or a carriage return and newline ("\r\n"). You must set this if you want message
+	# 	interpretation to work correctly.
 	class RS232Device < Device
 		# The number of seconds to way for a reply before transmitting the next message
 		TIMEOUT = 0.5
@@ -258,6 +274,8 @@ module Wescontrol
 			@_matchers += rh.matchers if rh.matchers
 		end
 		
+		# @private
+		# @return The array of responses created by calls do {RS232Device::responses}
 		def matchers
 			self.class.instance_variable_get(:@_matchers)
 		end
@@ -272,13 +290,47 @@ module Wescontrol
 			end
 		end
 		
+		# Starts a requests block, wherein statements describing the various requests that should
+		# be made of the device are placed. Many devices do not proactively report state changes
+		# to their controller and need to be constantly polled to determine whether anything has
+		# changed. In order to provide the user a feeling of control, it is important that the
+		# current system state always reflect the device's real state as closely as possible.
+		# For example, the default touchscreen interface does not allow you to turn on a projector
+		# that is already on. However, if the controller does not poll for the power state, the
+		# projector could be manually turned off and the controller would be unaware. Now, the
+		# projector is off but the system still thinks it's on, and the user is unable to turn it
+		# back on using the touchscreen.
+		# 
+		# Creating requests is very simple. Each request needs three things: a name, the string to
+		# send, and its priority compared to other requests. The priority is a floating point number
+		# which determines how often the request is sent. If we have two requests, A with priority 1.0
+		# and B with priority 0.5, request A will be sent roughly twice as often as request B. The
+		# numbers are entirely relative, so you can use whatever scale you like. The system will send
+		# a request whenever the channel is clear (we are not waiting for a response) and there are
+		# no commands waiting to be sent, so user commands are still prioritized but states are kept
+		# as up to date as possible. When requests are defined a vector is created with the sequence
+		# of requests to send. Every time a request can be sent, the next request is taken from this
+		# vector. The number of copies of each request in this vector is determined by the priorities.
+		# In essence, we scale all of the priorities such that the smallest is one; these scaled
+		# priorities are then the number of copies. We then interleave them as much as possible so that
+		# there is a regular spacing between requests.
+		# @example
+		# 	requests do
+		# 		send :input,  "I\r\n", 1.5
+		# 		send :volume, "V\r\n", 0.5
+		# 		send :mute,   "Z\r\n", 1.0
+		# 	end
+		# 	# The requests vector created by these priorities is as follows
+		# 	[:input, :volume, :mute, :input, :mute, :input]
 		def self.requests &block
 			rh = RequestHandler.new
 			rh.instance_eval(&block)
 			@_requests ||= []
 			@_requests += rh.requests
 			@_request_scheduler = []
+			#The multiplier is the number which scales everything such that the smallest is 1.0
 			multiplier = 1.0/@_requests.collect{|x| x[2]}.min
+			#Multiply all of the priorities by the multiplier
 			r = @_requests.collect{|x| [x[0], x[1], (x[2]*multiplier).to_i]}
 			iter = 0
 			r.inject(0){|sum, x|x[2] + sum}.times{|i|
@@ -287,13 +339,22 @@ module Wescontrol
 				end
 				r[iter % r.size][2] -= 1
 				@_request_scheduler << r[iter % r.size]
+				iter += 1
 			}
 		end
 		
+		# @private
+		# @return The vector of requests created by a {RS232Device::requests} block
 		def request_scheduler
 			self.class.instance_variable_get(:@_request_scheduler)
 		end
 		
+		# @private
+		# Reads in each block of data from EM::Serialport, and processes it by splitting it into
+		# discrete messages by means of message_end, then matching each message against the
+		# responses that have been defined by {RS232::responses}. If one is matched, its handler
+		# is called and the result is sent back to the user or ignored. Also sets ready_to_send,
+		# which causes the next request or command to be sent.
 		def read data
 			@_buffer ||= ""
 			@_responses ||= {}
@@ -336,6 +397,10 @@ module Wescontrol
 			end
 		end
 		
+		# @private
+		# When set to true, sends the next thing in the send queue or the next request if send_queue
+		# is empty. When set to false, will set itself to true if {RS232Device::TIMEOUT} seconds have
+		# passed sent the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			@_ready_to_send = true if !@_last_sent_time || Time.now - @_last_sent_time > TIMEOUT
@@ -349,8 +414,12 @@ module Wescontrol
 			end
 		end
 
+		# @private
+		# @return [Boolean] whether or not the device is ready for new messages
 		def ready_to_send; @_ready_to_send; end
 		
+		# @private
+		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
 			if message = @_send_queue.pop
 				@_last_sent_time = Time.now
@@ -361,6 +430,8 @@ module Wescontrol
 			end
 		end
 		
+		# @private
+		# Chooses the next request to send by iterating circularly through the request vector
 		def choose_request
 			return nil unless request_scheduler
 			@_request_iter ||= -1
@@ -371,6 +442,11 @@ module Wescontrol
 	end
 end
 
+# @private
+# Creates an EM::Connection for use with EM::Serialport. Because the main RS232Device class must
+# subclass from Device, it cannot subclass from EM::Connection. Therefore, we must create a dummy
+# connection subclass to use instead. All it does is call @receiver.read when data is received,
+# where @receiver is automatically set to the RS232Device subclass.
 class RS232Connection < EM::Connection
 	def initialize
 		@receiver ||= self.class.instance_variable_get(:@receiver)
