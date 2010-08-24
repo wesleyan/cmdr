@@ -43,13 +43,12 @@ class ExtronVideoSwitcher < VideoSwitcher
 	state_var :clipping, :type => 'boolean', :display_order => 4, :editable => false
 	
 	responses do
-		match :channel,  /Chn\d/, proc{|r| self.input = r.strip[-1].to_i.to_s}
-		match :volume,   /Vol\d+/, proc{|r| self.volume = r.strip[3..-1].to_i/100.0}
-		match :mute,     /Amt\d+/, proc{|r| self.mute = r[-1] == "1"}
-		match :status,   /Vid\d+ Aud\d+ Clp\d/, proc{|r|
-			input = r.scan(/Vid\d+/).join("")[3..-1].to_i
-			self.input = input if input > 0
-			self.clipping = r.scan(/Clp\d+/).join("")[3..-1] == "1"
+		match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i.to_s}
+		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
+		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
+		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
+			self.input = m[1].to_i if m[1].to_i > 0
+			self.clipping = (m[2] == "1")
 		}
 	end
 	
