@@ -33,9 +33,15 @@ begin
 			YARD.parse('lib/roomtrol/device.rb')
 			f.write YARD::Registry.objects["Wescontrol::Device"].docstring
 		end
+		
+		File.open "roomtrol-daemon.wiki/RS232Device.md", "w+" do |f|
+			YARD.parse('lib/roomtrol/RS232Device.rb')
+			f.write YARD::Registry.objects["Wescontrol::RS232Device"].docstring
+		end
 
 		g = Git.open('roomtrol-daemon.wiki')
 		g.add('Device.md')
+		g.add('RS232Device.md')
 		g.commit("Updated Device")
 		g.push
 		puts "Updated device on wiki"
