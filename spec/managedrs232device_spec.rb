@@ -2,6 +2,13 @@ require_relative 'spec_helper.rb'
 require_relative '../lib/roomtrol/device.rb'
 require_relative '../lib/roomtrol/rs232device.rb'
 
+Spec::Runner.configure do |config|
+	#For some reason in Ruby 1.9.2 class definition constants leak between tests, causing errors
+	config.before(:each) {
+		Object.send(:remove_const, :MR232DeviceSubclass) if Object.constants.include? :MR232DeviceSubclass
+	}
+end
+
 describe "managed_state_var enhancements" do
 	it "shouldn't break managed_state_vars" do
 		class MR232DeviceSubclass < Wescontrol::RS232Device
@@ -132,7 +139,7 @@ describe "do requests" do
 			}
 			ds.run
 		}
-		ds.string_array[0..5].sort.should == ["I\r\n", "V\r\n", "Z\r\n", "I\r\n", "Z\r\n", "I\r\n"]
+		ds.string_array[0..5].should == ["I\r\n", "V\r\n", "Z\r\n", "I\r\n", "Z\r\n", "I\r\n"]
 	end
 end
 
