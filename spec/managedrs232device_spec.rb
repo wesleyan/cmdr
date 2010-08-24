@@ -1,12 +1,15 @@
 require_relative 'spec_helper.rb'
 require_relative '../lib/roomtrol/device.rb'
 require_relative '../lib/roomtrol/rs232device.rb'
-#require File.dirname(__FILE__) + '/../lib/roomtrol/managedrs232device.rb'
 
-# Time to add your specs!
-# http://rspec.info/
+Spec::Runner.configure do |config|
+	#For some reason in Ruby 1.9.2 class definition constants leak between tests, causing errors
+	config.before(:each) {
+		Object.send(:remove_const, :MR232DeviceSubclass) if Object.constants.include? :MR232DeviceSubclass
+	}
+end
 
-describe "managed_state_var enhancements" do	
+describe "managed_state_var enhancements" do
 	it "shouldn't break managed_state_vars" do
 		class MR232DeviceSubclass < Wescontrol::RS232Device
 			managed_state_var :input, 
@@ -68,7 +71,7 @@ describe "do responses" do
 			[:volume, /Vol(\d)/, $proc],
 		]
 	end
-	it "should properly match regexps" do
+	it "should properly match regexps, strings and procs" do
 		class MR232DeviceSubclass < Wescontrol::RS232Device
 			managed_state_var :input, 
 				:type => 'option', 
@@ -88,6 +91,8 @@ describe "do responses" do
 			responses do
 				match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i}
 				match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
+				match :something, "hello", proc{ self.volume = 22 }
+				match :else, proc {|x| x.to_i != 0}, proc{|m| self.volume = m.to_i}
 			end
 		end
 		ds = MR232DeviceSubclass.new("Extron", :port => '/dev/null')
@@ -95,6 +100,10 @@ describe "do responses" do
 		ds.read "Vol12\r\n"
 		ds.input.should == 4
 		ds.volume.should == 0.12
+		ds.read "hello\r\n"
+		ds.volume.should == 22
+		ds.read "512\r\n"
+		ds.volume.should == 512
 	end
 end
 
@@ -112,9 +121,9 @@ describe "do requests" do
 			end
 
 			requests do
-				send :input, "I\r\n", 0.5
-				send :volume, "V\r\n", 1
-				send :mute, "Z\r\n", 0.5
+				send :input, "I\r\n", 1.5
+				send :volume, "V\r\n", 0.5
+				send :mute, "Z\r\n", 1.0
 			end
 			
 			def send_string string
@@ -130,7 +139,7 @@ describe "do requests" do
 			}
 			ds.run
 		}
-		ds.string_array[0..3].sort.should == ["I\r\n", "V\r\n", "V\r\n", "Z\r\n"]
+		ds.string_array[0..5].should == ["I\r\n", "V\r\n", "Z\r\n", "I\r\n", "Z\r\n", "I\r\n"]
 	end
 end
 

@@ -110,7 +110,7 @@ module Wescontrol
 	# System defined config vars, on the other hand, are not modifiable by the user. They are
 	# specified in the device definition (as can be seen here) and cannot change. You can add
 	# whatever configuration variables you need, though they should be named using lowercase
-	# letters connected by underscores. Configuration information is accessible through the
+	# letters connected\_by\_underscores. Configuration information is accessible through the
 	# {Device#configuration} method, which returns a hash mapping between a symbol of the name
 	# to the value. More information in the {Device::configure} method definition.
 	# 
@@ -351,7 +351,7 @@ module Wescontrol
 		# you supply a type that is not defined in the system, a simple text box will be used.
 		# 
 		# You can add whatever configuration variables you need, though they should be named using 
-		# lowercase letters connected by underscores. Configuration information is accessible through the
+		# lowercase letters connected\_by\_underscores. Configuration information is accessible through the
 		# {Device#configuration} method, which returns a hash mapping between a symbol of the name
 		# to the value.
 		# 
@@ -401,7 +401,7 @@ module Wescontrol
 		# creating accessor methods, if supplied an :action parameter state_var will
 		# create a set_varname method using the proc supplied.
 		# @param [Symbol] name The name for the state var. Should follow the general
-		# 	naming conventions: all lowercase, with multiple words connected by underscores.
+		# 	naming conventions: all lowercase, with multiple words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the state_var
 		# @option options [Symbol] :type [mandatory] the type of the variable; this is
 		# 	used by the web interface to decide what kind of interface to show. Possible
@@ -413,7 +413,7 @@ module Wescontrol
 		# 	variables are visible and in which order they are displayed. For a particular
 		# 	device, the var with the lowest :display_order is ranked highest, followed by
 		# 	the next lowest up to 6. Leave out if the variable should not be shown.
-		# @option options [Array<#to_json>] :options If :option is select for type, the
+		# @option options [Array<#to_json>] :options If :option is selected for type, the
 		# 	elements in this array serve as the allowable options.
 		# @option options [Proc] :action If a proc is supplied to :action, then state_var
 		# 	will automatically create a set_varname method (where varname is the name of
@@ -496,7 +496,7 @@ module Wescontrol
 		# var to compute this information, as seen in the example. Virtual vars are updated whenever 
 		# the variables they depend on either state vars or other virtual vars) are updated.
 		# @param [Symbol] name The name for the virtual var. Should follow the general
-		# 	naming convention: all lowercase, with multiple words connected by underscores.
+		# 	naming convention: all lowercase, with multiple words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the virtual var
 		# @option options [Array<Symbol>] :depends_on [mandatory] An array of the variables' names that
 		# 	this one depends on. Note that these must have been defined already.
@@ -527,10 +527,35 @@ module Wescontrol
 		
 		# @return [Hash{Symbol => Object}] A map from command name to options
 		def self.commands; @command_vars; end
+		
 		# @return [Hash{Symbol => Object}] A map from command name to options
 		def commands; self.class.commands; end
 		
-		# 
+		# This method, when called in a class definition, creates a new command for the device.
+		# Commands are used for things that need to be controlled directly, rather than by
+		# changing an associated state. For example, a camera may have a "zoom in" and "zoom out"
+		# feature but no command for setting the zoom level directly. However, for situation
+		# where the command is changing an obverable state, like with on/off, a state var should
+		# be used instead. In addition to calling `command`, you should create a method with the
+		# same name as the command—this will be called when the command is activated by the user.
+		# Alternatively, you can pass in a proc to :action which will create this method
+		# automatically.
+		# @param [Symbol] name The name for the device. Should follow the general nameing convention:
+		# 	all lowercase, with multiple words connected\_by\_underscores.
+		# @param [Hash] options Options for configuring the command
+		# @option options [Symbol, Array<Symbol>] type The type of the argument. If only one argument,
+		# 	supply it directly; if multiple, supply an array of types. These types are used by the
+		# 	web interface to determine what kind of interface to display. Possible values are :boolean,
+		# 	:string, :percentage, :number, :decimal, and :option
+		# @option options [Array<#to_json>] options If :option is selected for type, the elements in 
+		# 	this array serve as the allowable options.
+		# @option options [Proc] action If a proc is supplied to action, then `command` will automatically
+		# 	create a method with the same name as supplied; this method will be called whenever a user
+		# 	triggers the command, so it should communicate with the device and take the desired action.
+		# @example
+		# 	command :zoom_in, :type => :percentage, :action => proc{|speed|
+		# 		send "zoom +#{speed}"
+		# 	}
 		def self.command name, options = {}
 			if options[:action].class == Proc
 				define_method name, &options[:action]
@@ -539,10 +564,15 @@ module Wescontrol
 			@command_vars[name] = options
 		end
 		
+		# Returns a string representation of the device
+		# @return [String] A string representation of the device
 		def inspect
 			"<#{self.class.to_s}:0x#{object_id.to_s(16)}>"
 		end
 		
+		# @return [Hash] A hash which, when converted to_json, is the CouchDB representation
+		# 	of the device. Includes all information neccessary to recreate the device on the
+		# 	next restart.
 		def to_couch
 			hash = {:state_vars => {}, :config => {}, :commands => {}}
 			
@@ -566,6 +596,11 @@ module Wescontrol
 
 			return hash
 		end
+		
+		# @param [Hash] hash A hash (probably created by {Device#to_couch}) which contains
+		# 	the information neccessary to recreate a device
+		# @return [Device] A new Device instance created with all of the information
+		# 	in the hash passed in (which should have been created by {Device#to_couch}).
 		def self.from_couch(hash)
 			config = {}
 			hash['attributes']['config'].each{|var, value|
@@ -595,6 +630,13 @@ module Wescontrol
 				device.instance_variable_set("@#{name}", value)
 			}
 			return device
+		end
+		
+		# @param [String] id The id of a CouchDB document for the device
+		# @return [Device] A device instance created by downloading the specified CouchDB
+		# 	document and running {Device::from_couch} on it.
+		def self.from_doc(id)
+			from_couch(CouchRest.database(@database).get(id))
 		end
 		
 		# Registers an error, which involves sending it as an event
@@ -632,10 +674,10 @@ module Wescontrol
 			) if @amq_responder
 		end
 		
-		def self.from_doc(id)
-			from_couch(CouchRest.database(@database).get(id))
-		end
-		
+		# Saves the current state of the device to CouchDB and sends updates on the update queue
+		# if changed is passed in
+		# @param [Symbol] changed The variable whose changing prompted this save
+		# @param [#to_json] old_val The value of `changed` before it, well, changed
 		def save changed = nil, old_val = nil
 			retried = false
 			begin
@@ -666,11 +708,16 @@ module Wescontrol
 			end
 		end
 		
+		# @return [EventMachine::Deferrable] A deferrable which is notified when a state var
+		# 	changes. Look at the EventMachine documentation for more information about deferrables,
 		def register_for_changes
 			@change_deferrable ||= EM::DefaultDeferrable.new
 			@change_deferrable
 		end
 		
+		# Takes in a block which is specified as the callback for the deferrable returned by
+		# {Device#register_for_changes} automatically whenever a state var changes. Thus, the
+		# code in the block will be run every time a change occurs, rather than just once.
 		def auto_register_for_changes(&block)
 			@auto_register ||= []
 			@auto_register << block
@@ -679,9 +726,11 @@ module Wescontrol
 	end
 end
 
-# These methods dup all objects inside the hash/array as well as the data structure itself
-# However, because we don't check for cycles, they will cause an infinite loop if present.
+# @private
 class Object
+	# @private
+	# These methods dup all objects inside the hash/array as well as the data structure itself
+	# However, because we don't check for cycles, they will cause an infinite loop if present.
 	def deep_dup
 		begin
 			self.dup
@@ -691,18 +740,26 @@ class Object
 	end
 end
 
+# @private
 class Hash
+	# @private
+	# Converts all of the keys of a hash to symbols in place
 	def symbolize_keys!
 		t = self.dup
 		self.clear
 		t.each_pair{|k, v| self[k.to_sym] = v}
 		self
 	end
+	# @private
+	# @return [Hash] A copy of the hash with all keys converted to symbols
 	def symbolize_keys
 		t = {}
 		self.each_pair{|k, v| t[k.to_sym] = v}
 		t
 	end
+	# @private
+	# These methods dup all objects inside the hash/array as well as the data structure itself
+	# However, because we don't check for cycles, they will cause an infinite loop if present.
 	def deep_dup
 		new_hash = {}
 		self.each{|k, v| new_hash[k] = v.deep_dup}
@@ -710,7 +767,11 @@ class Hash
 	end
 end
 
+# @private
 class Array
+	# @private
+	# These methods dup all objects inside the hash/array as well as the data structure itself
+	# However, because we don't check for cycles, they will cause an infinite loop if present.
 	def deep_dup
 		self.collect{|x| x.deep_dup}
 	end

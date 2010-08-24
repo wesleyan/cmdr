@@ -4,8 +4,14 @@ require_relative '../lib/roomtrol/constants.rb'
 require 'eventmachine'
 require 'mq'
 require 'couchrest'
-# Time to add your specs!
-# http://rspec.info/
+
+Spec::Runner.configure do |config|
+	#For some reason in Ruby 1.9.2 class definition constants leak between tests, causing errors
+	config.before(:each) {
+		Object.send(:remove_const, :DeviceSubclass) if Object.constants.include? :DeviceSubclass
+		Object.send(:remove_const, :DeviceSubSubclass) if Object.constants.include? :DeviceSubSubclass
+	}
+end
 
 describe "allow configuration" do
 	it "should respond to configure" do
