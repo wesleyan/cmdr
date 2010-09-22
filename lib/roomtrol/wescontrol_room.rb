@@ -80,5 +80,31 @@ module Wescontrol
 			end
 			db.save_doc(doc)
 		end
+		
+		def self.create_room(db_uri)
+			db = CouchRest.database(db_uri)
+			
+			number = 0
+			serial_ports = `ls /dev/serial/by-id`.split("\n").collect{|port|
+				{
+					"name" => "port#{number}",
+					"value" => port
+				}
+				number += 1
+			}
+			
+			unless `/dev | grep lircd` == ""
+				serial_ports << {"name" => "IR Port", "value" => "/dev/lircd"}
+			end
+			
+			doc = {
+				:class => "Room",
+				:attributes => {
+					"name": "Unnamed room",
+					"mac": MAC.addr,
+					"ports": serial_ports
+				}
+			}
+		end
 	end
 end
