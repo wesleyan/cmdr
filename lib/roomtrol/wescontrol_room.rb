@@ -104,9 +104,12 @@ module Wescontrol
 				serial_ports << {"name" => "IR Port", "value" => "/dev/lircd"}
 			end
 			
-			doc = {
-				:id => JSON.parse(RestClient.get("#{db.server.uri}/_uuids"))["uuids"][0],
+			building_id = "cc7e9b6fe3e2757deba97d8d83157515"
+			
+			room_doc = {
+				#:id => JSON.parse(RestClient.get("#{db.server.uri}/_uuids"))["uuids"][0],
 				:class => "Room",
+				:belongs_to => building_id,
 				:attributes => {
 					:name => "Unnamed room",
 					:mac => MAC.addr,
@@ -114,7 +117,16 @@ module Wescontrol
 				}
 			}
 			
-			db.save_doc(doc)
+			building_doc = {
+				'_id' => building_id,
+				:class => "Building",
+				:attributes => {
+					:name => "Uncategorized"
+				}
+			}
+			
+			db.save_doc(room_doc)
+			db.save_doc(building_doc)
 		end
 	end
 end
