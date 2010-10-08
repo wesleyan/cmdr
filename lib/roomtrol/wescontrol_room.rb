@@ -1,11 +1,17 @@
 module Wescontrol
 	class WescontrolRoom < Wescontrol
 		def initialize
+			retried = false
 			begin
 				@controller = Room.find_by_mac(MAC.addr)
 				throw "Room Does Not Exist" unless @controller
 			rescue
-				raise "The room has not been added the database"
+				unless retried
+					Room.create_room
+					retried = true
+					retry
+				end
+				raise "The room could not be added to the database. Is CouchDB running?"
 			end
 
 			device_hashes = Room.devices(@controller["id"])
@@ -18,7 +24,7 @@ module Wescontrol
 		@database = "http://localhost:5984/rooms"
 		
 		def self.find_by_mac(mac, db_uri = @database)
-			db = CouchRest.database(db_uri)
+			db = CouchRest.database!(db_uri)
 			retried = false
 			begin
 				db.get("_design/room").view("by_mac", {:key => mac})['rows'][0]
@@ -35,7 +41,7 @@ module Wescontrol
 		end
 		
 		def self.devices(room, db_uri = @database)
-			db = CouchRest.database(db_uri)
+			db = CouchRest.database!(db_uri)
 			retried = false
 			begin
 				db.get("_design/room").view("devices_for_room", {:key => room})['rows']
@@ -52,7 +58,7 @@ module Wescontrol
 		end
 		
 		def self.define_db_views(db_uri)
-			db = CouchRest.database(db_uri)
+			db = CouchRest.database!(db_uri)
 
 			doc = {
 				"_id" => "_design/room",
@@ -79,6 +85,48 @@ module Wescontrol
 			rescue
 			end
 			db.save_doc(doc)
+		end
+		
+		def self.create_room(db_uri = @database)
+			puts "Creating room"
+			db = CouchRest.database!(db_uri)
+			
+			number = 0
+			serial_ports = `ls /dev/serial/by-id`.split("\n").collect{|port|
+				{
+					"name" => "port#{number}",
+					"value" => port
+				}
+				number += 1
+			}
+			
+			unless `ls /dev | grep lircd` == ""
+				serial_ports << {"name" => "IR Port", "value" => "/dev/lircd"}
+			end
+			
+			building_id = "cc7e9b6fe3e2757deba97d8d83157515"
+			
+			room_doc = {
+				#:id => JSON.parse(RestClient.get("#{db.server.uri}/_uuids"))["uuids"][0],
+				:class => "Room",
+				:belongs_to => building_id,
+				:attributes => {
+					:name => "Unnamed room",
+					:mac => MAC.addr,
+					:ports => serial_ports
+				}
+			}
+			
+			building_doc = {
+				'_id' => building_id,
+				:class => "Building",
+				:attributes => {
+					:name => "Uncategorized"
+				}
+			}
+			
+			db.save_doc(room_doc)
+			db.save_doc(building_doc)
 		end
 	end
 end
