@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
 	s.name = 'roomtrol'
-	s.version = '0.4.1'
+	s.version = '0.4.2'
 	s.summary = "Roomtrol daemon"
 	s.description = %{Roomtrol daemon and related classes}
 	s.files = [Dir['lib/**/*.rb'],
