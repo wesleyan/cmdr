@@ -1,8 +1,6 @@
 require 'mq'
 require 'fileutils'
 
-$SAFE = 1
-
 module RoomtrolVideo
 	# The command to start recording video
 	RECORD_CMD = %q?
@@ -216,7 +214,7 @@ module RoomtrolVideo
 					else
 						@restart_count = @restart_count.to_i - 1
 						start_command PLAY_CMD
-						fanout_send({
+						send_fanout({
 							:message => :recording_died,
 							:restart_count => @restart_count
 						})
@@ -232,7 +230,7 @@ module RoomtrolVideo
 						FileUtils.mkdir_p file[0]
 						new_filename = "#{file.join("/")}.#{@restart_count}"
 						@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
-						fanout_send({
+						send_fanout({
 							:message => :recording_died,
 							:restart_count => @restart_count,
 							:new_file => new_filename
@@ -248,7 +246,7 @@ module RoomtrolVideo
 	
 		private
 		def state= new_state
-			fanout_send({
+			send_fanout({
 				:message => :state_changed,
 				:from => @state,
 				:to => new_state
@@ -270,7 +268,8 @@ module RoomtrolVideo
 		end
 	
 		def alive? pid
-			Process.new(self.pid).exists?
+			#double exclamation mark returns true for a non-nil value
+			!!::Process.kill(0, pid) rescue false
 		end
 	
 		def start_command cmd
