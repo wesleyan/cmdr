@@ -160,20 +160,37 @@ module RoomtrolVideo
 				mq = MQ.new
 				@fanout = MQ.fanout(FANOUT_EXCHANGE)
 				mq.queue(@send_queue).subscribe do |msg|
+					DaemonKit.logger.debug("Received: #{msg}")
 					req = JSON.parse(msg)
 					resp = {:id => req["id"]}
-					case req['get']
-					when "start_time"
-						resp[:result] = @recording_start_time
-					when "current_state"
-						resp[:result] = @state
+					if req['get']
+						case req['get']
+						when "start_time"
+							resp[:result] = @recording_start_time
+						when "current_state"
+							resp[:result] = @state
+						else
+							resp[:error] = "Invalid request"
+						end
+					elsif req['command']
+						case req['command']
+						when "start_playing"
+							resp[:result] = !!start_playback
+						when "start_recording"
+							resp[:result] = !!start_recording
+							resp[:start_time] = @recording_start_time
+						when "stop"
+							resp[:result] == !!stop
+						else
+							resp[:error] = "Invalid command"
+						end
 					else
-						resp[:error] = "Invalid request"
+						resp[:error] = "Invalid message"
 					end
 					mq.queue(req["queue"]).publish(resp.to_json)
 				end
 				EM.add_periodic_timer(1.0/WATCH_FREQUENCY) do
-					watch
+					#watch
 				end
 			end
 		end
@@ -200,7 +217,9 @@ module RoomtrolVideo
 		end
 	
 		def stop
+			puts "Stopping #{@current_pid}"
 			if @current_pid
+				self.state = STOPPED_STATE
 				kill_command @current_pid
 			end
 		end
@@ -209,16 +228,19 @@ module RoomtrolVideo
 			case @state
 			when PLAYING_STATE
 				if !alive?(@current_pid)
+					DaemonKit.logger.debug("Playing but not alive on #{@current_pid}")
 					if @restart_count <= 0
 						self.state = STOPPED_STATE
 					else
 						@restart_count = @restart_count.to_i - 1
-						start_command PLAY_CMD
+						@current_pid = start_command PLAY_CMD
 						send_fanout({
 							:message => :recording_died,
 							:restart_count => @restart_count
 						})
 					end
+				else
+					@restart_count = RESTART_LIMIT
 				end
 			when RECORDING_STATE
 				if !alive?(@current_pid)
@@ -236,6 +258,8 @@ module RoomtrolVideo
 							:new_file => new_filename
 						})
 					end
+				else
+					@restart_count = RESTART_LIMIT
 				end
 			else
 				if !alive?(@current_pid)
@@ -257,19 +281,19 @@ module RoomtrolVideo
 		def kill_command pid
 			5.times{|time|
 				begin
-					::Process.kill(0, pid)
+					Process.kill(-2, pid)
 				rescue Errno::ESRCH
 					return
 				end
-				sleep 1
+				sleep 0.1
 			}
 		
 			Process.kill('KILL', pid) rescue nil
 		end
 	
 		def alive? pid
-			#double exclamation mark returns true for a non-nil value
-			!!::Process.kill(0, pid) rescue false
+			#double exclamation mark returns true for a non-false values
+			!!Process.kill(0, pid) rescue false
 		end
 	
 		def start_command cmd
@@ -279,22 +303,26 @@ module RoomtrolVideo
 					STDOUT.reopen(w)
 					r.close
 					pid = fork do
+						#Process.setsid
+						#Dir.chdir '/'
 						$0 = cmd
 						STDIN.reopen("/dev/null")
 						STDOUT.reopen("/dev/null")
-						STDERR.reopen("/dev/null")
+						STDERR.reopen(STDOUT)
 						3.upto(256){|fd| IO.new(fd).close rescue nil}
+						exec cmd
 					end
 					puts pid.to_s
 				end
 				Process.waitpid(outside_pid, 0)
 				w.close
-				pid = r.gets.chomp
+				pid = r.gets.chomp.to_i
 			ensure
 				r.close rescue nil
 				w.close rescue nil
 			end
-			pid
+			puts "Starting command as #{child_pids(pid)[0]}"
+			child_pids(pid)[0]
 		end
 	
 		def filename_for_time(time)
@@ -304,6 +332,11 @@ module RoomtrolVideo
 		end
 		def send_fanout hash
 			@fanout.publish(hash.to_json)
+		end
+		def child_pids pid
+			`ps -ef | grep #{pid}`.split("\n").collect{|line| line.split(/\s+/)}.reject{|parts| 
+				parts[2] != pid.to_s || parts[-2] == "grep"
+			}.collect{|parts| parts[1]}
 		end
 	end
 end
