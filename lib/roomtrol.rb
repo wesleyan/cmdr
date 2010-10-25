@@ -34,16 +34,16 @@ module Wescontrol
 				begin
 					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
 					Thread.new {
-						begin
+						#begin
 							device.run
-						rescue
-							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
-							retry
-						end
+						#rescue
+						#	DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+						#	retry
+						#end
 					}
 					device
 				rescue
-					DaemonKit.logger.error "Failed to create device: #{$!}"
+					DaemonKit.logger.error "Failed to create device #{hash['value']}: #{$!}"
 				end
 			}.compact
 			
