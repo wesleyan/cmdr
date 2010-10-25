@@ -190,7 +190,7 @@ module RoomtrolVideo
 					mq.queue(req["queue"]).publish(resp.to_json)
 				end
 				EM.add_periodic_timer(1.0/WATCH_FREQUENCY) do
-					#watch
+					watch
 				end
 			end
 		end
@@ -250,7 +250,7 @@ module RoomtrolVideo
 						@restart_count = @restart_count.to_i - 1
 						file = filename_for_time(@rec_started)
 						FileUtils.mkdir_p file[0]
-						new_filename = "#{file.join("/")}.#{@restart_count}"
+						new_filename = "#{file.join("/")}.#{RESTART_LIMIT-@restart_count}"
 						@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
 						send_fanout({
 							:message => :recording_died,
@@ -281,7 +281,7 @@ module RoomtrolVideo
 		def kill_command pid
 			5.times{|time|
 				begin
-					Process.kill(-2, pid)
+					Process.kill(2, pid)
 				rescue Errno::ESRCH
 					return
 				end
@@ -322,7 +322,7 @@ module RoomtrolVideo
 				w.close rescue nil
 			end
 			puts "Starting command as #{child_pids(pid)[0]}"
-			child_pids(pid)[0]
+			child_pids(pid)[0].to_i
 		end
 	
 		def filename_for_time(time)
