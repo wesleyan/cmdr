@@ -9,50 +9,73 @@
 #}
 #---
 
-require 'drb/drb'
+require 'uuidtools'
+
 class VideoRecorder < Wescontrol::Device
-	
-	SERVER_URI = "drbunix:///tmp/god.17165.sock"
-	
-	state_var :recording,         :type => :boolean
+	SEND_QUEUE = "roomtrol:video:send:queue"
+	FANOUT_QUEUE = "roomtrolvideo:messages"
+	state_var :state, :type => :option, :options => {:playing, :recording, :stopped}
 	state_var :recording_started, :type => :time, :editable => false
 	state_var :recording_stopped, :type => :time, :editable => false
+	state_var :restarts_remaining,:type => :integer, :editable => false
 	
 	def initialize(name, options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
 		DaemonKit.logger.info "Initializing Video Recorder #{options[:name]} on #{options[:port]}"
-		DaemonKit.logger.info "starting god:"
+		@response_queue = "roomtrol:#{name}:video_resp"
+		@requests = {}
 		super(name, options)
 	end
 	
 	def run
-		DaemonKit.logger.info `god`
-		@_god = DRbObject.new_with_uri(SERVER_URI)
+		mq.queue(@response_queue).subscribe do |json|
+			msg = JSON.load(json)
+			if deferrable = @requests.delete msg["id"]
+				deferrable.set_deferred_status(msg["result"] == true ? :succeeded : :failed)
+			else
+				DaemonKit.logger.debug("Unhandled message: #{msg}")
+			end
+		end
+		
+		mq.queue(FANOUT_QUEUE).subscribe do |json|
+			msg = JSON.load(json)
+			DaemonKit.logger.debug("Received on fanout: #{msg}")
+			case msg["message"]
+			when "state_changed"
+				self.state = msg["to"].to_sym
+				time = DateTime.parse(msg["time"])
+				case msg["to"]
+				when "recording"
+					self.recording_started = time
+				when "stopped"
+					self.recording_stopped = time
+				end
+			when "playback_died"
+				self.restarts_remaining = msg["restarts_left"]
+			when "recording_died"
+				self.restarts_remaining = msg["restarts_left"]
+			end
+		end
 		super
 	end
 		
-	def set_recording(on)
-		if on
-			if !@_god.ping
-				DaemonKit.logger.debug puts "Starting god"
-				`god`
-			end
-			if !@_god.status || !@_god.status["recorder"]
-				`god load #{File.dirname(__FILE__)}/../../bin/encoder_watch.god`
-			end
-			if @_god.status && @_god.status["recorder"][:state] == :unmonitored
-				DaemonKit.logger.debug "Starting recorder"
-				self.recording_started = Time.now
-				`god start recorder`
-			end
+	def set_state(state)
+		req = {
+			:id => UUIDTools::UUID.random_create.to_s,
+			:queue => @response_queue
+		}
+		case state.to_s
+		when "playing" then req[:command] = "start_playing"
+		when "recording" then req[:command] = "start_recording"
+		when "stopped" then req[:command] = "stop"
 		else
-			if @_god.status && @_god.status["recorder"][:state] != :unmonitored
-				DaemonKit.logger.debug "Stopping recorder"
-				self.recording_stopped = Time.now
-				`god stop recorder`
-			end
+			DaemonKit.logger.error("unknown state: #{state}")
+			return
 		end
-		@_god && @_god.status ? @_god.status["recorder"][:state] != :unmonitored : nil
+		deferrable = EM::DefaultDeferrable.new
+		@requests[req[:id]] = deferrable
+		mq.queue(SEND_QUEUE).publish(req.to_json)
+		deferrable
 	end
 end
