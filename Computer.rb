@@ -52,7 +52,7 @@ class Computer < Wescontrol::Device
 		
 		Thread.new {
 			while true
-				self.reachable = Ping.pingecho(self.ip_address)
+				self.reachable = Ping.pingecho(self.ip_address) rescue nil
 				sleep 5
 			end
 		}
