@@ -2,22 +2,6 @@ require 'mq'
 require 'fileutils'
 
 module RoomtrolVideo
-	# The command to start recording video
-	RECORD_CMD = %q?
-	gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
-	    tee name=t_vid ! queue ! \
-	    xvimagesink sync=false t_vid. ! queue ! \
-	    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
-	    alsasrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
-	    audioconvert ! queue ! mux. avimux name=mux ! \
-	    filesink location=OUTPUT_FILE?
-    
-	# The command to start video playback, but not record
-	PLAY_CMD =  %q?
-	gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
-	    queue ! \
-	    xvimagesink sync=false . ?
-
 	# This class is reponsible for recording video and playing back the current state of
 	# the camera. It is controlled over AMQP. There are several kinds of messages you can
 	# send over the wire, all of which should be encoded via JSON. In each of these messages,
@@ -99,7 +83,8 @@ module RoomtrolVideo
 	# 	!!!json
 	# 	{
 	# 		id: "D62F993B-E036-417C-948B-FEA389480984",
-	# 		result: true #on success, false on failure
+	# 		result: true, #on success, false on failure
+	# 		stop_time: "20-10-19 17:50:29 -0400"
 	# 	}
 	#
 	#
@@ -114,19 +99,33 @@ module RoomtrolVideo
 	# 		to: "stopped"
 	# 	}
 	#
-	# 	!!!json
 	# 	{
 	#		message: "playback_died",
 	# 		restarts_left: 4
 	# 	}
 	#
-	# 	!!!json
 	# 	{
 	# 		message: "recording_died",
 	# 		restarts_left: 3
 	# 		new_file: "/var/video/2010/10/20/04.10.50.avi.7"
 	# 	}
 	class RemoteRecorder
+		# The command to start recording video
+		RECORD_CMD = %q?
+		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+		    tee name=t_vid ! queue ! \
+		    xvimagesink sync=false t_vid. ! queue ! \
+		    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
+		    alsasrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
+		    audioconvert ! queue ! mux. avimux name=mux ! \
+		    filesink location=OUTPUT_FILE?
+
+		# The command to start video playback, but not record
+		PLAY_CMD =  %q?
+		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+		    queue ! \
+		    xvimagesink sync=false . ?
+		
 		# Currently playing video back
 		PLAYING_STATE = :playing
 		# Currently recording video
@@ -147,9 +146,8 @@ module RoomtrolVideo
 		# 	be sent from the recorder to the client. The client should watch this queue.
 		# @param [String] send_queue The name of the queue over which the client would like
 		# 	to send messages to the recorder. It will watch this queue.
-		def initialize response_queue, send_queue
+		def initialize send_queue
 			@state = STOPPED_STATE
-			@response_queue = response_queue
 			@send_queue = send_queue
 		end
 		
@@ -160,15 +158,32 @@ module RoomtrolVideo
 				mq = MQ.new
 				@fanout = MQ.fanout(FANOUT_EXCHANGE)
 				mq.queue(@send_queue).subscribe do |msg|
+					DaemonKit.logger.debug("Received: #{msg}")
 					req = JSON.parse(msg)
 					resp = {:id => req["id"]}
-					case req['get']
-					when "start_time"
-						resp[:result] = @recording_start_time
-					when "current_state"
-						resp[:result] = @state
+					if req['get']
+						case req['get']
+						when "start_time"
+							resp[:result] = @recording_start_time
+						when "current_state"
+							resp[:result] = @state
+						else
+							resp[:error] = "Invalid request"
+						end
+					elsif req['command']
+						case req['command']
+						when "start_playing"
+							resp[:result] = !!start_playback
+						when "start_recording"
+							resp[:result] = !!start_recording
+							resp[:start_time] = @recording_start_time
+						when "stop"
+							resp[:result] == !!stop
+						else
+							resp[:error] = "Invalid command"
+						end
 					else
-						resp[:error] = "Invalid request"
+						resp[:error] = "Invalid message"
 					end
 					mq.queue(req["queue"]).publish(resp.to_json)
 				end
@@ -191,7 +206,7 @@ module RoomtrolVideo
 			if @current_pid
 				kill_command @current_pid
 			end
-			@rec_started = Time.now
+			@recording_start_time = Time.now
 			@restart_count = RESTART_LIMIT
 			self.state = RECORDING_STATE
 			file = filename_for_time(@rec_started)
@@ -200,7 +215,9 @@ module RoomtrolVideo
 		end
 	
 		def stop
+			puts "Stopping #{@current_pid}"
 			if @current_pid
+				self.state = STOPPED_STATE
 				kill_command @current_pid
 			end
 		end
@@ -209,16 +226,19 @@ module RoomtrolVideo
 			case @state
 			when PLAYING_STATE
 				if !alive?(@current_pid)
+					DaemonKit.logger.debug("Playing but not alive on #{@current_pid}")
 					if @restart_count <= 0
 						self.state = STOPPED_STATE
 					else
 						@restart_count = @restart_count.to_i - 1
-						start_command PLAY_CMD
+						@current_pid = start_command PLAY_CMD
 						send_fanout({
 							:message => :recording_died,
 							:restart_count => @restart_count
 						})
 					end
+				else
+					@restart_count = RESTART_LIMIT
 				end
 			when RECORDING_STATE
 				if !alive?(@current_pid)
@@ -228,7 +248,7 @@ module RoomtrolVideo
 						@restart_count = @restart_count.to_i - 1
 						file = filename_for_time(@rec_started)
 						FileUtils.mkdir_p file[0]
-						new_filename = "#{file.join("/")}.#{@restart_count}"
+						new_filename = "#{file.join("/")}.#{RESTART_LIMIT-@restart_count}"
 						@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
 						send_fanout({
 							:message => :recording_died,
@@ -236,6 +256,8 @@ module RoomtrolVideo
 							:new_file => new_filename
 						})
 					end
+				else
+					@restart_count = RESTART_LIMIT
 				end
 			else
 				if !alive?(@current_pid)
@@ -249,7 +271,8 @@ module RoomtrolVideo
 			send_fanout({
 				:message => :state_changed,
 				:from => @state,
-				:to => new_state
+				:to => new_state,
+				:time => new_state == RECORDING_STATE ? @recording_start_time : Time.now
 			})
 			@state = new_state
 		end
@@ -257,19 +280,19 @@ module RoomtrolVideo
 		def kill_command pid
 			5.times{|time|
 				begin
-					::Process.kill(0, pid)
+					Process.kill(2, pid)
 				rescue Errno::ESRCH
 					return
 				end
-				sleep 1
+				sleep 0.1
 			}
 		
 			Process.kill('KILL', pid) rescue nil
 		end
 	
 		def alive? pid
-			#double exclamation mark returns true for a non-nil value
-			!!::Process.kill(0, pid) rescue false
+			#double exclamation mark returns true for a non-false values
+			!!Process.kill(0, pid) rescue false
 		end
 	
 		def start_command cmd
@@ -279,22 +302,26 @@ module RoomtrolVideo
 					STDOUT.reopen(w)
 					r.close
 					pid = fork do
+						#Process.setsid
+						#Dir.chdir '/'
 						$0 = cmd
 						STDIN.reopen("/dev/null")
 						STDOUT.reopen("/dev/null")
-						STDERR.reopen("/dev/null")
+						STDERR.reopen(STDOUT)
 						3.upto(256){|fd| IO.new(fd).close rescue nil}
+						exec cmd
 					end
 					puts pid.to_s
 				end
 				Process.waitpid(outside_pid, 0)
 				w.close
-				pid = r.gets.chomp
+				pid = r.gets.chomp.to_i
 			ensure
 				r.close rescue nil
 				w.close rescue nil
 			end
-			pid
+			puts "Starting command as #{child_pids(pid)[0]}"
+			child_pids(pid)[0].to_i
 		end
 	
 		def filename_for_time(time)
@@ -304,6 +331,11 @@ module RoomtrolVideo
 		end
 		def send_fanout hash
 			@fanout.publish(hash.to_json)
+		end
+		def child_pids pid
+			`ps -ef | grep #{pid}`.split("\n").collect{|line| line.split(/\s+/)}.reject{|parts| 
+				parts[2] != pid.to_s || parts[-2] == "grep"
+			}.collect{|parts| parts[1]}
 		end
 	end
 end
