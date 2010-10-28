@@ -22,11 +22,11 @@ module Wescontrol
 		}
 		
 		def initialize
-			DaemonKit.logger.info("Starting WescontrolHTTP")
-			@queue = "roomtrol:http:#{self.object_id}"
+			@queue_name = "roomtrol:http:#{self.object_id}"
+			@queue = @amq.queue(@queue_name)
 			@deferred_responses = {}
 			@amq = MQ.new
-			@amq.queue(@queue).subscribe{|json|
+			@queue.subscribe{|json|
 				msg = JSON.parse(json)
 				DaemonKit.logger.debug("Received HTTP response: #{msg}")
 				if @deferred_responses[msg["id"]]
@@ -34,6 +34,10 @@ module Wescontrol
 				end
 			}
 		end
+		
+		def unbind
+			@queue.unsubscribe
+	    end
 		
 		def process_http_request
 			resp = EventMachine::DelegatedHttpResponse.new( self )
@@ -102,7 +106,7 @@ module Wescontrol
 			DaemonKit.logger.debug("Running get on #{path}")
 			device_req = {
 				:id => UUIDTools::UUID.random_create.to_s,
-				:queue => @queue,
+				:queue => @queue_name,
 				:type => :state_get,
 				:var => path[2]
 			}
@@ -117,7 +121,7 @@ module Wescontrol
 				data = JSON.parse(@http_post_content)
 				device_req = {
 					:id => UUIDTools::UUID.random_create.to_s,
-					:queue => @queue
+					:queue => @queue_name
 				}
 				if data['value']
 					device_req[:type] = :state_set

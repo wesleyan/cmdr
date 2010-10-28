@@ -44,9 +44,8 @@ module Wescontrol
 		end
 		
 		def start
-			#puts @devices.inspect
 			#start each device
-			WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
+			WescontrolHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				EventMonitor.run
