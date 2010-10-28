@@ -39,7 +39,7 @@ class Computer < Wescontrol::Device
 	end
 	#attempt to turn on the computer via WoL
 	command :start, :action => proc{
-		w = Wol::WakeOnLan.new(:address => self.ip_address, :mac => self.mac_address)
+		w = Wol::WakeOnLan.new(:address => configuration[:ip_address], :mac => self.mac_address)
 		w.wake
 	}
 	
@@ -52,7 +52,7 @@ class Computer < Wescontrol::Device
 		
 		Thread.new {
 			while true
-				self.reachable = Ping.pingecho(self.ip_address) rescue nil
+				self.reachable = Ping.pingecho(configuration[:ip_address]) rescue nil
 				sleep 5
 			end
 		}
