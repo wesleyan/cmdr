@@ -674,7 +674,7 @@ module Wescontrol
 			message[:update] = true
 			message[:severity] ||= 0.1
 			message[:time] ||= Time.now.to_i
-			@amq_responder.queue(EVENT_QUEUE, :durable => true).publish(
+			@amq_responder.queue(EVENT_QUEUE).publish(
 				message.to_json,
 				:persistent => true
 			) if @amq_responder
