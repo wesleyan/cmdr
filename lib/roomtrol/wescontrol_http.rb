@@ -127,13 +127,13 @@ module Wescontrol
 					device_req[:type] = :state_set
 					device_req[:var] = path[2]
 					device_req[:value] = data['value']
-				else
+				elsif data['command']
 					device_req[:type] = :command
 					device_req[:method] = path[2]
-					device_req[:args] = data['args']
+					device_req[:args] = data['args'] if data['args']
 				end
 				defer_device_operation resp, device_req, path[1]
-			rescue JSON::ParserError
+			rescue JSON::ParserError, TypeError
 				resp.status = 400
 				content = {"error" => "bad_json"}
 				resp.send_response
