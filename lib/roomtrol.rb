@@ -32,22 +32,10 @@ module Wescontrol
 			@devices = device_hashes.collect{|hash|
 				begin
 					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
-					Thread.new {
-						begin
-							device.run
-						rescue
-							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
-							retry
-						end
-					}
-					device
 				rescue
 					DaemonKit.logger.error "Failed to create device: #{$!}"
 				end
 			}.compact
-			
-			#WescontrolHTTP.instance_variable_set(:@couchid, @couchid)
-			#WescontrolHTTP.instance_variable_set(:@controller, @controller)
 		end
 			
 		def inspect
@@ -55,6 +43,18 @@ module Wescontrol
 		end
 		
 		def start
+			#puts @devices.inspect
+			#start each device
+			@devices.each{|device|
+				Thread.new {
+					begin
+						device.run
+					rescue
+						DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+						retry
+					end
+				}
+			}
 			WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
