@@ -127,7 +127,7 @@ module Wescontrol
 					device_req[:type] = :state_set
 					device_req[:var] = path[2]
 					device_req[:value] = data['value']
-				elsif data['command']
+				else
 					device_req[:type] = :command
 					device_req[:method] = path[2]
 					device_req[:args] = data['args'] if data['args']
