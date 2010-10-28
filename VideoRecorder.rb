@@ -19,10 +19,6 @@ class VideoRecorder < Wescontrol::Device
 	state_var :recording_stopped, :type => :time, :editable => false
 	state_var :restarts_remaining,:type => :integer, :editable => false
 	
-	command :start_playing, :action => proc { handle_command :start_playing }
-	command :start_recording, :action => proc { handle_command :start_recording }
-	command :stop, :action => proc { handle_command :stop}
-	
 	def initialize(name, options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
@@ -88,20 +84,7 @@ class VideoRecorder < Wescontrol::Device
 			DaemonKit.logger.error("unknown state: #{state}")
 			return
 		end
-		send_request req
-	end
-	
-	def handle_command cmd
-		req = {
-			:id => UUIDTools::UUID.rand_create.to_s,
-			:queue => @response_queue,
-			:command => cmd
-		}
-		
-		send_request req
-	end
-	
-	def send_request req
+
 		deferrable = EM::DefaultDeferrable.new
 		@requests[req[:id]] = deferrable
 		mq = MQ.new
