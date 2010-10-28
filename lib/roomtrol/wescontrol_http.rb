@@ -22,10 +22,10 @@ module Wescontrol
 		}
 		
 		def initialize
+			@amq = MQ.new
 			@queue_name = "roomtrol:http:#{self.object_id}"
 			@queue = @amq.queue(@queue_name)
 			@deferred_responses = {}
-			@amq = MQ.new
 			@queue.subscribe{|json|
 				msg = JSON.parse(json)
 				DaemonKit.logger.debug("Received HTTP response: #{msg}")
