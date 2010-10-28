@@ -22,15 +22,13 @@ class VideoRecorder < Wescontrol::Device
 	def initialize(name, options)
 		Thread.abort_on_exception = true
 		options = options.symbolize_keys
-		DaemonKit.logger.info "Initializing Video Recorder #{name}"
+		DaemonKit.logger.info "Initializing Video Recorder #{options[:name]} on #{options[:port]}"
 		@response_queue = "roomtrol:#{name}:video_resp"
 		@requests = {}
-		
 		super(name, options)
 	end
 	
-	def amqp_setup
-		mq = MQ.new
+	def run
 		mq.queue(@response_queue).subscribe do |json|
 			msg = JSON.load(json)
 			if deferrable = @requests.delete(msg["id"])
@@ -39,7 +37,7 @@ class VideoRecorder < Wescontrol::Device
 				DaemonKit.logger.debug("Unhandled message: #{msg}")
 			end
 		end
-	
+		
 		mq.queue(FANOUT_QUEUE).subscribe do |json|
 			msg = JSON.load(json)
 			DaemonKit.logger.debug("Received on fanout: #{msg}")
@@ -59,6 +57,7 @@ class VideoRecorder < Wescontrol::Device
 				self.restarts_remaining = msg["restarts_left"]
 			end
 		end
+		super
 	end
 		
 	def set_state(state)
@@ -76,7 +75,6 @@ class VideoRecorder < Wescontrol::Device
 		end
 		deferrable = EM::DefaultDeferrable.new
 		@requests[req[:id]] = deferrable
-		mq = MQ.new
 		mq.queue(SEND_QUEUE).publish(req.to_json)
 		deferrable
 	end
