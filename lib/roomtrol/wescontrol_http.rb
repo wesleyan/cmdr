@@ -97,6 +97,7 @@ module Wescontrol
 				@deferred_responses.delete(deferrable)
 			}
 			@deferred_responses[device_req[:id]] = deferrable
+			DaemonKit.logger.debug("Sending #{device}: #{device_req}")
 			@amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
 		end
 		
@@ -119,11 +120,12 @@ module Wescontrol
 		def post path, resp
 			begin
 				data = JSON.parse(@http_post_content)
+				DaemonKit.logger.debug("Received POST: #{data}")
 				device_req = {
 					:id => UUIDTools::UUID.random_create.to_s,
 					:queue => @queue_name
 				}
-				if data['value']
+				if data['value'] != nil #we want to allow false values, but not nil values
 					device_req[:type] = :state_set
 					device_req[:var] = path[2]
 					device_req[:value] = data['value']

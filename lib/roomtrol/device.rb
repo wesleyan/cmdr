@@ -580,13 +580,14 @@ module Wescontrol
 		# 	of the device. Includes all information neccessary to recreate the device on the
 		# 	next restart.
 		def to_couch
-			hash = {:state_vars => {}, :config => {}, :commands => {}}
+			hash = {:state_vars => {}, :config => configuration, :commands => {}, :name => @name}
 			
-			if config_vars
-				config_vars.each{|var, options|
-					hash[:config][var] = configuration[var]
-				}
-			end
+			#if configuration
+			#	puts "Config vars: #{config_vars.inspect}"
+			#	config_vars.each{|var, options|
+			#		hash[:config][var] = configuration[var]
+			#	}
+			#end
 			
 			self.class.state_vars.each{|var, options|
 				if options[:type] == :time
@@ -703,7 +704,6 @@ module Wescontrol
 				end
 			end
 			if changed
-				DaemonKit.logger.debug("Changed running")
 				update = {
 					'state_update' => true,
 					'var' => changed,
