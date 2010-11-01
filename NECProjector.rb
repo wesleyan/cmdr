@@ -61,7 +61,7 @@ class NECProjector < Projector
 		@max_volume = 63
 		@max_volume = 0
 		
-		@commands = {
+		@_commands = {
 			#format is :name => [id1, id2, data, callback]
 			:set_power			=> [2, proc {|on| on ? 0 : 1}, nil, nil],
 			:set_video_mute		=> [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
@@ -209,9 +209,9 @@ class NECProjector < Projector
 
 	
 	def method_missing(method_name, *args)
-		if @commands[method_name]
-			_command = @commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
-			_command << @commands[method_name][-1]
+		if @_commands[method_name]
+			_command = @_commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
+			_command << @_commands[method_name][-1]
 			return send_command(*_command)
 		else
 			super.method_missing(method_name, *args)
@@ -230,6 +230,45 @@ class NECProjector < Projector
 		response = @responses[id2]
 		@responses[id2] = nil
 		return response
+	end
+
+	def read data
+		data.each_byte{|byte|
+			@buffer << byte
+			@buffer[0..-6].each_index{|i|
+				#this fun line uses bit-level operations to get the 12 bits that are the size of the data
+				#data_size = ((@buffer[i + 4] & 0b1111) << 8) + @buffer[i + 5]
+				data_size = @buffer[i + 4]
+
+				#puts "Data size = #{data_size}"
+				#we make sure that, assuming that a frame started on index i of the buffer, we have all of the
+				#bytes that make up the frame
+				if @buffer.size && @buffer.size - i >= 5 + data_size
+					#we add up the bytes of the supposed frame, and see if it matches the checksum
+					#if it does, it's probably a frame and we will treat it as such
+					bytes = @buffer[i..(i + 4 + data_size + 1)]
+				
+					if bytes[-1] != 0 && bytes[-1] == bytes[0..-2].inject{|sum, byte| sum += byte} & 255
+						#printf("%08b " * bytes.size + "\n", *bytes)
+						frame = interpret_message(bytes)
+						if frame['id2'] && frame['id1'] != 0
+							if frame["ack"]
+								begin
+									@frames[frame['id2']].call(frame) if @frames[frame['id2']]
+								rescue => e
+									DaemonKit.logger.exception e
+								end
+								@responses[frame['id2']] = ""
+							else
+								@responses[frame['id2']] = interpret_error(frame)
+							end
+						end
+						@buffer = []
+						break
+					end
+				end
+			}
+		}
 	end
 
 	private
@@ -291,45 +330,6 @@ class NECProjector < Projector
 		#puts "NACK" if cm["id1"] >> 4 == 0x2
 		
 		return cm
-	end
-	
-	def read data
-		data.each_byte{|byte|
-			@buffer << byte
-			@buffer[0..-6].each_index{|i|
-				#this fun line uses bit-level operations to get the 12 bits that are the size of the data
-				#data_size = ((@buffer[i + 4] & 0b1111) << 8) + @buffer[i + 5]
-				data_size = @buffer[i + 4]
-
-				#puts "Data size = #{data_size}"
-				#we make sure that, assuming that a frame started on index i of the buffer, we have all of the
-				#bytes that make up the frame
-				if @buffer.size && @buffer.size - i >= 5 + data_size
-					#we add up the bytes of the supposed frame, and see if it matches the checksum
-					#if it does, it's probably a frame and we will treat it as such
-					bytes = @buffer[i..(i + 4 + data_size + 1)]
-				
-					if bytes[-1] != 0 && bytes[-1] == bytes[0..-2].inject{|sum, byte| sum += byte} & 255
-						#printf("%08b " * bytes.size + "\n", *bytes)
-						frame = interpret_message(bytes)
-						if frame['id2'] && frame['id1'] != 0
-							if frame["ack"]
-								begin
-									@frames[frame['id2']].call(frame) if @frames[frame['id2']]
-								rescue => e
-									DaemonKit.logger.exception e
-								end
-								@responses[frame['id2']] = ""
-							else
-								@responses[frame['id2']] = interpret_error(frame)
-							end
-						end
-						@buffer = []
-						break
-					end
-				end
-			}
-		}
 	end
 	
 	def interpret_error(frame)
