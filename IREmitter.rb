@@ -20,7 +20,7 @@ class IREmitter < Wescontrol::Device
 
 	command :pulse_command, :action => proc {|button|
 		_command = "send_once #{@remote} #{button}"
-		@commands[_command] = nil
+		@_commands[_command] = nil
 		begin
 			@socket.write(_command + "\n")
 		rescue
@@ -33,10 +33,10 @@ class IREmitter < Wescontrol::Device
 		end
 
 		20.times {|t|
-			break if @commands[_command]
+			break if @_commands[_command]
 			sleep(0.1)
 		}
-		next @commands[_command] if @commands[_command]
+		next @_commands[_command] if @_commands[_command]
 		next "Failed to communicate with IR emitter"
 	}
 
@@ -45,7 +45,7 @@ class IREmitter < Wescontrol::Device
 		options = options.symbolize_keys
 		DaemonKit.logger.info "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"
 		super(name, options)
-		@commands = {}
+		@_commands = {}
 		@remote = options[:remote]
 		throw "No remote specified" unless @remote
 		#@port = options[:port]
@@ -78,7 +78,7 @@ class IREmitter < Wescontrol::Device
 					buffer.push(line)
 					if line.strip == "END"
 						DaemonKit.logger.debug "#{buffer[1]}: #{buffer[2]}"
-						@commands[buffer[1]] = buffer[2]
+						@_commands[buffer[1]] = buffer[2]
 					end
 					line = ""
 				else
