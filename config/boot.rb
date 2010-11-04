@@ -3,6 +3,15 @@
 
 DAEMON_ROOT = "#{File.expand_path(File.dirname(__FILE__))}/.." unless defined?( DAEMON_ROOT )
 
+# Use Bundler (preferred)
+begin
+  require File.expand_path('../../.bundle/environment', __FILE__)
+rescue LoadError
+  require 'rubygems'
+  require 'bundler'
+  Bundler.setup
+end
+
 module DaemonKit
   class << self
     def boot!
@@ -20,7 +29,7 @@ module DaemonKit
     end
 
     def vendor_kit?
-      File.exists?( "#{DAEMON_ROOT}/vendor/daemon_kit" )
+      File.exists?( "#{DAEMON_ROOT}/vendor/daemon-kit" )
     end
   end
 
@@ -33,20 +42,22 @@ module DaemonKit
 
   class VendorBoot < Boot
     def load_initializer
-      require "#{DAEMON_ROOT}/vendor/daemon_kit/lib/daemon_kit/initializer"
+      require "#{DAEMON_ROOT}/vendor/daemon-kit/lib/daemon_kit/initializer"
     end
   end
 
   class GemBoot < Boot
     def load_initializer
       begin
+        require 'rubygems' unless defined?( ::Gem )
         gem 'daemon-kit'
         require 'daemon_kit/initializer'
-      rescue Gem::LoadError => e
+      rescue ::Gem::LoadError => e
         msg = <<EOF
-You are missing the daemon-kit gem. Please install the following gems:
 
-* Stable   - sudo gem install daemon-kit
+You are missing the daemon-kit gem. Please install the following gem:
+
+sudo gem install daemon-kit
 
 EOF
         $stderr.puts msg
