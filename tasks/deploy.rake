@@ -49,6 +49,9 @@ task :deploy, :needs => [:collect_password] do
 	`rm /tmp/roomtrol-daemon.zip && cd #{WORKING} && zip -r /tmp/roomtrol-daemon.zip * -x .\*`
 	
 	CONTROLLERS.each do |controller|
+		Net::SSH.start(controller, 'roomtrol', :password => OPTS[:password]) do |ssh|
+			puts ssh.exec!("echo '#{OPTS[:password]}' | sudo -S mkdir /var/roomtrol-daemon && chown roomtrol /var/roomtrol-daemon")
+		end
 		Net::SCP.start(controller, 'roomtrol', :password => OPTS[:password]) do |scp|
 			local_path = "/tmp/roomtrol-daemon.zip"
 			remote_path = "/var/roomtrol-daemon"
@@ -60,11 +63,20 @@ task :deploy, :needs => [:collect_password] do
 			path = "/var/roomtrol-daemon"
 			commands = [
 				"cd #{path}",
+				"rm -Rf !(roomtrol-daemon.zip)",
 				"unzip roomtrol-daemon.zip",
-				"rm roomtrol-daemon.zip"
+				"rm roomtrol-daemon.zip",
+				"echo 'Unzipped zip file'",
+				"rvm 1.9.2",
+				"echo 'Switched to rvm'",
+				"bundle install"
 			]
 		  
 			puts ssh.exec!(commands.join("; "))
+			
+			puts "Restarting daemon"
+			puts ssh.exec!("echo '#{OPTS[:password]}' | sudo -S restart roomtrol-daemon")
+			
 		end
 		puts "\tInstallation finished on #{controller}"
 	end
