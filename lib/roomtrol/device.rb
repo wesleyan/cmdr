@@ -240,7 +240,7 @@ module Wescontrol
 		# react appropriately to events.
 		def run
 			AMQP.start(:host => '127.0.0.1'){
-				#self.amqp_setup
+				self.amqp_setup
 				@amq_responder = MQ.new
 				handle_feedback = proc {|feedback, req, resp, job|
 					if feedback.is_a? EM::Deferrable

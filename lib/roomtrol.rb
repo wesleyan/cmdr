@@ -50,11 +50,13 @@ module Wescontrol
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				EventMonitor.run
 				@devices.each{|device|
-					begin
-						device.run
-					rescue
-						DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
-						retry
+					Thread.new do
+						begin
+							device.run
+						rescue
+							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+							retry
+						end
 					end
 				}
 			}
