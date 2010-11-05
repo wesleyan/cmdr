@@ -12,7 +12,7 @@ module Wescontrol
 	# strings to and from the device. However, most devices should be able to take advantage
 	# of the various "managed" features, which can greatly simplify the task of writing drivers
 	# for RS232 devices. In fact, using this class it is possible to write drivers without any
-	# real code at all besides some string handling.
+	# real code at all (besides some string handling).
 	# 
 	# There are several abstractions provided which can take over a part of device handling.
 	# Perhaps the most widely applicable is the {RS232Device::requests requests} abstraction.
