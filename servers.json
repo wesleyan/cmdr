@@ -1,0 +1,8 @@
+{
+	"servers": [
+		"ozymandias.class.wesleyan.edu"
+	],
+	"controllers": [
+		"roomtrol-sc509a.class.wesleyan.edu"
+	]
+}
