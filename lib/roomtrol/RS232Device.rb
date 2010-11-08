@@ -360,8 +360,7 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-			while msg = s.scan(/.+?#{configuration[:message_end]}/) do
-				msg.gsub!(configuration[:message_end], "")
+			handle_message = proc {
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -389,6 +388,17 @@ module Wescontrol
 						instance_exec(arg, &m[2])
 					end
 				end
+			}
+			#if message_end is a string, we scan through the buffer for message_end
+			if configuration[:message_end].is_a? String
+				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
+					msg.gsub!(configuration[:message_end], "")
+					handle_message.call
+				end
+			elsif configuration[:message_end].is_a? Proc
+				@_buffer.each_index{|i|
+					configuration[:message_end].call(@_buffer[0..i])
+				}
 			end
 			@_buffer = s.rest
 			#if we got the message end signal, we're safe to send the next thing
