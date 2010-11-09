@@ -95,7 +95,9 @@ module Wescontrol
 	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
 	# + *message_end*: the character(s) which demarcate the end of a message; for ASCII-based protocols usually
 	# 	a newline ("\n") or a carriage return and newline ("\r\n"). You must set this if you want message
-	# 	interpretation to work correctly.
+	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
+	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
+	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
 	class RS232Device < Device
 		# The number of seconds to way for a reply before transmitting the next message
 		TIMEOUT = 0.5
@@ -360,7 +362,7 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-			handle_message = proc {
+			handle_message = proc {|msg|
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -393,14 +395,22 @@ module Wescontrol
 			if configuration[:message_end].is_a? String
 				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
 					msg.gsub!(configuration[:message_end], "")
-					handle_message.call
+					handle_message.call(msg)
 				end
+				@_buffer = s.rest
 			elsif configuration[:message_end].is_a? Proc
-				@_buffer.each_index{|i|
-					configuration[:message_end].call(@_buffer[0..i])
-				}
+				loop do
+					found_msg = false
+					@_buffer.each_index{|i|
+						if configuration[:message_end].call(@_buffer[0..i])
+							handle_message.call(@_buffer[0..i])
+							@_buffer = @_buffer[(i+1)..-1]
+							found_msg = true
+						end
+					}
+					break unless found_msg
+				end				
 			end
-			@_buffer = s.rest
 			#if we got the message end signal, we're safe to send the next thing
 			if data.match(configuration[:message_end])
 				self.ready_to_send = true

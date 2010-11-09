@@ -4,6 +4,7 @@ GEM
     amqp (0.6.7)
       eventmachine (>= 0.12.4)
     bit-struct (0.13.6)
+    bluecloth (2.0.9)
     chronic (0.2.3)
       hoe (>= 1.2.1)
     couchrest (1.0.1)
@@ -39,6 +40,7 @@ GEM
     tilt (1.1)
     uuidtools (2.1.1)
     wol (0.4.0)
+    yard (0.6.1)
 
 PLATFORMS
   ruby
@@ -46,6 +48,7 @@ PLATFORMS
 DEPENDENCIES
   amqp
   bit-struct
+  bluecloth
   chronic
   couchrest
   daemon-kit
@@ -62,3 +65,4 @@ DEPENDENCIES
   sinatra
   uuidtools
   wol
+  yard
