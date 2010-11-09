@@ -184,7 +184,7 @@ module Wescontrol
 		# 	should return the string which, when sent to the device, will cause it to enter
 		# 	the chosen state.
 		# @example
-		# 	maanged_state_var :input, 
+		# 	managed_state_var :input, 
 		# 		:type => :option, 
 		# 		:display_order => 1, 
 		# 		:options => ("1".."6").to_a,
@@ -257,6 +257,12 @@ module Wescontrol
 		# 
 		# `match` takes three arguments: a name, a matcher and an interpreter. `nack` and `ack` each
 		# take only a matcher. `error` takes a name, a matcher and a string message.
+		#
+		# Note that response can be used in two ways: a in the first example, in which case the provided
+		# block is evaluated in the context of a special class (which means code inside of the block has no
+		# access to local variables or methods), or by providing a parameter into the block, in which
+		# case the block is evaluated in the context of the class (*not the instance*), but response methods 
+		# (like `match`) must be called on that argument (see the second example).
 		# @example
 		# 	responses do
 		# 		#regular expression matcher
@@ -269,9 +275,13 @@ module Wescontrol
 		# 		nack "nack"
 		# 		error :power_error, "power_error", "Projector failed to turn on"
 		# 	end
+		# @example
+		# 	responses do |r|
+		# 		r.match :volume, @matchers[:volume], proc{|m| self.volume = m[1].to_i/100.0}
+		# 	end
 		def self.responses &block
 			rh = ResponseHandler.new
-			rh.instance_eval(&block)
+			block.arity < 1 ? rh.instance_eval(&block) : block.call(rh)
 			@_matchers ||= []
 			@_matchers += rh.matchers if rh.matchers
 		end
@@ -316,6 +326,12 @@ module Wescontrol
 		# In essence, we scale all of the priorities such that the smallest is one; these scaled
 		# priorities are then the number of copies. We then interleave them as much as possible so that
 		# there is a regular spacing between requests.
+		#
+		# Note that requests can be used in two ways: a in the first example, in which case the provided
+		# block is evaluated in the context of a special class (which means code inside of the block has no
+		# access to local variables or methods), or by providing a parameter into the block, in which
+		# case the block is evaluated in the context of the class (*not the instance*), but request methods 
+		# (specifically `send`) must be called on that argument (see the second example).
 		# @example
 		# 	requests do
 		# 		send :input,  "I\r\n", 1.5
@@ -324,9 +340,15 @@ module Wescontrol
 		# 	end
 		# 	# The requests vector created by these priorities is as follows
 		# 	[:input, :volume, :mute, :input, :mute, :input]
+		#
+		# @example
+		# 	requests do |r|
+		# 		r.send :input, get_string(:input), 1.5
+		# 	end
 		def self.requests &block
 			rh = RequestHandler.new
-			rh.instance_eval(&block)
+			block.arity < 1 ? rh.instance_eval(&block) : block.call(rh)
+			
 			@_requests ||= []
 			@_requests += rh.requests
 			@_request_scheduler = []
@@ -402,7 +424,7 @@ module Wescontrol
 				loop do
 					found_msg = false
 					@_buffer.each_index{|i|
-						if configuration[:message_end].call(@_buffer[0..i])
+						if instance_exec(@_buffer[0..i], &configuration[:message_end])
 							handle_message.call(@_buffer[0..i])
 							@_buffer = @_buffer[(i+1)..-1]
 							found_msg = true
