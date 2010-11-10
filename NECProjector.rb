@@ -9,6 +9,76 @@
 #---
 
 class NECProjector < Projector
+	class << self
+		# Given an index into @_commands, this function gives the binary string that does that request
+		# @param [Symbol] name The index of @commands to use (the name of the request)
+		# @return [String] A binary string which, when sent to the projector, should 
+		# 	produce the desired response
+		def request_for_name(name, *args)
+			cmd = @_commands[name][0..-2].collect{|element| 
+				element.class == Proc ? element.call(*args) : element
+			}
+			package_message(*cmd)
+		end
+
+	    def package_message(id1, id2, data, projector_id = 0, model_code = 0)
+	        # create a new BitPack object to pack the message into
+			message = NECBitStruct.new
+			message.id1 = id1
+			message.id2 = id2
+			message.p_id = projector_id
+			message.m_code = model_code
+
+	        if data
+				message.len = data.size
+				message.data = data
+	        else
+	            message.len = 0
+				message.data = ""
+	        end
+        
+	        #now append the checksum, which is the last 8 bits of the sum of all the other stuff
+	        sum = 0
+	        message.each_byte{|byte| sum += byte}
+	        message.data += (sum & 255).chr #mask by 255 to get just the last 8 bits
+        
+	        return message.to_s
+	    end
+	
+		def interpret_message(msg)
+			message = NECBitStruct.new(msg)
+
+			cm = {}
+			cm["id1"] = message.id1
+			cm["id2"] = message.id2
+			cm["projector_id"] = message.p_id
+			cm["model_code"] = message.m_code
+			cm["data_size"] = message.len
+
+			cm["data"] = message.data.bytes.to_a[0..-2]
+
+			cm["checksum"] = message.data.bytes.to_a[-1]
+		
+			#Test whether the bit 8 is set or not. If it is, the response is acknowledged
+			#printf("id1: %08b\n", cm["id1"])
+			#cm["ack"] = cm["id1"] & 2**7 != 0
+			cm["ack"] = cm["id1"] >> 4 == 2
+
+			#puts "ACK" if cm["id1"] >> 4 == 0xA
+			#puts "NACK" if cm["id1"] >> 4 == 0x2
+		
+			return cm
+		end
+		
+		def interpret_error(frame)
+			error_codes = {0 => "Not supported", 1 => "Parameter error", 2 => "Operation mode error", 
+				3 => "Gain-related error", 4 => "Logo transfer error"}
+			if frame['data'] && frame['data'][0]
+				DaemonKit.logger.error "#{frame['id2'].to_s(16)}: The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
+				return "The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
+			end
+		end
+	end
 	
 	RGB1   = 1
 	RGB2   = 2
@@ -176,8 +246,16 @@ class NECProjector < Projector
 	end
 	
 	responses do |r|
-		@_commands.each{|name, hash|
-			
+		recognize = proc{|id2, msg|
+			frame = self.class.interpret_message(msg)
+			msg[1] == id2
+		}.curry
+		
+		# for each command in @_commands, create a matching rule. The recognize.(cmd[1]) 
+		# statement is doing partial application of the function recognize, which is a new
+		# feature of Ruby 1.9
+		@_commands.each{|name, cmd|
+			r.match name, recognize.(cmd[1]), cmd[3]
 		}
 	end
 	
@@ -202,73 +280,4 @@ class NECProjector < Projector
 			super.method_missing(method_name, *args)
 		end
 	end
-		
-	private
-	
-	# Given an index into @_commands, this function gives the binary string that does that request
-	# @param [Symbol] name The index of @commands to use (the name of the request)
-	# @return [String] A binary string which, when sent to the projector, should produce the desired response
-	def self.request_for_name(name, *args)
-		cmd = @_commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
-		package_message(*cmd)
-	end
-
-    def self.package_message(id1, id2, data, projector_id, model_code)
-        # create a new BitPack object to pack the message into
-		message = NECBitStruct.new
-		message.id1 = id1
-		message.id2 = id2
-		message.p_id = projector_id
-		message.m_code = model_code
-
-        if data
-			message.len = data.size
-			message.data = data
-        else
-            message.len = 0
-			message.data = ""
-        end
-        
-        #now append the checksum, which is the last 8 bits of the sum of all the other stuff
-        sum = 0
-        message.each_byte{|byte| sum += byte}
-        message.data += (sum & 255).chr #mask by 255 to get just the last 8 bits
-        
-        return message.to_s
-    end
-	
-	def self.interpret_message(msg)
-		message = NECBitStruct.new(msg)
-
-		cm = {}
-		cm["id1"] = message.id1
-		cm["id2"] = message.id2
-		cm["projector_id"] = message.p_id
-		cm["model_code"] = message.m_code
-		cm["data_size"] = message.len
-
-		cm["data"] = message.data.bytes.to_a[0..-2]
-
-		cm["checksum"] = message.data.bytes.to_a[-1]
-		
-		#Test whether the bit 8 is set or not. If it is, the response is acknowledged
-		#printf("id1: %08b\n", cm["id1"])
-		#cm["ack"] = cm["id1"] & 2**7 != 0
-		cm["ack"] = cm["id1"] >> 4 == 2
-
-		#puts "ACK" if cm["id1"] >> 4 == 0xA
-		#puts "NACK" if cm["id1"] >> 4 == 0x2
-		
-		return cm
-	end
-		
-	def self.interpret_error(frame)
-		error_codes = {0 => "Not supported", 1 => "Parameter error", 2 => "Operation mode error", 
-			3 => "Gain-related error", 4 => "Logo transfer error"}
-		if frame['data'] && frame['data'][0]
-			DaemonKit.logger.error "#{frame['id2'].to_s(16)}: The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
-			return "The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
-		end
-	end
-
 end
