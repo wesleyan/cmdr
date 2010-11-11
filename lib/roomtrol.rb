@@ -31,11 +31,11 @@ module Wescontrol
 			@db = CouchRest.database("http://localhost:5984/rooms")
 
 			@devices = device_hashes.collect{|hash|
-				begin
+				#begin
 					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
-				rescue
-					DaemonKit.logger.error "Failed to create device #{hash['value']}: #{$!}"
-				end
+				#rescue
+				#	DaemonKit.logger.error "Failed to create device #{hash['value']}: #{$!}"
+				#end
 			}.compact
 		end
 			

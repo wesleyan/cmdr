@@ -413,28 +413,30 @@ module Wescontrol
 					end
 				end
 			}
+			message_received = false
 			#if message_end is a string, we scan through the buffer for message_end
 			if configuration[:message_end].is_a? String
 				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
 					msg.gsub!(configuration[:message_end], "")
 					handle_message.call(msg)
 				end
+				message_received = data.match(configuration[:message_end])
 				@_buffer = s.rest
 			elsif configuration[:message_end].is_a? Proc
 				loop do
-					found_msg = false
-					@_buffer.each_index{|i|
+					message_received = false
+					@_buffer.size.times{|i|
 						if instance_exec(@_buffer[0..i], &configuration[:message_end])
 							handle_message.call(@_buffer[0..i])
 							@_buffer = @_buffer[(i+1)..-1]
-							found_msg = true
+							message_received = true
 						end
 					}
-					break unless found_msg
+					break unless message_received
 				end				
 			end
 			#if we got the message end signal, we're safe to send the next thing
-			if data.match(configuration[:message_end])
+			if message_received
 				self.ready_to_send = true
 			end
 		end
