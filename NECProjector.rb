@@ -214,13 +214,13 @@ class NECProjector < Projector
 		message_end lambda{|msg|
 			# get the NECBitStruct from the message
 			frame = self.class.interpret_message(msg)
-
+			bytes = msg.bytes.to_a
 			# we make sure that we have the right number of bytes given the given data_size
 			return false unless msg.size == 6 + frame["data_size"]
 			
 			# we add up the bytes of the supposed frame, and see if it matches the checksum
 			# if it does, it's probably a frame and we will treat it as such
-			return false unless msg[-1] != 0 && msg[-1] == msg[0..-2].inject{|sum, byte| sum += byte} & 255
+			return false unless bytes[-1] != 0 && bytes[-1] == bytes[0..-2].inject{|sum, byte| sum += byte} & 255
 
 			# make sure id1 isn't zero
 			return frame["id2"] && frame['id1'] != 0
@@ -247,15 +247,22 @@ class NECProjector < Projector
 	
 	responses do |r|
 		recognize = proc{|id2, msg|
-			frame = self.class.interpret_message(msg)
-			msg[1] == id2
+			frame = interpret_message(msg)
+			frame["id2"] == id2
 		}.curry
 		
 		# for each command in @_commands, create a matching rule. The recognize.(cmd[1]) 
 		# statement is doing partial application of the function recognize, which is a new
 		# feature of Ruby 1.9
 		@_commands.each{|name, cmd|
-			r.match name, recognize.(cmd[1]), cmd[3]
+			if cmd[-1].is_a? Proc
+				r.match name, recognize.(cmd[1]), proc {|msg|
+					frame = self.class.interpret_message(msg)
+					self.instance_exec(frame, &cmd[-1])
+				}
+			else
+				r.ack recognize.(cmd[1])
+			end
 		}
 	end
 	
@@ -268,14 +275,15 @@ class NECProjector < Projector
 		@max_volume = 63
 		@max_volume = 0
 		
-		@_commands = self.class.instace_variable_get(:_commands)
+		@_commands = self.class.instance_variable_get(:@_commands)
 	end
 	
 	def method_missing(method_name, *args)
 		if @_commands[method_name]
-			_command = @_commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
-			_command << @_commands[method_name][-1]
-			return send_command(*_command)
+			cmd = @_commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
+			deferrable = EM::DefaultDeferrable.new
+			do_message self.class.package_message(*cmd), deferrable
+			deferrable			
 		else
 			super.method_missing(method_name, *args)
 		end

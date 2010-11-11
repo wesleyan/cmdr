@@ -14,6 +14,7 @@ class EVID70Camera < Wescontrol::RS232Device
 	configure do
 		address :type => :string
 	end
+	
 	state_var :power, 				:type => :boolean
 	state_var :zoom, 				:type => :percentage
 	state_var :focus, 				:type => :percentage
