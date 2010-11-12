@@ -246,9 +246,9 @@ class NECProjector < Projector
 	end
 	
 	responses do |r|
-		recognize = proc{|id2, msg|
+		recognize = proc{|id2, ack, msg|
 			frame = interpret_message(msg)
-			frame["id2"] == id2
+			frame["id2"] == id2 && frame["ack"] == ack
 		}.curry
 		
 		# for each command in @_commands, create a matching rule. The recognize.(cmd[1]) 
@@ -256,13 +256,17 @@ class NECProjector < Projector
 		# feature of Ruby 1.9
 		@_commands.each{|name, cmd|
 			if cmd[-1].is_a? Proc
-				r.match name, recognize.(cmd[1]), proc {|msg|
+				r.match name, recognize.(cmd[1], true), proc {|msg|
 					frame = self.class.interpret_message(msg)
 					self.instance_exec(frame, &cmd[-1])
 				}
 			else
-				r.ack recognize.(cmd[1])
+				r.ack recognize.(cmd[1], true)
 			end
+			r.error name, recognize.(cmd[1], false), proc {|msg|
+				frame = self.class.interpret_message(msg)
+				self.class.interpret_error(frame)
+			}
 		}
 	end
 	
