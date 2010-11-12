@@ -8,6 +8,8 @@ source "http://rubygems.org"
 
 gem 'rake'
 gem 'daemon-kit'
+gem 'yard'
+gem 'bluecloth'
 
 gem 'macaddr'
 gem 'json'

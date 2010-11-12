@@ -95,10 +95,12 @@ module Wescontrol
 	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
 	# + *message_end*: the character(s) which demarcate the end of a message; for ASCII-based protocols usually
 	# 	a newline ("\n") or a carriage return and newline ("\r\n"). You must set this if you want message
-	# 	interpretation to work correctly.
+	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
+	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
+	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
 	class RS232Device < Device
 		# The number of seconds to way for a reply before transmitting the next message
-		TIMEOUT = 0.5
+		TIMEOUT = 2.0
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
 
@@ -131,6 +133,7 @@ module Wescontrol
 			
 			@_send_queue = []
 			@_ready_to_send = true
+			@_last_sent_time = Time.at(0)
 			super(name, options, db_uri, dqueue)
 		end
 
@@ -147,7 +150,9 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(TIMEOUT) { self.ready_to_send = @_ready_to_send}
+					EM::add_periodic_timer(TIMEOUT) {
+						self.ready_to_send = @_ready_to_send
+					}
 					EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
@@ -182,7 +187,7 @@ module Wescontrol
 		# 	should return the string which, when sent to the device, will cause it to enter
 		# 	the chosen state.
 		# @example
-		# 	maanged_state_var :input, 
+		# 	managed_state_var :input, 
 		# 		:type => :option, 
 		# 		:display_order => 1, 
 		# 		:options => ("1".."6").to_a,
@@ -255,6 +260,12 @@ module Wescontrol
 		# 
 		# `match` takes three arguments: a name, a matcher and an interpreter. `nack` and `ack` each
 		# take only a matcher. `error` takes a name, a matcher and a string message.
+		#
+		# Note that response can be used in two ways: a in the first example, in which case the provided
+		# block is evaluated in the context of a special class (which means code inside of the block has no
+		# access to local variables or methods), or by providing a parameter into the block, in which
+		# case the block is evaluated in the context of the class (*not the instance*), but response methods 
+		# (like `match`) must be called on that argument (see the second example).
 		# @example
 		# 	responses do
 		# 		#regular expression matcher
@@ -267,9 +278,13 @@ module Wescontrol
 		# 		nack "nack"
 		# 		error :power_error, "power_error", "Projector failed to turn on"
 		# 	end
+		# @example
+		# 	responses do |r|
+		# 		r.match :volume, @matchers[:volume], proc{|m| self.volume = m[1].to_i/100.0}
+		# 	end
 		def self.responses &block
 			rh = ResponseHandler.new
-			rh.instance_eval(&block)
+			block.arity < 1 ? rh.instance_eval(&block) : block.call(rh)
 			@_matchers ||= []
 			@_matchers += rh.matchers if rh.matchers
 		end
@@ -314,6 +329,12 @@ module Wescontrol
 		# In essence, we scale all of the priorities such that the smallest is one; these scaled
 		# priorities are then the number of copies. We then interleave them as much as possible so that
 		# there is a regular spacing between requests.
+		#
+		# Note that requests can be used in two ways: a in the first example, in which case the provided
+		# block is evaluated in the context of a special class (which means code inside of the block has no
+		# access to local variables or methods), or by providing a parameter into the block, in which
+		# case the block is evaluated in the context of the class (*not the instance*), but request methods 
+		# (specifically `send`) must be called on that argument (see the second example).
 		# @example
 		# 	requests do
 		# 		send :input,  "I\r\n", 1.5
@@ -322,9 +343,15 @@ module Wescontrol
 		# 	end
 		# 	# The requests vector created by these priorities is as follows
 		# 	[:input, :volume, :mute, :input, :mute, :input]
+		#
+		# @example
+		# 	requests do |r|
+		# 		r.send :input, get_string(:input), 1.5
+		# 	end
 		def self.requests &block
 			rh = RequestHandler.new
-			rh.instance_eval(&block)
+			block.arity < 1 ? rh.instance_eval(&block) : block.call(rh)
+			
 			@_requests ||= []
 			@_requests += rh.requests
 			@_request_scheduler = []
@@ -360,8 +387,7 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-			while msg = s.scan(/.+?#{configuration[:message_end]}/) do
-				msg.gsub!(configuration[:message_end], "")
+			handle_message = proc {|msg|
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -379,20 +405,47 @@ module Wescontrol
 							when :nack then
 								@_message_handler.fail
 							when :error then
-								resp = m[2].is_a? Proc ? m[2].call(arg) : m[2]
+								resp = m[2].is_a?(Proc) ? instance_exec(arg, &m[2]) : m[2]
 								@_message_handler.fail resp
 							else
 								@_message_handler.succeed instance_exec(arg, &m[2])
 						end
 						@_message_handler = nil
-					else
+					elsif m[2].is_a? Proc
 						instance_exec(arg, &m[2])
 					end
 				end
+			}
+			message_received = false
+			#if message_end is a string, we scan through the buffer for message_end
+			if configuration[:message_end].is_a? String
+				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
+					msg.gsub!(configuration[:message_end], "")
+					handle_message.call(msg)
+				end
+				message_received = data.match(configuration[:message_end])
+				@_buffer = s.rest
+			elsif configuration[:message_end].is_a? Proc
+				loop do
+					loop_message_received = false
+					@_buffer.size.times{|start|
+						(start+1).upto(@_buffer.size){|_end|
+							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
+								#DaemonKit.logger.debug("Y: #{@_buffer.bytes.to_a[0..i].collect{|x| x.to_s(16)}.join(" ")}")
+								handle_message.call(@_buffer[start.._end])
+								@_buffer = @_buffer[(_end+1)..-1]
+								loop_message_received = true
+								message_received |= loop_message_received
+								break
+							end
+						}
+					}
+					break unless loop_message_received
+				end
+				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
 			end
-			@_buffer = s.rest
 			#if we got the message end signal, we're safe to send the next thing
-			if data.match(configuration[:message_end])
+			if message_received
 				self.ready_to_send = true
 			end
 		end
@@ -403,8 +456,10 @@ module Wescontrol
 		# passed sent the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
-			@_ready_to_send = true if !@_last_sent_time || Time.now - @_last_sent_time > TIMEOUT
-
+			if Time.now - @_last_sent_time > TIMEOUT
+				DaemonKit.logger.debug("Request timed out") unless state
+				@_ready_to_send = true
+			end
 			if @_ready_to_send
 				if @_send_queue.size == 0
 					request = choose_request

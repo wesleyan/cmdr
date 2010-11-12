@@ -6,7 +6,7 @@ require 'uuidtools'
 
 module Wescontrol 
 	class WescontrolHTTP < EventMachine::Connection
-		TIMEOUT = 2.0
+		TIMEOUT = 4.0
 		include EventMachine::HttpServer
 		
 		@@kind_verifier = {
@@ -91,6 +91,7 @@ module Wescontrol
 				resp.send_response
 			}
 			deferrable.errback {|error|
+				DaemonKit.logger.debug("Errback called with #{error}")
 				resp.status = 500
 				resp.content = {:error => :timed_out}.to_json + "\n"
 				resp.send_response
