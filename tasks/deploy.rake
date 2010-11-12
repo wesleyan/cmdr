@@ -116,6 +116,7 @@ task :deploy_test, :needs => [:collect_password] do
 				"unzip roomtrol-daemon.zip",
 				"rm roomtrol-daemon.zip",
 				"echo 'Unzipped zip file'",
+				"echo 'Updated roomtrol' | wall",
 				"rvm 1.9.2",
 				"echo 'Switched to rvm'",
 				"bundle install"

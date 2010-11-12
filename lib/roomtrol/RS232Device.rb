@@ -100,7 +100,7 @@ module Wescontrol
 	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
 	class RS232Device < Device
 		# The number of seconds to way for a reply before transmitting the next message
-		TIMEOUT = 0.5
+		TIMEOUT = 2.0
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
 
@@ -133,6 +133,7 @@ module Wescontrol
 			
 			@_send_queue = []
 			@_ready_to_send = true
+			@_last_sent_time = Time.at(0)
 			super(name, options, db_uri, dqueue)
 		end
 
@@ -149,7 +150,9 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(TIMEOUT) { self.ready_to_send = @_ready_to_send}
+					EM::add_periodic_timer(TIMEOUT) {
+						self.ready_to_send = @_ready_to_send
+					}
 					EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
@@ -402,13 +405,13 @@ module Wescontrol
 							when :nack then
 								@_message_handler.fail
 							when :error then
-								resp = m[2].is_a? Proc ? m[2].call(arg) : m[2]
+								resp = m[2].is_a?(Proc) ? instance_exec(arg, &m[2]) : m[2]
 								@_message_handler.fail resp
 							else
 								@_message_handler.succeed instance_exec(arg, &m[2])
 						end
 						@_message_handler = nil
-					else
+					elsif m[2].is_a? Proc
 						instance_exec(arg, &m[2])
 					end
 				end
@@ -424,16 +427,22 @@ module Wescontrol
 				@_buffer = s.rest
 			elsif configuration[:message_end].is_a? Proc
 				loop do
-					message_received = false
-					@_buffer.size.times{|i|
-						if instance_exec(@_buffer[0..i], &configuration[:message_end])
-							handle_message.call(@_buffer[0..i])
-							@_buffer = @_buffer[(i+1)..-1]
-							message_received = true
-						end
+					loop_message_received = false
+					@_buffer.size.times{|start|
+						(start+1).upto(@_buffer.size){|_end|
+							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
+								#DaemonKit.logger.debug("Y: #{@_buffer.bytes.to_a[0..i].collect{|x| x.to_s(16)}.join(" ")}")
+								handle_message.call(@_buffer[start.._end])
+								@_buffer = @_buffer[(_end+1)..-1]
+								loop_message_received = true
+								message_received |= loop_message_received
+								break
+							end
+						}
 					}
-					break unless message_received
-				end				
+					break unless loop_message_received
+				end
+				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
 			end
 			#if we got the message end signal, we're safe to send the next thing
 			if message_received
@@ -447,8 +456,10 @@ module Wescontrol
 		# passed sent the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
-			@_ready_to_send = true if !@_last_sent_time || Time.now - @_last_sent_time > TIMEOUT
-
+			if Time.now - @_last_sent_time > TIMEOUT
+				DaemonKit.logger.debug("Request timed out") unless state
+				@_ready_to_send = true
+			end
 			if @_ready_to_send
 				if @_send_queue.size == 0
 					request = choose_request
