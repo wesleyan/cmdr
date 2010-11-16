@@ -120,7 +120,7 @@ module Wescontrol
 		#and returns something like this: `{"result" => true}`
 		def post path, resp
 			begin
-				data = JSON.parse(@http_post_content)
+				data = @http_post_content ? JSON.parse(@http_post_content) : {}
 				DaemonKit.logger.debug("Received POST: #{data}")
 				device_req = {
 					:id => UUIDTools::UUID.random_create.to_s,
@@ -137,6 +137,7 @@ module Wescontrol
 				end
 				defer_device_operation resp, device_req, path[1]
 			rescue JSON::ParserError, TypeError
+				DaemonKit.logger.debug("JSON Parser error")
 				resp.status = 400
 				content = {"error" => "bad_json"}
 				resp.send_response

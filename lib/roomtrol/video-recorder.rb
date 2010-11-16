@@ -316,6 +316,7 @@ module RoomtrolVideo
 				Process.waitpid(outside_pid, 0)
 				w.close
 				pid = r.gets.chomp.to_i
+				puts "Parent: #{pid}"
 			ensure
 				r.close rescue nil
 				w.close rescue nil
