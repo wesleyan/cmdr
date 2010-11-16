@@ -75,18 +75,17 @@ class EVID70Camera < Wescontrol::RS232Device
 			#name => [message, callback]
 			
 			#action commands
-			:power => proc{|on| "01 04 00 0" + (on ? "2" : "3")},
-			:zoom => proc{|t| p,q,r,s = ZOOM[t].split(""); "01 04 47 0#{p} 0#{q} 0#{r} 0#{s}"},
+			:set_power => proc{|on| "01 04 00 0" + (on ? "2" : "3")},
+			:set_zoom => proc{|t| p,q,r,s = ZOOM[t].split(""); "01 04 47 0#{p} 0#{q} 0#{r} 0#{s}"},
 			:zoom_in => "01 04 07 02",
 			:zoom_out => "01 04 07 03",
 			:zoom_stop => "01 04 07 00",
-			:focus => proc{|f| p = (f * 11 + 1).round.to_s(16); "01 04 48 0#{p} 00 00 00"},
+			:set_focus => proc{|f| p = (f * 11 + 1).round.to_s(16); "01 04 48 0#{p} 00 00 00"},
 			:focus_near => "01 04 08 03",
 			:focus_far => "01 04 08 02",
-			:auto_focus => proc{|on| "01 04 38 0" + (on ? "2" : "3")},
+			:set_auto_focus => proc{|on| "01 04 38 0" + (on ? "2" : "3")},
 			:trigger_auto_focus => "01 04 18 01",
-			:auto_white_balance => "01 04 35 00",
-			:manual_white_balance => "01 04 35 05",
+			:set_auto_white_balance => proc{|on| "01 04 0" + (on ? "0" : "5")},
 			:trigger_auto_white_balance => "01 04 10 05",
 			:move_up => proc{|v, w| pan_tilt(3, 1, v, w)},
 			:move_down => proc{|v, w| pan_tilt(3, 2, v, w)},
@@ -97,7 +96,7 @@ class EVID70Camera < Wescontrol::RS232Device
 			:move_down_left => proc{|v, w| pan_tilt(1, 2, v, w)},
 			:move_down_right => proc{|v, w| pan_tilt(2, 2, v, w)},
 			:move_stop => proc{|v, w| pan_tilt(3, 3, v, w)},
-			:position => proc{|v, w, y, z|
+			:set_position => proc{|v, w, y, z|
 				vv = "%02x" % (v*17+1).round
 				ww = "%02x" % (w*16+1).round
 				yyyy = ("%04x" % y).split("").collect{|x| "0#{x}"}.join(" ")
@@ -109,20 +108,20 @@ class EVID70Camera < Wescontrol::RS232Device
 		@_requests = {	
 			#Request commands
 			:lens_request => ["09 7E 7E 00", proc {|resp|
-				this.zoom = resp[2..5].collect{|x| x.to_s(16)}.join.to_i(16)
-				this.focus = resp[8..11].collect{|x| x.to_s(16)}.join.to_i(16)
-				this.auto_focus = resp[13] & 1
-				this.focussing = resp[14] & 2
-				this.zooming = resp[14] & 1
+				self.zoom = resp[2..5].collect{|x| x.to_s(16)}.join.to_i(16)
+				self.focus = resp[8..11].collect{|x| x.to_s(16)}.join.to_i(16)
+				self.auto_focus = resp[13] & 1
+				self.focussing = resp[14] & 2
+				self.zooming = resp[14] & 1
 			}],
 			#:camera_control_request => ["09 7E 7E 01", proc {|resp|
 			#	gives stuff like gain, exposure, aperture, etc
 			#}],
 			:power_inquiry => ["09 04 00", proc{|resp|
-				this.power = resp[2] == 2
+				self.power = resp[2] == 2
 			}],
 			:position_inquiry => ["09 06 12", proc{|res|
-				this.position = [
+				self.position = [
 					resp[2..5].collect{|x| x.to_s(16).join.to_i(16)}, #pan position
 					resp[6..9].collect{|x| x.to_s(16).join.to_i(16)}, #tilt position
 				]
@@ -142,20 +141,55 @@ class EVID70Camera < Wescontrol::RS232Device
 	end
 	
 	def method_missing(method_name, *args)
-		if @commands[method_name]
-			if @commands[method_name].class == Proc
-				_message = @commands[method_name].call(*args)
-			elsif @commands[method_name].class == String
-				_message = @commands[method_name]
+		if @_commands[method_name]
+			if @_commands[method_name].class == Proc
+				_message = @_commands[method_name].call(*args)
+			elsif @_commands[method_name].class == String
+				_message = @_commands[method_name]
 			else
 				throw "Method must be either a function or a string"
 			end
 			deferrable = EM::DefaultDeferrable.new
-			send _message, deferrable
+			send_command _message, deferrable
 			return deferrable
 		else
 			super.method_missing(method_name, *args)
 		end
+	end
+	
+	def read data
+		@_buffer ||= []
+		data.each_byte{|byte|
+			@_buffer << byte
+			if @_buffer[-1] == 0xFF #0xFF terminates each packet
+				if @_buffer[1] >> 4 == 4 #ACK
+					#the last four bits tell us the socket number, so we move
+					#the current command (stored in -1) to there
+					@_last_command[@_buffer[1] & 0b00001111] = @_last_command[-1]
+				 	self.ready_to_send = true
+				elsif @_buffer[1] >> 4 == 5 #completion
+					deferrable = @_last_command[@_buffer[1] & 0b00001111][1]
+					if @_buffer.size == 3 #command
+						deferrable.set_deferred_status :succeeded
+					else #request
+						if deferrable.class == Proc
+							deferrable.send(@buffer[2..-2])
+						else
+							deferrable.set_deferred_status :succeeded, @buffer[2..-2]
+						end
+					end
+				elsif @_buffer[1] >> 4 == 6 #error
+					_error = ERRORS[@_buffer[2]]
+					DaemonKit.logger.error "Camera error: #{_error}"
+					cmd = @_last_command[@_buffer[1] & 0b00001111]
+					if cmd
+						cmd[1].set_deferred_status :failed, _error if deferrable.class == EM::Deferrable
+					end
+				end
+				@_buffer = []
+			end
+			
+		}
 	end
 	
 	private
@@ -166,7 +200,7 @@ class EVID70Camera < Wescontrol::RS232Device
 		"01 06 01 #{vv} #{ww} #{"%02x" % c1} #{"%02x" % c2}"
 	end
 	
-	def send message, deferrable
+	def send_command message, deferrable
 		@_send_queue.unshift ["81 #{message} FF".hexify, deferrable]
 		ready_to_send = ready_to_send; #this makes sure that we send the message if we're ready
 	end
@@ -191,39 +225,6 @@ class EVID70Camera < Wescontrol::RS232Device
 	end
 	
 	def ready_to_send; @_ready_to_send; end
-
-	def read data
-		@_buffer ||= []
-		data.each_byte{|byte|
-			@_buffer << byte
-			if @_buffer[-1] == 0xFF #0xFF terminates each packet
-				if @_buffer[1] >> 4 == 4 #ACK
-					#the last four bits tell us the socket number, so we move
-					#the current command (stored in -1) to there
-					@_last_command[@_buffer[1] & 0b00001111] = @_last_command[-1]
-				 	this.ready_to_send = true
-				elsif @_buffer[1] >> 4 == 5 #completion
-					deferrable = @_last_command[@_buffer[1] & 0b00001111][1]
-					if @_buffer.size == 3 #command
-						deferrable.set_deferred_status :succeeded
-					else #request
-						if deferrable.class == Proc
-							deferrable.send(@buffer[2..-2])
-						else
-							deferrable.set_deferred_status :succeeded, @buffer[2..-2]
-						end
-					end
-				elsif @_buffer[1] >> 4 == 6 #error
-					_error = ERRORS[@_buffer[2]]
-					DaemonKit.logger.error "Camera error: #{_error}"
-					deferrable = @_last_command[buffer[1] & 0b00001111][1]
-					deferrable.set_deferred_status :failed, _error if deferrable.class == EM::Deferrable
-				end
-				@_buffer = []
-			end
-			
-		}
-	end
 end
 
 class String
@@ -240,6 +241,6 @@ class HashEnum
 	end
 	def next
 		@_counter += 1
-		hash[@_keys[@_counter % hash.size]]
+		@_hash[@_keys[@_counter % @_hash.size]]
 	end
 end
