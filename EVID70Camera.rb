@@ -22,11 +22,15 @@ class EVID70Camera < Wescontrol::RS232Device
 	state_var :auto_focus, 			:type => :boolean
 	state_var :auto_white_balance, 	:type => :boolean
 	
+	state_var :focussing,           :type => :boolean, :editable => false
+	state_var :zooming,             :type => :boolean, :editable => false
+	
 	command :zoom_in
 	command :zoom_out
 	command :zoom_stop
 	command :focus_near
 	command :focus_far
+	command :focus_stop
 	command :trigger_auto_focus
 	command :trigger_auto_white_balance
 	command :move_up_left, :type => :array
@@ -83,6 +87,7 @@ class EVID70Camera < Wescontrol::RS232Device
 			:set_focus => proc{|f| p = (f * 11 + 1).round.to_s(16); "01 04 48 0#{p} 00 00 00"},
 			:focus_near => "01 04 08 03",
 			:focus_far => "01 04 08 02",
+			:focus_stop => "01 04 08 00",
 			:set_auto_focus => proc{|on| "01 04 38 0" + (on ? "2" : "3")},
 			:trigger_auto_focus => "01 04 18 01",
 			:set_auto_white_balance => proc{|on| "01 04 0" + (on ? "0" : "5")},
@@ -120,10 +125,10 @@ class EVID70Camera < Wescontrol::RS232Device
 			:power_inquiry => ["09 04 00", proc{|resp|
 				self.power = resp[2] == 2
 			}],
-			:position_inquiry => ["09 06 12", proc{|res|
+			:position_inquiry => ["09 06 12", proc{|resp|
 				self.position = [
-					resp[2..5].collect{|x| x.to_s(16).join.to_i(16)}, #pan position
-					resp[6..9].collect{|x| x.to_s(16).join.to_i(16)}, #tilt position
+					resp[2..5].collect{|x| x.to_s(16)}.join.to_i(16), #pan position
+					resp[6..9].collect{|x| x.to_s(16)}.join.to_i(16), #tilt position
 				]
 			}]
 		}
@@ -151,6 +156,7 @@ class EVID70Camera < Wescontrol::RS232Device
 			end
 			deferrable = EM::DefaultDeferrable.new
 			send_command _message, deferrable
+			ready_to_send = ready_to_send #this makes sure that we send the message if we're ready
 			return deferrable
 		else
 			super.method_missing(method_name, *args)
@@ -168,14 +174,15 @@ class EVID70Camera < Wescontrol::RS232Device
 					@_last_command[@_buffer[1] & 0b00001111] = @_last_command[-1]
 				 	self.ready_to_send = true
 				elsif @_buffer[1] >> 4 == 5 #completion
-					deferrable = @_last_command[@_buffer[1] & 0b00001111][1]
-					if @_buffer.size == 3 #command
-						deferrable.set_deferred_status :succeeded
+					cmd = @_last_command[@_buffer[1] & 0b00001111]
+					if @_buffer.size == 3 && cmd #command
+						cmd[1].set_deferred_status :succeeded
 					else #request
-						if deferrable.class == Proc
-							deferrable.send(@buffer[2..-2])
+						#we don't get ACKs for requests, so the command never gets moved
+						if @_last_command[-1][1].class == Proc
+							@_last_command[-1][1].call(@_buffer[2..-2])
 						else
-							deferrable.set_deferred_status :succeeded, @buffer[2..-2]
+							@_last_command[-1][1].set_deferred_status :succeeded, @_buffer[2..-2]
 						end
 					end
 				elsif @_buffer[1] >> 4 == 6 #error
@@ -202,7 +209,6 @@ class EVID70Camera < Wescontrol::RS232Device
 	
 	def send_command message, deferrable
 		@_send_queue.unshift ["81 #{message} FF".hexify, deferrable]
-		ready_to_send = ready_to_send; #this makes sure that we send the message if we're ready
 	end
 	
 	def ready_to_send=(state)
@@ -210,14 +216,14 @@ class EVID70Camera < Wescontrol::RS232Device
 		@_ready_to_send = true if Time.now - @_last_sent_time > 1
 
 		if @_ready_to_send
-			if @_send_queue.size > 0
-				#we put the command currently being sent into -1 (@_last_command
-				#is a hash, so we can do that), then it's moved to the correct
-				#socket number when we get the ACK
-				@_last_command[-1] = @_send_queue.pop
-			else
-				@_last_command[-1] = @_r_enum.next
+			if @_send_queue.size == 0
+				request = @_r_enum.next
+				send_command request[0], request[1]
 			end
+			#we put the command currently being sent into -1 (@_last_command
+			#is a hash, so we can do that), then it's moved to the correct
+			#socket number when we get the ACK
+			@_last_command[-1] = @_send_queue.pop
 			@_last_sent_time = Time.now
 			@_ready_to_send = false
 			send_string(@_last_command[-1][0])
