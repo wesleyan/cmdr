@@ -111,6 +111,7 @@ module Wescontrol
 			stop_bits 1
 			parity 0
 			message_end "\r\n"
+			message_timeout 2.0
 		end
 		
 		# Creates a new RS232Device instance
@@ -128,9 +129,9 @@ module Wescontrol
 			@data_bits = options[:data_bits] ? options[:data_bits] : 8
 			@stop_bits = options[:stop_bits] ? options[:stop_bits] : 1
 			@parity = options[:parity] ? options[:parity] : 0
+			@message_timeout = options[:message_timeout]
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
-			
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
@@ -150,7 +151,7 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(TIMEOUT) {
+					EM::add_periodic_timer(@message_timeout) {
 						self.ready_to_send = @_ready_to_send
 					}
 					EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection

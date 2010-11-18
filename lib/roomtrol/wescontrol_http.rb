@@ -28,7 +28,6 @@ module Wescontrol
 			@deferred_responses = {}
 			@queue.subscribe{|json|
 				msg = JSON.parse(json)
-				DaemonKit.logger.debug("Received HTTP response: #{msg}")
 				if @deferred_responses[msg["id"]]
 					@deferred_responses.delete(msg["id"]).succeed(msg)
 				end
@@ -54,7 +53,6 @@ module Wescontrol
 		end
 				
 		def devices resp
-			DaemonKit.logger.debug("Running devices")
 			@devices ||= self.class.instance_variable_get(:@devices)
 			
 			if !@path[1]
@@ -84,21 +82,18 @@ module Wescontrol
 			deferrable.timeout TIMEOUT
 			
 			deferrable.callback {|result|
-				DaemonKit.logger.debug("Callback called with #{result}")
 				resp.status = result[:error] ? 500 : 200
 				result.delete("id")
 				resp.content = result.to_json + "\n"
 				resp.send_response
 			}
 			deferrable.errback {|error|
-				DaemonKit.logger.debug("Errback called with #{error}")
 				resp.status = 500
 				resp.content = {:error => :timed_out}.to_json + "\n"
 				resp.send_response
 				@deferred_responses.delete(deferrable)
 			}
 			@deferred_responses[device_req[:id]] = deferrable
-			DaemonKit.logger.debug("Sending #{device}: #{device_req}")
 			@amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
 		end
 		
@@ -121,7 +116,6 @@ module Wescontrol
 		def post path, resp
 			begin
 				data = @http_post_content ? JSON.parse(@http_post_content) : {}
-				DaemonKit.logger.debug("Received POST: #{data}")
 				device_req = {
 					:id => UUIDTools::UUID.random_create.to_s,
 					:queue => @queue_name

@@ -264,7 +264,6 @@ module Wescontrol
 				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
 				amq.queue(@dqueue).subscribe{ |msg|
 					begin
-						DaemonKit.logger.debug("Received message: #{msg}")
 						req = JSON.parse(msg)
 						resp = {:id => req["id"]}
 						case req["type"]
