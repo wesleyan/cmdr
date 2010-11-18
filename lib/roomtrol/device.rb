@@ -252,6 +252,8 @@ module Wescontrol
 							resp["error"] = error
 							@amq_responder.queue(req["queue"]).publish(resp.to_json)
 						end
+					elsif !feedback
+						@amq_responder.queue(req["queue"]).publish(resp.to_json)
 					else
 						resp["result"] = feedback
 						@amq_responder.queue(req["queue"]).publish(resp.to_json)
@@ -261,14 +263,19 @@ module Wescontrol
 				amq = MQ.new
 				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
 				amq.queue(@dqueue).subscribe{ |msg|
-					DaemonKit.logger.debug("Received message: #{msg}")
-					req = JSON.parse(msg)
-					resp = {:id => req["id"]}
-					case req["type"]
-					when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
-					when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
-					when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
-					else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
+					begin
+						DaemonKit.logger.debug("Received message: #{msg}")
+						req = JSON.parse(msg)
+						resp = {:id => req["id"]}
+						case req["type"]
+						when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
+						when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
+						when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
+						else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
+						end
+					rescue
+						resp[:error] = $!
+						handle_feedback.call(nil, req, resp)
 					end
 				}
 			}
