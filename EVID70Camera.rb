@@ -13,6 +13,7 @@ class EVID70Camera < Wescontrol::RS232Device
 	
 	configure do
 		address :type => :string
+		message_timeout 0.2
 	end
 	
 	state_var :power, 				:type => :boolean
@@ -169,6 +170,7 @@ class EVID70Camera < Wescontrol::RS232Device
 			@_buffer << byte
 			if @_buffer[-1] == 0xFF #0xFF terminates each packet
 				if @_buffer[1] >> 4 == 4 #ACK
+					DaemonKit.logger.debug("ACK received")
 					#the last four bits tell us the socket number, so we move
 					#the current command (stored in -1) to there
 					@_last_command[@_buffer[1] & 0b00001111] = @_last_command[-1]
@@ -217,6 +219,7 @@ class EVID70Camera < Wescontrol::RS232Device
 
 		if @_ready_to_send
 			if @_send_queue.size == 0
+				return
 				request = @_r_enum.next
 				send_command request[0], request[1]
 			end
@@ -226,6 +229,7 @@ class EVID70Camera < Wescontrol::RS232Device
 			@_last_command[-1] = @_send_queue.pop
 			@_last_sent_time = Time.now
 			@_ready_to_send = false
+			DaemonKit.logger.debug("Sending command")
 			send_string(@_last_command[-1][0])
 		end
 	end
