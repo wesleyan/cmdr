@@ -133,7 +133,7 @@ module RoomtrolVideo
 		# Currently stopped
 		STOPPED_STATE = :stopped
 		# The queue on which the recorder sends fanout messages to interested parties
-		FANOUT_EXCHANGE = "roomtrolvideo:messages"
+		FANOUT_EXCHANGE = "roomtrol:video:messages"
 		# The number of times to try restarting a recording that has stopped
 		RESTART_LIMIT = 10
 		# The number of times per second to checkup on processess
@@ -156,7 +156,7 @@ module RoomtrolVideo
 		def run
 			AMQP.start(:host => '127.0.0.1') do
 				mq = MQ.new
-				@fanout = MQ.fanout(FANOUT_EXCHANGE)
+				@fanout = MQ.new.fanout(FANOUT_EXCHANGE)
 				mq.queue(@send_queue).subscribe do |msg|
 					DaemonKit.logger.debug("Received: #{msg}")
 					req = JSON.parse(msg)
@@ -209,7 +209,7 @@ module RoomtrolVideo
 			@recording_start_time = Time.now
 			@restart_count = RESTART_LIMIT
 			self.state = RECORDING_STATE
-			file = filename_for_time(@rec_started)
+			file = filename_for_time(@recording_start_time)
 			FileUtils.mkdir_p file[0]
 			@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", file.join("/"))
 		end
@@ -268,12 +268,14 @@ module RoomtrolVideo
 	
 		private
 		def state= new_state
-			send_fanout({
-				:message => :state_changed,
-				:from => @state,
-				:to => new_state,
-				:time => new_state == RECORDING_STATE ? @recording_start_time : Time.now
-			})
+			if @state != new_state
+				send_fanout({
+					:message => :state_changed,
+					:from => @state,
+					:to => new_state,
+					:time => new_state == RECORDING_STATE ? @recording_start_time : Time.now
+				})
+			end
 			@state = new_state
 		end
 		#Thanks to God's process.rb for inspiration for the following methods
