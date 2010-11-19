@@ -297,7 +297,7 @@ module Wescontrol
 				end
 			} if self.instance_variable_get(:@state_vars)
 			
-			subclass.instance_variable_set(:@configuration, @configuration)
+			subclass.instance_variable_set(:@_configuration, @_configuration)
 						
 			self.instance_variable_get(:@command_vars).each{|name, options|
 				subclass.class_eval do
@@ -308,12 +308,12 @@ module Wescontrol
 		
 		# @return [Hash{Symbol => Object}] A map from config var name to value
 		def self.configuration
-			@configuration
+			@_configuration
 		end
 		
 		# @return [Hash{Symbol => Object}] A map from config var name to value
 		def configuration
-			self.class.instance_variable_get(:@configuration)
+			self.class.instance_variable_get(:@_configuration)
 		end
 		
 		# @return [Hash{Symbol => Hash}] A map from config var name to a hash containing
@@ -379,9 +379,9 @@ module Wescontrol
 		def self.configure &block
 			ch = ConfigurationHandler.new
 			ch.instance_eval(&block)
-			@configuration ||= {}
+			@_configuration ||= {}
 			@config_vars ||= {}
-			@configuration = @configuration.merge ch.configuration
+			@_configuration = @_configuration.merge ch.configuration
 			@config_vars = @config_vars.merge ch.config_vars
 		end
 		
@@ -586,6 +586,7 @@ module Wescontrol
 		# 	of the device. Includes all information neccessary to recreate the device on the
 		# 	next restart.
 		def to_couch
+			DaemonKit.logger.debug "Configuration: #{configuration}"
 			hash = {:state_vars => {}, :config => configuration, :commands => {}, :name => @name}
 			
 			#if configuration
