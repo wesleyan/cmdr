@@ -141,7 +141,7 @@ class EVID70Camera < Wescontrol::RS232Device
 		@_send_queue = []
 		@_last_sent_time = Time.now
 	
-		super(name, :port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1, :name => options[:name])
+		super(name, options)
 				
 		ready_to_send = true
 	end
@@ -157,7 +157,7 @@ class EVID70Camera < Wescontrol::RS232Device
 			end
 			deferrable = EM::DefaultDeferrable.new
 			send_command _message, deferrable
-			ready_to_send = ready_to_send #this makes sure that we send the message if we're ready
+			self.ready_to_send = ready_to_send #this makes sure that we send the message if we're ready
 			return deferrable
 		else
 			super.method_missing(method_name, *args)
@@ -192,7 +192,7 @@ class EVID70Camera < Wescontrol::RS232Device
 					DaemonKit.logger.error "Camera error: #{_error}"
 					cmd = @_last_command[@_buffer[1] & 0b00001111]
 					if cmd
-						cmd[1].set_deferred_status :failed, _error if deferrable.class == EM::Deferrable
+						cmd[1].set_deferred_status :failed, _error if cmd[1].is_a? EM::Deferrable
 					end
 				end
 				@_buffer = []
@@ -229,7 +229,6 @@ class EVID70Camera < Wescontrol::RS232Device
 			@_last_command[-1] = @_send_queue.pop
 			@_last_sent_time = Time.now
 			@_ready_to_send = false
-			DaemonKit.logger.debug("Sending command")
 			send_string(@_last_command[-1][0])
 		end
 	end
