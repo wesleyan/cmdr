@@ -13,7 +13,7 @@ require 'uuidtools'
 
 class VideoRecorder < Wescontrol::Device
 	SEND_QUEUE = "roomtrol:video:send:queue"
-	FANOUT_QUEUE = "roomtrolvideo:messages"
+	FANOUT_QUEUE = "roomtrol:video:messages"
 	state_var :state, :type => :option, :options => [:playing, :recording, :stopped]
 	state_var :recording_started, :type => :time, :editable => false
 	state_var :recording_stopped, :type => :time, :editable => false
@@ -29,7 +29,7 @@ class VideoRecorder < Wescontrol::Device
 		super(name, options)
 	end
 	
-	def amqp_setup
+	def run
 		mq = MQ.new
 		mq.queue(@response_queue).subscribe do |json|
 			msg = JSON.load(json)
@@ -41,14 +41,13 @@ class VideoRecorder < Wescontrol::Device
 				DaemonKit.logger.debug("Unhandled message: #{msg}")
 			end
 		end
-	
-		mq.queue(FANOUT_QUEUE).subscribe do |json|
+		mq.queue('listener').bind(mq.fanout(FANOUT_QUEUE)).subscribe do |json|
 			msg = JSON.load(json)
 			DaemonKit.logger.debug("Received on fanout: #{msg}")
 			case msg["message"]
 			when "state_changed"
 				self.state = msg["to"].to_sym
-				time = DateTime.parse(msg["time"])
+				time = DateTime.parse(msg["time"]).to_time
 				case msg["to"]
 				when "recording"
 					self.recording_started = time
@@ -69,6 +68,8 @@ class VideoRecorder < Wescontrol::Device
 				:get => "current_state"
 			}.to_json
 		)
+		
+		super
 	end
 		
 	def set_state state
