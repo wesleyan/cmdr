@@ -116,7 +116,7 @@ module RoomtrolVideo
 		    tee name=t_vid ! queue ! \
 		    xvimagesink sync=false t_vid. ! queue ! \
 		    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
-		    alsasrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
+		    audiotestsrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
 		    audioconvert ! queue ! mux. avimux name=mux ! \
 		    filesink location=OUTPUT_FILE?
 

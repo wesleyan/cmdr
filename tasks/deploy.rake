@@ -103,7 +103,7 @@ task :deploy_test, :needs => [:collect_password] do
 		end
 		Net::SCP.start(controller, 'roomtrol', :password => OPTS[:password]) do |scp|
 			local_path = "/tmp/roomtrol-daemon.zip"
-			remote_path = "/var/roomtrol-daemon"
+			remote_path = "/tmp"
 			puts "\tCopying roomtrol-daemon to #{controller}"
 			scp.upload! local_path, remote_path, :recursive => false
 		end
@@ -112,7 +112,8 @@ task :deploy_test, :needs => [:collect_password] do
 			path = "/var/roomtrol-daemon"
 			commands = [
 				"cd #{path}",
-				"rm -Rf !(roomtrol-daemon.zip)",
+				"rm -Rf *",
+				"mv /tmp/roomtrol-daemon.zip .",
 				"unzip roomtrol-daemon.zip",
 				"rm roomtrol-daemon.zip",
 				"echo 'Unzipped zip file'",
