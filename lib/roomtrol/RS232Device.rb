@@ -426,6 +426,10 @@ module Wescontrol
 				end
 				message_received = data.match(configuration[:message_end])
 				@_buffer = s.rest
+			elsif configuration[:message_format].is_a? Regexp
+				while msg = s.scan(configuration[:message_format]) do
+					handle_message.call(msg.match(configuration[:message_format])[1])
+				end
 			elsif configuration[:message_end].is_a? Proc
 				loop do
 					loop_message_received = false

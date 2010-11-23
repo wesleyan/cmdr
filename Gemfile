@@ -10,6 +10,7 @@ gem 'rake'
 gem 'daemon-kit'
 gem 'yard'
 gem 'bluecloth'
+gem 'rspec'
 
 gem 'macaddr'
 gem 'json'
