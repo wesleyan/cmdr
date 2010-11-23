@@ -120,7 +120,7 @@ task :deploy_test, :needs => [:collect_password] do
 				"echo 'Updated roomtrol' | wall",
 				"rvm 1.9.2",
 				"echo 'Switched to rvm'",
-				"bundle install"
+				"echo '#{OPTS[:password]}' | rvmsudo -S bundle install"
 			]
 		  
 			puts ssh.exec!(commands.join("; "))
