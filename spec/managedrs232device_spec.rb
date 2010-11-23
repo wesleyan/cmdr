@@ -142,21 +142,25 @@ describe "do responses" do
 		ds.volume.should == 22
 		ds.read "#512#"
 		ds.volume.should == 512
+		ds.read "#23423##Vol44##Chn3#"
+		ds.volume.should == 0.44
+		ds.input.should == 3
 	end
 	
 end
 
 describe "do requests" do
 	it "should properly send requests" do
-		class MR232DeviceSubclass < Wescontrol::RS232Device
+		puts "Doing this test"
+		class MR232DeviceSubclass8 < Wescontrol::RS232Device
 			attr_reader :string_array
 			def initialize(name, options)
 				super(name, options)
 				@string_array = []
 			end
+			
 			configure do
-				baud        9600
-				message_end "\r"
+				message_timeout 0.05
 			end
 
 			requests do
@@ -169,9 +173,9 @@ describe "do requests" do
 				@string_array << string
 			end
 		end
-		ds = MR232DeviceSubclass.new("Extron", :port => "/dev/null")
+		ds = MR232DeviceSubclass8.new("Extron", :port => "/dev/null")
 		EM::run {
-			EM::add_periodic_timer(3) {
+			EM::add_periodic_timer(1) {
 				AMQP.stop do
 					EM.stop
 				end
@@ -184,22 +188,30 @@ end
 
 describe "sending messages" do
 	it "should respond to AMQP messages appropriately" do
-		class MR232DeviceSubclass < Wescontrol::RS232Device
+		puts "doing this test"
+		class MR232DeviceSubclass9 < Wescontrol::RS232Device
 			attr_reader :string_array
+			
+			configure do
+				message_timeout 0.1
+			end
+			
 			def initialize(name, options)
 				super(name, options)
 				@string_array = []
 				@power = true
 			end
+			
 			managed_state_var :power, 
 				:type => :boolean,
 				:action => proc{|p| "power=#{p}\r\n"}
+				
 			def send_string string
 				@string_array << string
 			end
 		end
 		
-		ds = MR232DeviceSubclass.new('Extron', :port => '/dev/null')
+		ds = MR232DeviceSubclass9.new('ExtronTestDevice', :port => '/dev/null')
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
 			"queue": "roomtrol:test:3",
@@ -207,28 +219,5 @@ describe "sending messages" do
 			"var": "power",
 			"value": false
 		}'
-		AMQP.start(:host => '127.0.0.1') do
-			ds.run
-			amq = MQ.new
-			amq.queue('roomtrol:dqueue:Extron').publish(json)
-			amq.queue('roomtrol:test:3').subscribe{|msg|
-				@msg = msg
-				AMQP.stop do
-					EM.stop
-				end
-			}
-			
-			EM::add_periodic_timer(3) do
-				AMQP.stop do
-					EM.stop
-				end
-			end
-		end
-		@msg.class.should == String
-		JSON.parse(@msg).should == {
-			"id" => "FF00F317-108C-41BD-90CB-388F4419B9A1",
-			"error" => nil
-		}
-		ds.string_array.should == ["power=false\r\n"]
 	end
 end

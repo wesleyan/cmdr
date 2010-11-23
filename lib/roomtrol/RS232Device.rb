@@ -75,7 +75,7 @@ module Wescontrol
 	# 3. The device is now ready for a new message, starting the cycle over.
 	# 
 	# In particular, since many devices can only handle one message at a time, RS232Device waits
-	# until a response is received or {RS232Device::TIMEOUT TIMEOUT} seconds have passed before
+	# until a response is received or message_timeout seconds have passed before
 	# sending the next message in the queue. Devices with more complex message handling (for example,
 	# those with multiple message queues) may not work optimally with this strategy. In those cases,
 	# writing the message handling system yourself may be preferable. It is also very important that
@@ -99,8 +99,6 @@ module Wescontrol
 	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
 	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
 	class RS232Device < Device
-		# The number of seconds to way for a reply before transmitting the next message
-		TIMEOUT = 2.0
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
 
@@ -123,19 +121,14 @@ module Wescontrol
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
 			options = options.symbolize_keys
-			@port = options[:port]
-			throw "Must supply serial port parameter" unless @port
-			@baud = options[:baud] ? options[:baud] : 9600
-			@data_bits = options[:data_bits] ? options[:data_bits] : 8
-			@stop_bits = options[:stop_bits] ? options[:stop_bits] : 1
-			@parity = options[:parity] ? options[:parity] : 0
-			@message_timeout = options[:message_timeout]
+			super(name, options, db_uri, dqueue)
+			puts "MT: #{configuration[:message_timeout]}"
+			throw "Must supply serial port parameter" unless configuration[:port]
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
-			super(name, options, db_uri, dqueue)
 		end
 
 		# Sends a string to the serial device
@@ -151,10 +144,15 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(@message_timeout) {
+					EM::add_periodic_timer(configuration[:message_timeout]) {
 						self.ready_to_send = @_ready_to_send
 					}
-					EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
+					EM::open_serial configuration[:port], 
+						configuration[:baud], 
+						configuration[:data_bits], 
+						configuration[:stop_bits], 
+						configuration[:parity], 
+						@connection
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -418,18 +416,17 @@ module Wescontrol
 				end
 			}
 			message_received = false
-			#if message_end is a string, we scan through the buffer for message_end
-			if configuration[:message_end].is_a? String
+			if configuration[:message_format].is_a? Regexp
+				while msg = s.scan(configuration[:message_format]) do
+					handle_message.call(msg.match(configuration[:message_format])[1])
+				end 
+			elsif configuration[:message_end].is_a? String
 				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
 					msg.gsub!(configuration[:message_end], "")
 					handle_message.call(msg)
 				end
 				message_received = data.match(configuration[:message_end])
 				@_buffer = s.rest
-			elsif configuration[:message_format].is_a? Regexp
-				while msg = s.scan(configuration[:message_format]) do
-					handle_message.call(msg.match(configuration[:message_format])[1])
-				end
 			elsif configuration[:message_end].is_a? Proc
 				loop do
 					loop_message_received = false
@@ -457,11 +454,11 @@ module Wescontrol
 		
 		# @private
 		# When set to true, sends the next thing in the send queue or the next request if send_queue
-		# is empty. When set to false, will set itself to true if {RS232Device::TIMEOUT} seconds have
+		# is empty. When set to false, will set itself to true if message_timeout seconds have
 		# passed sent the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
-			if Time.now - @_last_sent_time > TIMEOUT
+			if Time.now - @_last_sent_time > configuration[:message_timeout]
 				DaemonKit.logger.debug("Request timed out") unless state
 				@_ready_to_send = true
 			end
@@ -485,7 +482,7 @@ module Wescontrol
 				@_last_sent_time = Time.now
 				@_ready_to_send = false
 				@_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
-				@_message_handler.timeout(TIMEOUT)
+				@_message_handler.timeout(configuration[:message_timeout])
 				send_string message[0]
 			end
 		end
