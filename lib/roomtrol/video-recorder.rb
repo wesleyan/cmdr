@@ -246,7 +246,7 @@ module RoomtrolVideo
 						self.state = STOPPED_STATE
 					else
 						@restart_count = @restart_count.to_i - 1
-						file = filename_for_time(@rec_started)
+						file = filename_for_time(@recording_start_time)
 						FileUtils.mkdir_p file[0]
 						new_filename = "#{file.join("/")}.#{RESTART_LIMIT-@restart_count}"
 						@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
