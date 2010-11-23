@@ -113,7 +113,7 @@ module RoomtrolVideo
 		# The command to start recording video
 		RECORD_CMD = %q?
 		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
-		    tee name=t_vid ! queue ! \
+		    tee name=t_vid ! queue ! cairotextoverlay text="recording" valign=bottom halign=right ! \
 		    xvimagesink sync=false t_vid. ! queue ! \
 		    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
 		    audiotestsrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
