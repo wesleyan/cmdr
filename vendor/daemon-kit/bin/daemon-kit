@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+begin
+  require 'daemon_kit'
+rescue LoadError
+  $:.unshift File.expand_path( '../../lib', __FILE__ )
+  require 'daemon_kit'
+end
+
+if %w(-v --version).include? ARGV.first
+  puts "#{File.basename($0)} #{DaemonKit::VERSION} (http://github.com/kennethkalmer/daemon-kit)"
+  exit(0)
+end
+
+require 'daemon_kit/generators'
+require 'generators/daemon_kit/app/app_generator'
+
+DaemonKit::Generators::AppGenerator.start

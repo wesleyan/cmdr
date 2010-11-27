@@ -30,21 +30,21 @@ module Wescontrol
 					end
 				end
 				EM::add_periodic_timer(TIMEOUT) do
-					buffer.each{|var, hash|
+					buffer.delete_if{|var, hash|
 						#only process the events if it's been at least TIMEOUT seconds since the last event
-						next unless hash[:time] + TIMEOUT < Time.now
-						case hash[:events].size
-						when 1
-							db.save_doc(hash[:events])
-						when 2
-							db.save_doc(hash[:events][0])
-							db.save_doc(hash[:events][1])
-						else
-							if hash[:events].size > 2
+						hash[:time] + TIMEOUT >= Time.now ? false :
+							case hash[:events].size
+							when 1
 								db.save_doc(hash[:events][0])
-								db.save_doc(hash[:events][-1])
+							when 2
+								db.save_doc(hash[:events][0])
+								db.save_doc(hash[:events][1])
+							else
+								if hash[:events].size > 2
+									db.save_doc(hash[:events][0])
+									db.save_doc(hash[:events][-1])
+								end
 							end
-						end
 					}
 				end
 			}

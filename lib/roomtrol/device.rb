@@ -15,8 +15,8 @@ end
 
 module Wescontrol
 	# Device provides a DSL for describing devices of all kinds. Anything that
-	# can be controlled by a computer—whether by IR, serial, ethernet, or laser
-	# pulse—can be described by this DSL. Furthermore, in order to be part of
+	# can be controlled by a computer--whether by IR, serial, ethernet, or laser
+	# pulse--can be described by this DSL. Furthermore, in order to be part of
 	# the Roomtrol system, a device _must_ be implemented as a Device. New devices
 	# are created by either subclassing Device directly or by subclassing one of
 	# its child classes, like RS232Device, Projector, or VideoSwitcher. If there
@@ -30,7 +30,7 @@ module Wescontrol
 	# #Device Variables
 	# The basis for this
 	# DSL is the concept of state variables, defined by the state_var method.
-	# State vars are—as their name suggests—variables that track the state
+	# State vars are--as their name suggests--variables that track the state
 	# of something about the device. For example, a projector device might
 	# have have a state var "power," which is true if the projector is on
 	# and false if the projector is off. There are two kinds of state vars:
@@ -240,6 +240,7 @@ module Wescontrol
 		# react appropriately to events.
 		def run
 			AMQP.start(:host => '127.0.0.1'){
+				self.amqp_setup
 				@amq_responder = MQ.new
 				handle_feedback = proc {|feedback, req, resp, job|
 					if feedback.is_a? EM::Deferrable
@@ -251,6 +252,8 @@ module Wescontrol
 							resp["error"] = error
 							@amq_responder.queue(req["queue"]).publish(resp.to_json)
 						end
+					elsif !feedback
+						@amq_responder.queue(req["queue"]).publish(resp.to_json)
 					else
 						resp["result"] = feedback
 						@amq_responder.queue(req["queue"]).publish(resp.to_json)
@@ -260,17 +263,26 @@ module Wescontrol
 				amq = MQ.new
 				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
 				amq.queue(@dqueue).subscribe{ |msg|
-					DaemonKit.logger.debug("Received message: #{msg}")
-					req = JSON.parse(msg)
-					resp = {:id => req["id"]}
-					case req["type"]
-					when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
-					when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
-					when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
-					else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
+					begin
+						req = JSON.parse(msg)
+						resp = {:id => req["id"]}
+						case req["type"]
+						when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
+						when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
+						when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
+						else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
+						end
+					rescue
+						resp[:error] = $!
+						handle_feedback.call(nil, req, resp)
 					end
 				}
 			}
+		end
+		
+		# Subclasses can override this method to add addition AMQP setup, like setting their own
+		# callbacks and handlers
+		def amqp_setup
 		end
 
 		# @private
@@ -285,7 +297,7 @@ module Wescontrol
 				end
 			} if self.instance_variable_get(:@state_vars)
 			
-			subclass.instance_variable_set(:@configuration, @configuration)
+			subclass.instance_variable_set(:@_configuration, @_configuration)
 						
 			self.instance_variable_get(:@command_vars).each{|name, options|
 				subclass.class_eval do
@@ -296,12 +308,12 @@ module Wescontrol
 		
 		# @return [Hash{Symbol => Object}] A map from config var name to value
 		def self.configuration
-			@configuration
+			@_configuration
 		end
 		
 		# @return [Hash{Symbol => Object}] A map from config var name to value
 		def configuration
-			self.class.instance_variable_get(:@configuration)
+			self.class.instance_variable_get(:@_configuration)
 		end
 		
 		# @return [Hash{Symbol => Hash}] A map from config var name to a hash containing
@@ -367,9 +379,9 @@ module Wescontrol
 		def self.configure &block
 			ch = ConfigurationHandler.new
 			ch.instance_eval(&block)
-			@configuration ||= {}
+			@_configuration ||= {}
 			@config_vars ||= {}
-			@configuration = @configuration.merge ch.configuration
+			@_configuration = @_configuration.merge ch.configuration
 			@config_vars = @config_vars.merge ch.config_vars
 		end
 		
@@ -379,7 +391,7 @@ module Wescontrol
 		def self.state_vars; @state_vars; end
 		
 		# This method, when called in a class definition, defines a new state variable for the
-		# device class. State vars are—as their name suggests—variables that track the state
+		# device class. State vars are--as their name suggests--variables that track the state
 		# of something about the device. For example, a projector device might
 		# have have a state var "power," which is true if the projector is on
 		# and false if the projector is off. There are two kinds of state vars:
@@ -537,7 +549,7 @@ module Wescontrol
 		# feature but no command for setting the zoom level directly. However, for situation
 		# where the command is changing an obverable state, like with on/off, a state var should
 		# be used instead. In addition to calling `command`, you should create a method with the
-		# same name as the command—this will be called when the command is activated by the user.
+		# same name as the command--this will be called when the command is activated by the user.
 		# Alternatively, you can pass in a proc to :action which will create this method
 		# automatically.
 		# @param [Symbol] name The name for the device. Should follow the general nameing convention:
@@ -574,13 +586,15 @@ module Wescontrol
 		# 	of the device. Includes all information neccessary to recreate the device on the
 		# 	next restart.
 		def to_couch
-			hash = {:state_vars => {}, :config => {}, :commands => {}}
+			DaemonKit.logger.debug "Configuration: #{configuration}"
+			hash = {:state_vars => {}, :config => configuration, :commands => {}, :name => @name}
 			
-			if config_vars
-				config_vars.each{|var, options|
-					hash[:config][var] = configuration[var]
-				}
-			end
+			#if configuration
+			#	puts "Config vars: #{config_vars.inspect}"
+			#	config_vars.each{|var, options|
+			#		hash[:config][var] = configuration[var]
+			#	}
+			#end
 			
 			self.class.state_vars.each{|var, options|
 				if options[:type] == :time
@@ -668,7 +682,7 @@ module Wescontrol
 			message[:update] = true
 			message[:severity] ||= 0.1
 			message[:time] ||= Time.now.to_i
-			@amq_responder.queue(EVENT_QUEUE, :durable => true).publish(
+			@amq_responder.queue(EVENT_QUEUE).publish(
 				message.to_json,
 				:persistent => true
 			) if @amq_responder
@@ -697,7 +711,6 @@ module Wescontrol
 				end
 			end
 			if changed
-				DaemonKit.logger.debug("Changed running")
 				update = {
 					'state_update' => true,
 					'var' => changed,

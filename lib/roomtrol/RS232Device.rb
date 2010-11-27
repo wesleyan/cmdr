@@ -12,7 +12,7 @@ module Wescontrol
 	# strings to and from the device. However, most devices should be able to take advantage
 	# of the various "managed" features, which can greatly simplify the task of writing drivers
 	# for RS232 devices. In fact, using this class it is possible to write drivers without any
-	# real code at all besides some string handling.
+	# real code at all (besides some string handling).
 	# 
 	# There are several abstractions provided which can take over a part of device handling.
 	# Perhaps the most widely applicable is the {RS232Device::requests requests} abstraction.
@@ -75,7 +75,7 @@ module Wescontrol
 	# 3. The device is now ready for a new message, starting the cycle over.
 	# 
 	# In particular, since many devices can only handle one message at a time, RS232Device waits
-	# until a response is received or {RS232Device::TIMEOUT TIMEOUT} seconds have passed before
+	# until a response is received or message_timeout seconds have passed before
 	# sending the next message in the queue. Devices with more complex message handling (for example,
 	# those with multiple message queues) may not work optimally with this strategy. In those cases,
 	# writing the message handling system yourself may be preferable. It is also very important that
@@ -95,10 +95,10 @@ module Wescontrol
 	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
 	# + *message_end*: the character(s) which demarcate the end of a message; for ASCII-based protocols usually
 	# 	a newline ("\n") or a carriage return and newline ("\r\n"). You must set this if you want message
-	# 	interpretation to work correctly.
+	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
+	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
+	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
 	class RS232Device < Device
-		# The number of seconds to way for a reply before transmitting the next message
-		TIMEOUT = 0.5
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
 
@@ -109,6 +109,7 @@ module Wescontrol
 			stop_bits 1
 			parity 0
 			message_end "\r\n"
+			message_timeout 2.0
 		end
 		
 		# Creates a new RS232Device instance
@@ -120,18 +121,14 @@ module Wescontrol
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
 			options = options.symbolize_keys
-			@port = options[:port]
-			throw "Must supply serial port parameter" unless @port
-			@baud = options[:baud] ? options[:baud] : 9600
-			@data_bits = options[:data_bits] ? options[:data_bits] : 8
-			@stop_bits = options[:stop_bits] ? options[:stop_bits] : 1
-			@parity = options[:parity] ? options[:parity] : 0
+			super(name, options, db_uri, dqueue)
+			puts "MT: #{configuration[:message_timeout]}"
+			throw "Must supply serial port parameter" unless configuration[:port]
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
-			
 			@_send_queue = []
 			@_ready_to_send = true
-			super(name, options, db_uri, dqueue)
+			@_last_sent_time = Time.at(0)
 		end
 
 		# Sends a string to the serial device
@@ -147,8 +144,15 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(TIMEOUT) { self.ready_to_send = @_ready_to_send}
-					EM::open_serial @port, @baud, @data_bits, @stop_bits, @parity, @connection
+					EM::add_periodic_timer(configuration[:message_timeout]) {
+						self.ready_to_send = @_ready_to_send
+					}
+					EM::open_serial configuration[:port], 
+						configuration[:baud], 
+						configuration[:data_bits], 
+						configuration[:stop_bits], 
+						configuration[:parity], 
+						@connection
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -182,7 +186,7 @@ module Wescontrol
 		# 	should return the string which, when sent to the device, will cause it to enter
 		# 	the chosen state.
 		# @example
-		# 	maanged_state_var :input, 
+		# 	managed_state_var :input, 
 		# 		:type => :option, 
 		# 		:display_order => 1, 
 		# 		:options => ("1".."6").to_a,
@@ -255,6 +259,12 @@ module Wescontrol
 		# 
 		# `match` takes three arguments: a name, a matcher and an interpreter. `nack` and `ack` each
 		# take only a matcher. `error` takes a name, a matcher and a string message.
+		#
+		# Note that response can be used in two ways: a in the first example, in which case the provided
+		# block is evaluated in the context of a special class (which means code inside of the block has no
+		# access to local variables or methods), or by providing a parameter into the block, in which
+		# case the block is evaluated in the context of the class (*not the instance*), but response methods 
+		# (like `match`) must be called on that argument (see the second example).
 		# @example
 		# 	responses do
 		# 		#regular expression matcher
@@ -267,9 +277,13 @@ module Wescontrol
 		# 		nack "nack"
 		# 		error :power_error, "power_error", "Projector failed to turn on"
 		# 	end
+		# @example
+		# 	responses do |r|
+		# 		r.match :volume, @matchers[:volume], proc{|m| self.volume = m[1].to_i/100.0}
+		# 	end
 		def self.responses &block
 			rh = ResponseHandler.new
-			rh.instance_eval(&block)
+			block.arity < 1 ? rh.instance_eval(&block) : block.call(rh)
 			@_matchers ||= []
 			@_matchers += rh.matchers if rh.matchers
 		end
@@ -314,6 +328,12 @@ module Wescontrol
 		# In essence, we scale all of the priorities such that the smallest is one; these scaled
 		# priorities are then the number of copies. We then interleave them as much as possible so that
 		# there is a regular spacing between requests.
+		#
+		# Note that requests can be used in two ways: a in the first example, in which case the provided
+		# block is evaluated in the context of a special class (which means code inside of the block has no
+		# access to local variables or methods), or by providing a parameter into the block, in which
+		# case the block is evaluated in the context of the class (*not the instance*), but request methods 
+		# (specifically `send`) must be called on that argument (see the second example).
 		# @example
 		# 	requests do
 		# 		send :input,  "I\r\n", 1.5
@@ -322,9 +342,15 @@ module Wescontrol
 		# 	end
 		# 	# The requests vector created by these priorities is as follows
 		# 	[:input, :volume, :mute, :input, :mute, :input]
+		#
+		# @example
+		# 	requests do |r|
+		# 		r.send :input, get_string(:input), 1.5
+		# 	end
 		def self.requests &block
 			rh = RequestHandler.new
-			rh.instance_eval(&block)
+			block.arity < 1 ? rh.instance_eval(&block) : block.call(rh)
+			
 			@_requests ||= []
 			@_requests += rh.requests
 			@_request_scheduler = []
@@ -360,8 +386,7 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-			while msg = s.scan(/.+?#{configuration[:message_end]}/) do
-				msg.gsub!(configuration[:message_end], "")
+			handle_message = proc {|msg|
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -379,32 +404,64 @@ module Wescontrol
 							when :nack then
 								@_message_handler.fail
 							when :error then
-								resp = m[2].is_a? Proc ? m[2].call(arg) : m[2]
+								resp = m[2].is_a?(Proc) ? instance_exec(arg, &m[2]) : m[2]
 								@_message_handler.fail resp
 							else
 								@_message_handler.succeed instance_exec(arg, &m[2])
 						end
 						@_message_handler = nil
-					else
+					elsif m[2].is_a? Proc
 						instance_exec(arg, &m[2])
 					end
 				end
+			}
+			message_received = false
+			if configuration[:message_format].is_a? Regexp
+				while msg = s.scan(configuration[:message_format]) do
+					handle_message.call(msg.match(configuration[:message_format])[1])
+				end 
+			elsif configuration[:message_end].is_a? String
+				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
+					msg.gsub!(configuration[:message_end], "")
+					handle_message.call(msg)
+				end
+				message_received = data.match(configuration[:message_end])
+				@_buffer = s.rest
+			elsif configuration[:message_end].is_a? Proc
+				loop do
+					loop_message_received = false
+					@_buffer.size.times{|start|
+						(start+1).upto(@_buffer.size){|_end|
+							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
+								#DaemonKit.logger.debug("Y: #{@_buffer.bytes.to_a[0..i].collect{|x| x.to_s(16)}.join(" ")}")
+								handle_message.call(@_buffer[start.._end])
+								@_buffer = @_buffer[(_end+1)..-1]
+								loop_message_received = true
+								message_received |= loop_message_received
+								break
+							end
+						}
+					}
+					break unless loop_message_received
+				end
+				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
 			end
-			@_buffer = s.rest
 			#if we got the message end signal, we're safe to send the next thing
-			if data.match(configuration[:message_end])
+			if message_received
 				self.ready_to_send = true
 			end
 		end
 		
 		# @private
 		# When set to true, sends the next thing in the send queue or the next request if send_queue
-		# is empty. When set to false, will set itself to true if {RS232Device::TIMEOUT} seconds have
+		# is empty. When set to false, will set itself to true if message_timeout seconds have
 		# passed sent the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
-			@_ready_to_send = true if !@_last_sent_time || Time.now - @_last_sent_time > TIMEOUT
-
+			if Time.now - @_last_sent_time > configuration[:message_timeout]
+				DaemonKit.logger.debug("Request timed out") unless state
+				@_ready_to_send = true
+			end
 			if @_ready_to_send
 				if @_send_queue.size == 0
 					request = choose_request
@@ -425,7 +482,7 @@ module Wescontrol
 				@_last_sent_time = Time.now
 				@_ready_to_send = false
 				@_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
-				@_message_handler.timeout(TIMEOUT)
+				@_message_handler.timeout(configuration[:message_timeout])
 				send_string message[0]
 			end
 		end
