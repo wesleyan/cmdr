@@ -198,75 +198,71 @@ module RoomtrolVideo
 		end
 	
 		def start_playback
-			if @current_pid
-				kill_command @current_pid
-			end
+			@current_process.kill if @current_process
+			
 			self.state = PLAYING_STATE
-			@restart_count = RESTART_LIMIT
-			@current_pid = start_command PLAY_CMD
+			@current_process = RoomtrolVideo::ProcessMonitor.new(PLAY_CMD)
+			@current_process.start
 		end
 	
 		def start_recording
-			if @current_pid
-				kill_command @current_pid
-			end
+			@current_process.kill if @current_process
+			
 			@recording_start_time = Time.now
-			@restart_count = RESTART_LIMIT
 			self.state = RECORDING_STATE
 			file = filename_for_time(@recording_start_time)
 			FileUtils.mkdir_p file[0]
-			@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", file.join("/"))
+			
+			@current_process = RoomtrolVideo::ProcessMonitor.new(RECORD_CMD.gsub("OUTPUT_FILE", file.join("/")))
+			@current_process.start
+			
 			@video_files = [file]
 		end
 	
 		def stop
-			puts "Stopping #{@current_pid}"
-			if @current_pid
+			if @current_process
 				self.state = STOPPED_STATE
-				kill_command @current_pid
+				@current_process.kill
 			end
 		end
 	
 		def watch
 			case @state
 			when PLAYING_STATE
-				if !alive?(@current_pid)
-					DaemonKit.logger.debug("Playing but not alive on #{@current_pid}")
-					if @restart_count <= 0
+				if @current_process && !@current_process.alive?
+					DaemonKit.logger.debug("Playing but not alive on #{@current_process.pid}")
+					if @current_process.restarts >= RESTART_LIMIT
+						@current_process = nil
 						self.state = STOPPED_STATE
 					else
-						@restart_count = @restart_count.to_i - 1
-						@current_pid = start_command PLAY_CMD
+						@current_process.start
 						send_fanout({
 							:message => :recording_died,
-							:restart_count => @restart_count
+							:restart_count => @current_process.restarts
 						})
 					end
-				else
-					@restart_count = RESTART_LIMIT
 				end
 			when RECORDING_STATE
-				if !alive?(@current_pid)
-					if @restart_count <= 0
+				if @current_process && !@current_process.alive?
+					if @current_process.restarts >= RESTART_LIMIT
+						@current_process = nil
 						self.state = STOPPED_STATE
 					else
-						@restart_count = @restart_count.to_i - 1
 						file = filename_for_time(@recording_start_time)
 						FileUtils.mkdir_p file[0]
-						new_filename = "#{file.join("/")}.#{RESTART_LIMIT-@restart_count}"
-						@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
+						new_filename = "#{file.join("/")}.#{@current_process.restarts}"
+						@current_process.cmd = RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
+						@current_process.start
 						send_fanout({
 							:message => :recording_died,
-							:restart_count => @restart_count,
+							:restart_count => @current_process.restarts,
 							:new_file => new_filename
 						})
 						@video_files << new_filename
 					end
-				else
-					@restart_count = RESTART_LIMIT
 				end
 			else
-				if !alive?(@current_pid)
+				if !@current_process || !@current_process.alive?
 					self.state = STOPPED_STATE
 				end
 			end
@@ -305,54 +301,6 @@ module RoomtrolVideo
 			end
 			@state = new_state
 		end
-		#Thanks to God's process.rb for inspiration for the following methods
-		def kill_command pid
-			5.times{|time|
-				begin
-					Process.kill(2, pid)
-				rescue Errno::ESRCH
-					return
-				end
-				sleep 0.1
-			}
-		
-			Process.kill('KILL', pid) rescue nil
-		end
-	
-		def alive? pid
-			#double exclamation mark returns true for a non-false values
-			!!Process.kill(0, pid) rescue false
-		end
-	
-		def start_command cmd
-			r, w = IO.pipe
-			begin
-				outside_pid = fork do
-					STDOUT.reopen(w)
-					r.close
-					pid = fork do
-						#Process.setsid
-						#Dir.chdir '/'
-						$0 = cmd
-						STDIN.reopen("/dev/null")
-						STDOUT.reopen("/dev/null")
-						STDERR.reopen(STDOUT)
-						3.upto(256){|fd| IO.new(fd).close rescue nil}
-						exec cmd
-					end
-					puts pid.to_s
-				end
-				Process.waitpid(outside_pid, 0)
-				w.close
-				pid = r.gets.chomp.to_i
-				puts "Parent: #{pid}"
-			ensure
-				r.close rescue nil
-				w.close rescue nil
-			end
-			puts "Starting command as #{child_pids(pid)[0]}"
-			child_pids(pid)[0].to_i
-		end
 	
 		def filename_for_time(time)
 			dir = "/var/video/#{time.year}/#{time.month}/#{time.day}"
@@ -361,11 +309,6 @@ module RoomtrolVideo
 		end
 		def send_fanout hash
 			@fanout.publish(hash.to_json)
-		end
-		def child_pids pid
-			`ps -ef | grep #{pid}`.split("\n").collect{|line| line.split(/\s+/)}.reject{|parts| 
-				parts[2] != pid.to_s || parts[-2] == "grep"
-			}.collect{|parts| parts[1]}
 		end
 	end
 end

@@ -48,8 +48,6 @@ module RoomtrolVideo
 							:restart_count => @restart_count
 						})
 					end
-				else
-					@restart_count = RESTART_LIMIT
 				end
 			when RECORDING_STATE
 				if !alive?(@current_pid)
