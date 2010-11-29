@@ -126,6 +126,9 @@ module RoomtrolVideo
 		    queue ! \
 		    xvimagesink sync=false . ?
 		
+		# The database where video information is stored
+		VIDEO_DB = "http://localhost:5984/videos"
+		
 		# Currently playing video back
 		PLAYING_STATE = :playing
 		# Currently recording video
@@ -157,6 +160,7 @@ module RoomtrolVideo
 			AMQP.start(:host => '127.0.0.1') do
 				mq = MQ.new
 				@fanout = MQ.new.fanout(FANOUT_EXCHANGE)
+				@db = CouchRest.database!(VIDEO_DB)
 				mq.queue(@send_queue).subscribe do |msg|
 					DaemonKit.logger.debug("Received: #{msg}")
 					req = JSON.parse(msg)
@@ -212,6 +216,7 @@ module RoomtrolVideo
 			file = filename_for_time(@recording_start_time)
 			FileUtils.mkdir_p file[0]
 			@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", file.join("/"))
+			@video_files = [file]
 		end
 	
 		def stop
@@ -255,6 +260,7 @@ module RoomtrolVideo
 							:restart_count => @restart_count,
 							:new_file => new_filename
 						})
+						@video_files << new_filename
 					end
 				else
 					@restart_count = RESTART_LIMIT
@@ -275,6 +281,27 @@ module RoomtrolVideo
 					:to => new_state,
 					:time => new_state == RECORDING_STATE ? @recording_start_time : Time.now
 				})
+				
+				# if we're transitioning from recording to another state, we need to save a
+				# record of the video to the database so that it can be shown in the web interface
+				# and encoded by the encoding daemon
+				if @state == :recording
+					doc = @db.save_doc({
+						"couchrest-type" => "Video",
+						"created_at" => Time.now,
+						"updated_at" => Time.now,
+						"description" => nil,
+						"encoded" => false,
+						"files" => @video_files,
+						"length" => Time.now - @recording_start_time,
+						"recorded_at" => @recording_start_time
+					})
+					send_fanout({
+						:message => :recording_finished,
+						:doc_id => doc["id"],
+						:files => @video_files
+					})
+				end
 			end
 			@state = new_state
 		end
