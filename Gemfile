@@ -30,3 +30,7 @@ gem 'highline'
 gem 'net-ssh'
 gem 'net-scp' 
 gem 'git'
+
+group :video do
+  gem "ffmpeg-ruby"
+end

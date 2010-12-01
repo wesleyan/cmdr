@@ -1,18 +1,35 @@
 require 'mq'
 require 'fileutils'
-require 'video-recorder'
+require 'tempfile'
+require_relative 'process'
+require_relative 'video-recorder'
 
 module RoomtrolVideo
+	class EncodingProcessMonitor < ProcessMonitor
+		# ffmpeg command to encode a video
+		ENCODING_COMMAND = "ffmpeg -i INPUT -acodec libfaac -ab 96k -vcodec libx264 -vpre slow -crf 22 -threads 0 OUTPUT"
+		
+		attr_accessor :input_video
+		attr_accessor :output_video
+		
+		def initialize(input, output)
+			@input_video = input
+			@output_video = output
+			super(ENCODING_COMMAND.gsub("INPUT", input).gsub("OUTPUT", output))
+		end
+		
+		def video_valid?
+			!!FFMPEG::InputFormat.new(@output_video) rescue false
+		end
+	end
 	class RemoteEncoder
 		# Max number of encoding jobs to run simultaeneously
 		MAX_THREADS = 1
-		
-		# ffmpeg command to encode a video
-		ENCODING_COMMAND = "ffmpeg -i VIDEO_NAME.avi -acodec libfaac -ab 96k -vcodec libx264 -vpre slow -crf 22 -threads 0 VIDEO_NAME.mp4"
-		
+			
 		def initialize
 			@queue = []
 			@db = CouchRest.database!(RemoteRecorder::VIDEO_DB)
+			@processes = {}
 		end
 					
 		# Starts the recording server. Until this is called, the recorder will not respond
@@ -28,52 +45,55 @@ module RoomtrolVideo
 							:id => message[:doc_id],
 							:files => message[:files]
 						})
+						
 					end
 				end
 			end
 		end
 		
+		private
+		
+		def process_queue
+			check_processes
+			if @processes.size < MAX_THREADS && !@queue.empty?
+				start_encoding_job(@queue.pop)
+			end	
+		end
+		
+		def start_encoding_job job
+			record = @db.get(job[:id])
+			path = job[:files].size == 1 ? job[:files][0] : combine_files(job[:files])
+			process = EncodingProcessMonitor.new(path, job[:files][0].gsub(".avi", ".mp4"))
+			@processes[job[:id]] = process
+			process.start
+		end
+		
+		# raw AVI can be combined by concatentation
+		def combine_files files
+			tempfile = Tempfile.new("video")
+			path = tempfile.path
+			tempfile.close
+			`cat #{files.join(" ")} > #{path}.avi`
+			path
+		end
+	
 		def watch
-			case @state
-			when PLAYING_STATE
-				if !alive?(@current_pid)
-					DaemonKit.logger.debug("Playing but not alive on #{@current_pid}")
-					if @restart_count <= 0
-						self.state = STOPPED_STATE
-					else
-						@restart_count = @restart_count.to_i - 1
-						@current_pid = start_command PLAY_CMD
-						send_fanout({
-							:message => :recording_died,
-							:restart_count => @restart_count
-						})
-					end
+			@processes.each{|id, process|
+				unless process.alive?
+					if process.video_valid?
+						doc = @db.get(id)
+						doc["file"] = process.output_video
+						doc["encoded"] = true
 				end
-			when RECORDING_STATE
-				if !alive?(@current_pid)
-					if @restart_count <= 0
-						self.state = STOPPED_STATE
-					else
-						@restart_count = @restart_count.to_i - 1
-						file = filename_for_time(@recording_start_time)
-						FileUtils.mkdir_p file[0]
-						new_filename = "#{file.join("/")}.#{RESTART_LIMIT-@restart_count}"
-						@current_pid = start_command RECORD_CMD.gsub("OUTPUT_FILE", new_filename)
-						send_fanout({
-							:message => :recording_died,
-							:restart_count => @restart_count,
-							:new_file => new_filename
-						})
-						@video_files << new_filename
-					end
-				else
-					@restart_count = RESTART_LIMIT
-				end
-			else
-				if !alive?(@current_pid)
-					self.state = STOPPED_STATE
-				end
-			end
+			}
+		end
+		
+		def get_frame file
+			video = FFMPEG::InputFormat.new(file)
+			# we choose a frame from 1/3 through, because that seems like a resonable heuristic
+			# this can probably be tuned to a better value later
+			video.first_video_stream.seek(video.duration/3)
+			frame = video.first_video_stream.decode_frame.to_ppm
 		end
 	
 		private
@@ -90,7 +110,7 @@ module RoomtrolVideo
 				# record of the video to the database so that it can be shown in the web interface
 				# and encoded by the encoding daemon
 				if @state == :recording
-					@db.save_doc({
+					doc = @db.save_doc({
 						"couchrest-type" => "Video",
 						"created_at" => Time.now,
 						"updated_at" => Time.now,
@@ -100,57 +120,14 @@ module RoomtrolVideo
 						"length" => Time.now - @recording_start_time,
 						"recorded_at" => @recording_start_time
 					})
+					send_fanout({
+						:message => :recording_finished,
+						:doc_id => doc["id"],
+						:files => @video_files
+					})
 				end
 			end
 			@state = new_state
-		end
-		#Thanks to God's process.rb for inspiration for the following methods
-		def kill_command pid
-			5.times{|time|
-				begin
-					Process.kill(2, pid)
-				rescue Errno::ESRCH
-					return
-				end
-				sleep 0.1
-			}
-		
-			Process.kill('KILL', pid) rescue nil
-		end
-	
-		def alive? pid
-			#double exclamation mark returns true for a non-false values
-			!!Process.kill(0, pid) rescue false
-		end
-	
-		def start_command cmd
-			r, w = IO.pipe
-			begin
-				outside_pid = fork do
-					STDOUT.reopen(w)
-					r.close
-					pid = fork do
-						#Process.setsid
-						#Dir.chdir '/'
-						$0 = cmd
-						STDIN.reopen("/dev/null")
-						STDOUT.reopen("/dev/null")
-						STDERR.reopen(STDOUT)
-						3.upto(256){|fd| IO.new(fd).close rescue nil}
-						exec cmd
-					end
-					puts pid.to_s
-				end
-				Process.waitpid(outside_pid, 0)
-				w.close
-				pid = r.gets.chomp.to_i
-				puts "Parent: #{pid}"
-			ensure
-				r.close rescue nil
-				w.close rescue nil
-			end
-			puts "Starting command as #{child_pids(pid)[0]}"
-			child_pids(pid)[0].to_i
 		end
 	
 		def filename_for_time(time)
@@ -160,11 +137,6 @@ module RoomtrolVideo
 		end
 		def send_fanout hash
 			@fanout.publish(hash.to_json)
-		end
-		def child_pids pid
-			`ps -ef | grep #{pid}`.split("\n").collect{|line| line.split(/\s+/)}.reject{|parts| 
-				parts[2] != pid.to_s || parts[-2] == "grep"
-			}.collect{|parts| parts[1]}
 		end
 	end
 end
