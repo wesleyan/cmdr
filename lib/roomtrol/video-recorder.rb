@@ -1,5 +1,6 @@
 require 'mq'
 require 'fileutils'
+require_relative 'process'
 
 module RoomtrolVideo
 	# This class is reponsible for recording video and playing back the current state of
