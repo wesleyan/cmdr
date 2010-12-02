@@ -94,7 +94,7 @@ task :deploy_test, :needs => [:collect_password] do
 	end
 	
 	puts "\tCreating zip of roomtrol-daemon"
-	`rm /tmp/roomtrol-daemon.zip && cd #{WORKING} && zip -r /tmp/roomtrol-daemon.zip * -x .\*`
+	`rm /tmp/roomtrol-daemon.zip; cd #{WORKING} && zip -r /tmp/roomtrol-daemon.zip * -x .\*`
 	
 	TEST.each do |controller|
 		puts "Deploying to controller #{controller}"
