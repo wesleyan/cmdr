@@ -37,7 +37,7 @@ module RoomtrolVideo
 		MAX_THREADS = 1
 		# ffmpeg command to grab a video frame
 		FRAME_GRAB_COMMAND = "ffmpeg -itsoffset TIME_OFFSET -i INPUT -y -vcodec mjpeg -vframes 1 -an -f rawvideo OUTPUT 2>&1"
-			
+
 		def initialize
 			@queue = []
 			@db = CouchRest.database!(RemoteRecorder::VIDEO_DB)

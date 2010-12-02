@@ -46,6 +46,12 @@ task :deploy, :needs => [:collect_password] do
 		exit(1)
 	end
 	
+	puts "Hey, you're deploying to PRODUCTION!!!! Let me repeat that: PRODUCTION!!!!!!!!"
+	puts "Are you absolutely, positively sure you want to do this?"
+	exit(1) unless ask("Deploy? (yN) ").upcase == "Y"
+	puts "Ok, but are you really, really sure?"
+	exit(1) unless ask("Deploy to PRODUCTION?  (yN) ").upcase == "Y"
+	
 	puts "\tCreating zip of roomtrol-daemon"
 	`rm /tmp/roomtrol-daemon.zip && cd #{WORKING} && zip -r /tmp/roomtrol-daemon.zip * -x .\*`
 	
