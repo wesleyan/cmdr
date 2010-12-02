@@ -1,6 +1,5 @@
 require 'mq'
 require 'fileutils'
-require_relative 'process'
 
 module RoomtrolVideo
 	# This class is reponsible for recording video and playing back the current state of
@@ -202,7 +201,7 @@ module RoomtrolVideo
 			@current_process.kill if @current_process
 			
 			self.state = PLAYING_STATE
-			@current_process = RoomtrolVideo::ProcessMonitor.new(PLAY_CMD)
+			@current_process = ProcessMonitor.new(PLAY_CMD, true)
 			@current_process.start
 		end
 	
@@ -214,10 +213,10 @@ module RoomtrolVideo
 			file = filename_for_time(@recording_start_time)
 			FileUtils.mkdir_p file[0]
 			
-			@current_process = RoomtrolVideo::ProcessMonitor.new(RECORD_CMD.gsub("OUTPUT_FILE", file.join("/")))
+			@current_process = ProcessMonitor.new(RECORD_CMD.gsub("OUTPUT_FILE", file.join("/")), true)
 			@current_process.start
 			
-			@video_files = [file]
+			@video_files = [file.join("/")]
 		end
 	
 		def stop
@@ -282,7 +281,7 @@ module RoomtrolVideo
 				# if we're transitioning from recording to another state, we need to save a
 				# record of the video to the database so that it can be shown in the web interface
 				# and encoded by the encoding daemon
-				if @state == :recording
+				if @state == RECORDING_STATE
 					doc = @db.save_doc({
 						"couchrest-type" => "Video",
 						"created_at" => Time.now,
@@ -293,6 +292,7 @@ module RoomtrolVideo
 						"length" => Time.now - @recording_start_time,
 						"recorded_at" => @recording_start_time
 					})
+					DaemonKit.logger.debug("Sending message on fanout")
 					send_fanout({
 						:message => :recording_finished,
 						:doc_id => doc["id"],

@@ -13,7 +13,9 @@ require 'roomtrol/devices/Projector'
 require 'roomtrol/devices/VideoSwitcher'
 require 'roomtrol/devices/Computer'
 require 'roomtrol/MAC.rb'
+require 'roomtrol/process'
 require 'roomtrol/video-recorder'
+require 'roomtrol/video-encoder'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin

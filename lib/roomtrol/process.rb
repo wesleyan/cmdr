@@ -9,17 +9,20 @@ module RoomtrolVideo
 		# Creates a new process monitor for the process started by running
 		# the supplied command
 		# @param [String] cmd The command to run
-		def initialize(cmd)
+		# @param [TrueClass] get_child Are we starting a process that will spawn another process?
+		# 	If so, set this to true so that the child process will be watched and not the parent.
+		def initialize(cmd, get_child=false)
 			@cmd = cmd
 			@restarts = 0
 			@run_once = false
+			@get_child = get_child
 		end 
 		
 		# Kills the process, by force if neccessary
 		def kill
 			5.times{|time|
 				begin
-					Process.kill(2, pid)
+					Process.kill(2, @pid)
 				rescue Errno::ESRCH
 					return
 				end
@@ -32,9 +35,9 @@ module RoomtrolVideo
 		# Checks whether or not the process is still running
 		# @return [TrueClass] true if the process is still running, false otherwise
 		def alive?
+			@restarts = 0
 			#double exclamation mark returns true for a non-false values
 			!!Process.kill(0, @pid) rescue false
-			@restarts = 0
 		end
 	
 		# Starts the process by running the command
@@ -67,7 +70,7 @@ module RoomtrolVideo
 				w.close rescue nil
 			end
 			@run_once = true
-			@pid = child_pids(pid)[0].to_i
+			@pid = @get_child ? child_pids(pid)[0].to_i : pid
 		end
 	
 		private
