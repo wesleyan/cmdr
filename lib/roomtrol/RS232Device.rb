@@ -109,7 +109,7 @@ module Wescontrol
 			stop_bits 1
 			parity 0
 			message_end "\r\n"
-			message_timeout 2.0
+			message_timeout 0.2
 		end
 		
 		# Creates a new RS232Device instance
@@ -122,7 +122,6 @@ module Wescontrol
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
-			puts "MT: #{configuration[:message_timeout]}"
 			throw "Must supply serial port parameter" unless configuration[:port]
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
@@ -424,8 +423,8 @@ module Wescontrol
 				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
 					msg.gsub!(configuration[:message_end], "")
 					handle_message.call(msg)
+					message_received = true
 				end
-				message_received = data.match(configuration[:message_end])
 				@_buffer = s.rest
 			elsif configuration[:message_end].is_a? Proc
 				loop do
@@ -459,7 +458,7 @@ module Wescontrol
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
-				DaemonKit.logger.debug("Request timed out") unless state
+				DaemonKit.logger.debug("Request timed out: #{}") unless state
 				@_ready_to_send = true
 			end
 			if @_ready_to_send
