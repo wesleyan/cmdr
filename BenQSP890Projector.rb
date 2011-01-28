@@ -53,7 +53,7 @@ class BenQSP890Projector < Projector
 	end
 	
 	requests do
-		#send :power, "\r*pow=?#\r", 1
+		send :power, "\r*pow=?#\r", 1
 	end
 	
 end
