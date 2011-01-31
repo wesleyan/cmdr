@@ -8,7 +8,7 @@
 #}
 #---
 
-class ATPA100 < RS232Device
+class ATPA100 < Wescontrol::RS232Device
   configure do
     baud 9600
     message_end "\r\n"
@@ -35,7 +35,7 @@ class ATPA100 < RS232Device
   }
 
   def volume=
-    super unless @fake_mute///////
+    super unless @fake_mute
   end
   
   managed_state_var :mic_volume,
@@ -56,7 +56,7 @@ class ATPA100 < RS232Device
   :type => :option,
   :options => ("1".."2").to_a,
   :display_order => 4,
-  action => proc{|input|
+  :action => proc{|input|
     "#{input}A1."
   }
 
@@ -64,13 +64,14 @@ class ATPA100 < RS232Device
 
   responses do
     match :mode, /([STEREO|MONO]) MODE/, proc{|m| self.mode = m[1]}
-    match :input, /A: (\d) -> 1/, proc{|i| self.input = m[1]}
-    match :mic_volume, /Volume of MIC : (\d\d)/, proc{|i| self.mic_volume = m[1].to_i/60.0}
-    match :volume, /Volume of LINE : (\d\d)/, proc{|i| self.volume = m[1].to_a/60.0}
+    match :input, /A: (\d) -> 1/, proc{|m| self.input = m[1]}
+    match :mic_volume, /Volume of MIC : (\d\d)/, proc{|m| self.mic_volume = m[1].to_i/60.0}
+    match :volume, /Volume of LINE : (\d\d)/, proc{|m| self.volume = m[1].to_i/60.0}
     match :mute, "Mute Audio", proc{ self.mute = true }
     match :unmute, "UnMute Audio", proc{ self.mute = false }
   end
 
   requests do
     send :status, "600%", 1
+  end
 end

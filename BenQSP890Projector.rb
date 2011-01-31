@@ -11,14 +11,14 @@
 class BenQSP890Projector < Projector
 	configure do
 		baud           9600
-		message_format(/\*(.*)#\r/)
+		message_format(/\*(.*)#\n\r/)
 	end
 	
 	managed_state_var :power, 
 		:type => :boolean,
 		:display_order => 1,
 		:action => proc{|on|
-			"*pow=#{on ? "on" : "off"}#\r"
+			"*pow=#{on ? "on" : "off"}#"
 		}
 	
 	managed_state_var :input, 
@@ -26,34 +26,37 @@ class BenQSP890Projector < Projector
 		:options => ['VGA', 'DVI', 'COMP', 'SVID'],
 		:display_order => 2,
 		:action => proc{|source|
-			"*sour=#{source}#\r"
+			"*sour=#{source}#"
 		}
 
 	managed_state_var :mute, 
 		:type => :boolean,
 		:action => proc{|on|
-			"*mute=#{on ? "on" : "off"}#\r"
+			"*mute=#{on ? "on" : "off"}#"
 		}
 	
 	managed_state_var :video_mute,
 		:type => :boolean,
 		:display_order => 4,
 		:action => proc{|on|
-			"*blank=#{on ? "on" : "off"}#\r"
+			"*blank=#{on ? "on" : "off"}#"
 		}
 		
 	responses do
-		match :power,  /pow=(.+)/, proc{|m| 
-			self.power = (m[1] == "on")
-			self.cooling = (m[1] == "cool down")
+		match :power,  /pow=([^?]+)/i, proc{|m| 
+			self.power = (m[1].downcase == "on")
+			self.cooling = (m[1].downcase == "cool down")
 		}
-		match :mute,       /mute=(.+)/, proc{|m| self.mute = (m[1] == "on")}
-		match :video_mute, /blank=(.+)/, proc{|m| self.video_mute = (m[1] == "on")}
-		match :input,      /sour=(.+)/, proc{|m| self.input = m[1]}
+		match :mute,       /mute=([^?]+)/, proc{|m| self.mute = (m[1] == "on")}
+		match :video_mute, /blank=([^?]+b)/, proc{|m| self.video_mute = (m[1] == "on")}
+		match :input,      /sour=([^?]+)/, proc{|m| self.input = m[1]}
 	end
 	
 	requests do
-		send :power, "\r*pow=?#\r", 1
+		send :power, "*pow=?#", 1
+    send :source, "*sour=?#", 1
+    send :mute, "*blank=?#", 1
+#    send :lamp_usage, "*ltim=?#", 0.1
 	end
 	
 end
