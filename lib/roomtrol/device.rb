@@ -445,7 +445,7 @@ module Wescontrol
 		def self.state_var name, options
 			sym = name.to_sym
 			self.class_eval do
-				raise "Must have type field" unless options[:type]
+b				raise "Must have type field" unless options[:type]
 				@state_vars ||= {}
 				@state_vars[sym] = options
 			end
@@ -746,8 +746,12 @@ class Object
 	# However, because we don't check for cycles, they will cause an infinite loop if present.
 	def deep_dup
 		begin
-			self.dup
-		rescue
+      if self.is_a? Symbol or self.is_a? TrueClass or self.is_a? FalseClass
+        self
+      else
+        self.dup
+      end
+		rescue TypeError
 			self
 		end
 	end

@@ -105,7 +105,49 @@ describe "do responses" do
 		ds.read "512\r\n"
 		ds.volume.should == 512
 	end
-	
+
+  it "should properly match with messages defined by a regex message_end" do
+		class MR232DeviceSubclass7a < Wescontrol::RS232Device
+			configure do
+				message_end(/\r\n|\n\r/)
+			end
+			managed_state_var :input, 
+      :type => 'option', 
+      :display_order => 1, 
+      :options => ("1".."6").to_a,
+      :response => :channel,
+      :action => proc{|input|
+        "#{input}!\r\n"
+      }
+			managed_state_var :volume,
+      :type => 'percentage',
+      :display_order => 2,
+      :response => :volume,
+      :action => proc{|volume|
+        "#{(volume*100).to_i}V\r\n"
+      }
+			responses do
+				match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i}
+				match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
+				match :something, "hello", proc{ self.volume = 22 }
+				match :else, proc {|x| x.to_i != 0}, proc{|m| self.volume = m.to_i}
+			end
+		end
+		ds = MR232DeviceSubclass7a.new("Extron", :port => '/dev/null')
+		ds.read "Chn4\r\n"
+		ds.read "Vol12\n\r"
+		ds.input.should == 4
+		ds.volume.should == 0.12
+		ds.read "hello\n\r"
+		ds.volume.should == 22
+		ds.read "512\r\n"
+		ds.volume.should == 512
+		ds.read "23423\n\rVol44\r\nChn3\r\n"
+		ds.volume.should == 0.44
+		ds.input.should == 3
+	end
+
+  
 	it "should properly match with messages defined by message_format" do
 		class MR232DeviceSubclass7 < Wescontrol::RS232Device
 			configure do

@@ -385,7 +385,9 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
+#      DaemonKit.logger.debug("message: #{@_buffer.inspect}")
 			handle_message = proc {|msg|
+#        DaemonKit.logger.debug("Received: #{msg}")
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -418,15 +420,8 @@ module Wescontrol
 			if configuration[:message_format].is_a? Regexp
 				while msg = s.scan(configuration[:message_format]) do
 					handle_message.call(msg.match(configuration[:message_format])[1])
-				end 
-			elsif configuration[:message_end].is_a? String
-				while msg = s.scan(/.+?#{configuration[:message_end]}/) do
-					msg.gsub!(configuration[:message_end], "")
-					handle_message.call(msg)
-					message_received = true
 				end
-				@_buffer = s.rest
-			elsif configuration[:message_end].is_a? Proc
+      elsif configuration[:message_end].is_a? Proc
 				loop do
 					loop_message_received = false
 					@_buffer.size.times{|start|
@@ -443,6 +438,14 @@ module Wescontrol
 					}
 					break unless loop_message_received
 				end
+			elsif me = configuration[:message_end]
+        regex = /.+?#{me}/
+				while msg = s.scan(regex) do
+					msg.gsub!(me, "")
+					handle_message.call(msg)
+					message_received = true
+				end
+				@_buffer = s.rest
 				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
 			end
 			#if we got the message end signal, we're safe to send the next thing
@@ -458,12 +461,13 @@ module Wescontrol
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
-				DaemonKit.logger.debug("Request timed out: #{}") unless state
+				DaemonKit.logger.debug("#{self.name}: Request timed out: #{}") unless state
 				@_ready_to_send = true
 			end
 			if @_ready_to_send
 				if @_send_queue.size == 0
 					request = choose_request
+          DaemonKit.logger.debug("#{self.name}: Sending request: #{request}")
 					do_message request if request
 				end
 				send_from_queue

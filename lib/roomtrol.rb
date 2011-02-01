@@ -20,8 +20,8 @@ require 'roomtrol/video-encoder'
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
 		require device
-	rescue
-		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
+	rescue => e
+		DaemonKit.logger.exception e # "Failed to load #{device}: #{$!}"
 	rescue LoadError
 		DaemonKit.logger.error "Failed to load #{device}: syntax error"
 	end
