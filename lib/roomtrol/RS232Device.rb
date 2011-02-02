@@ -440,10 +440,12 @@ module Wescontrol
 				end
 			elsif me = configuration[:message_end]
         regex = /.+?#{me}/
+        DaemonKit.logger.debug("regex: #{regex}; buffer: #{@_buffer.inspect}")
 				while msg = s.scan(regex) do
 					msg.gsub!(me, "")
 					handle_message.call(msg)
 					message_received = true
+          DaemonKit.logger.debug("Msg: #{msg}")
 				end
 				@_buffer = s.rest
 				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
@@ -457,7 +459,7 @@ module Wescontrol
 		# @private
 		# When set to true, sends the next thing in the send queue or the next request if send_queue
 		# is empty. When set to false, will set itself to true if message_timeout seconds have
-		# passed sent the last message was sent.
+		# passed since the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
