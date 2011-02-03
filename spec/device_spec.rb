@@ -5,7 +5,7 @@ require 'eventmachine'
 require 'mq'
 require 'couchrest'
 
-Spec::Runner.configure do |config|
+RSpec::Runner.configure do |config|
 	#For some reason in Ruby 1.9.2 class definition constants leak between tests, causing errors
 	config.before(:each) {
 		Object.send(:remove_const, :DeviceSubclass) if Object.constants.include? :DeviceSubclass
@@ -362,7 +362,7 @@ describe "persist to couchdb database" do
 			"attributes" => {
 				"name" => "Projector",
 				"config" => {
-					"data_bits" => 8,
+					"data_bits" => 7,
 					"baud" => 9600,
 					"port" => "/dev/null",
 				},
