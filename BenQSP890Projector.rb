@@ -10,8 +10,7 @@
 
 class BenQSP890Projector < Projector
 	configure do
-		baud           9600
-		message_format(/\*(.*)#\n\r/)
+    message_end(/\n\r|\r\n/)
 	end
 	
 	managed_state_var :power, 
@@ -43,13 +42,14 @@ class BenQSP890Projector < Projector
 		}
 		
 	responses do
-		match :power,  /pow=([^?]+)/i, proc{|m| 
-			self.power = (m[1].downcase == "on")
-			self.cooling = (m[1].downcase == "cool down")
+    ack /\*[a-z]+?=.+#/
+		match :power,  /\*POW=(.+)#/, proc{|m| 
+			self.power = !(m[1] == "OFF")
+			self.cooling = (m[1].downcase == "COOL DOWN")
 		}
-		match :mute,       /mute=([^?]+)/, proc{|m| self.mute = (m[1] == "on")}
-		match :video_mute, /blank=([^?]+b)/, proc{|m| self.video_mute = (m[1] == "on")}
-		match :input,      /sour=([^?]+)/, proc{|m| self.input = m[1]}
+		match :mute,       /\*MUTE=(.+)#/, proc{|m| self.mute = (m[1] == "ON")}
+		match :video_mute, /\*BLANK=(.+)#/, proc{|m| self.video_mute = (m[1] == "ON")}
+		match :input,      /\*SOUR=(.+)#/, proc{|m| self.input = m[1]}
 	end
 	
 	requests do
