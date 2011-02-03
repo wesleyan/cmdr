@@ -618,7 +618,9 @@ b				raise "Must have type field" unless options[:type]
 		def self.from_couch(hash)
 			config = {}
 			hash['attributes']['config'].each{|var, value|
-				config[var] = value unless self.configuration[var.to_sym] && !@config_vars[var.to_sym][:default]
+				unless self.configuration[var.to_sym] && (@config_vars[var.to_sym] && !@config_vars[var.to_sym][:default])
+          config[var] = value
+        end
 			} if hash['attributes']['config']
 			device = self.new(hash['attributes']['name'], config)
 			device._id = hash['_id']

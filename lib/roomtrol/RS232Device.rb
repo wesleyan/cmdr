@@ -123,6 +123,7 @@ module Wescontrol
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
+      DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
 			@_send_queue = []
@@ -385,9 +386,7 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-#      DaemonKit.logger.debug("message: #{@_buffer.inspect}")
 			handle_message = proc {|msg|
-#        DaemonKit.logger.debug("Received: #{msg}")
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -439,13 +438,11 @@ module Wescontrol
 					break unless loop_message_received
 				end
 			elsif me = configuration[:message_end]
-        regex = /.+?#{me}/
-        DaemonKit.logger.debug("regex: #{regex}; buffer: #{@_buffer.inspect}")
+        regex = /.*?#{me}/
 				while msg = s.scan(regex) do
 					msg.gsub!(me, "")
 					handle_message.call(msg)
 					message_received = true
-          DaemonKit.logger.debug("Msg: #{msg}")
 				end
 				@_buffer = s.rest
 				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
@@ -469,7 +466,6 @@ module Wescontrol
 			if @_ready_to_send
 				if @_send_queue.size == 0
 					request = choose_request
-          DaemonKit.logger.debug("#{self.name}: Sending request: #{request}")
 					do_message request if request
 				end
 				send_from_queue
