@@ -22,10 +22,10 @@ class BenQSP890Projector < Projector
 	
 	managed_state_var :input, 
 		:type => :option,
-		:options => ['VGA', 'DVI', 'COMP', 'SVID'],
+		:options => ['VGA', 'HDMI', 'YPBR', 'RGB', 'RGB2', 'VID', 'SVID'],
 		:display_order => 2,
 		:action => proc{|source|
-			"*sour=#{source}#"
+			"*sour=#{source.downcase}#"
 		}
 
 	managed_state_var :mute, 
