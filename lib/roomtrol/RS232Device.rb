@@ -123,6 +123,7 @@ module Wescontrol
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
+      DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
 			@connection = RS232Connection.dup
 			@connection.instance_variable_set(:@receiver, self)
 			@_send_queue = []
@@ -385,9 +386,7 @@ module Wescontrol
 			@_responses ||= {}
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-#      DaemonKit.logger.debug("message: #{@_buffer.inspect}")
 			handle_message = proc {|msg|
-#        DaemonKit.logger.debug("Received: #{msg}")
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -439,8 +438,10 @@ module Wescontrol
 					break unless loop_message_received
 				end
 			elsif me = configuration[:message_end]
-        regex = /.+?#{me}/
+        regex = /.*?#{me}/
+#        DaemonKit.logger.debug("buffer: #{@_buffer.inspect}")
 				while msg = s.scan(regex) do
+#          DaemonKit.logger.debug("msg: #{msg}")
 					msg.gsub!(me, "")
 					handle_message.call(msg)
 					message_received = true
@@ -457,7 +458,7 @@ module Wescontrol
 		# @private
 		# When set to true, sends the next thing in the send queue or the next request if send_queue
 		# is empty. When set to false, will set itself to true if message_timeout seconds have
-		# passed sent the last message was sent.
+		# passed since the last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
@@ -467,7 +468,6 @@ module Wescontrol
 			if @_ready_to_send
 				if @_send_queue.size == 0
 					request = choose_request
-          DaemonKit.logger.debug("#{self.name}: Sending request: #{request}")
 					do_message request if request
 				end
 				send_from_queue
