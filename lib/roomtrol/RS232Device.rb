@@ -439,7 +439,9 @@ module Wescontrol
 				end
 			elsif me = configuration[:message_end]
         regex = /.*?#{me}/
+#        DaemonKit.logger.debug("buffer: #{@_buffer.inspect}")
 				while msg = s.scan(regex) do
+#          DaemonKit.logger.debug("msg: #{msg}")
 					msg.gsub!(me, "")
 					handle_message.call(msg)
 					message_received = true
