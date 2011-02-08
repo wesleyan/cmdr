@@ -18,13 +18,14 @@ module Wescontrol
   #
   # #Messages
   # ##Client -> Server
-  # ###state_get
-  # Gets information about the current state of a variable
+  # ###State get requests
+  # Gets information about the current state of elements in the system. Requests
+  # look like this:
   #
   #     {
   #       "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
   #       "type": "state_get",
-  #       "device": "Projector",
+  #       "resource": "projector",
   #       "var": "power"
   #     }
   #
@@ -35,6 +36,17 @@ module Wescontrol
   #       "result": true
   #     }
   #
+  # The allowed resource/var pairs are listed here:
+  # #### projector
+  #  - **state** (on/off/warming/cooling)
+  #  - **video_mute** (true/false)
+  #
+  # #### volume
+  #  - **level** (0-1.0)
+  #  - **mute** (true/false)
+  #
+  # #### source
+  #  - **
   # ###state_set
   # Sets the state of a variable
   #
@@ -86,7 +98,7 @@ module Wescontrol
   #       "room": {
   #          "guid": "99b9b6d7bc4c69844b9b70ff601e3124",
   #          "name": "004",
-  #          "projector: "Projector",
+  #          "projector": "Projector",
   #          "switcher": "Extron",
   #          "volume": "Extron",
   #          "dvdplayer": "dvdplayer"
@@ -94,6 +106,10 @@ module Wescontrol
   #       "devices": [
   #         {
   #            "guid": "0552c56cf2517e5d4b65d859541273fe",
+  #            "name": "Extron",
+  #            "state_vars": {
+  #               "
+  #            }
   #         }
   #       ]
   #     }
