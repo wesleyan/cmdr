@@ -21,38 +21,38 @@ module Wescontrol
   # ###state_get
   # Gets information about the current state of a variable
   #
-  #   {
-  #      "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
-  #      "type": "state_get",
-  #      "device": "Projector",
-  #      "var": "power"
-  #   }
+  #     {
+  #       "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
+  #       "type": "state_get",
+  #       "device": "Projector",
+  #       "var": "power"
+  #     }
   #
   # This should produce the response:
   #
-  #   {
-  #     "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
-  #     "result": true
-  #   }
+  #     {
+  #       "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
+  #       "result": true
+  #     }
   #
   # ###state_set
   # Sets the state of a variable
   #
-  #   {
-  #      "id": "D62F993B-E036-417C-948B-FEA389480984",
-  #      "type": "state_set",
-  #      "device": "Projector",
-  #      "var": "power",
-  #      "value": true
-  #   }
+  #     {
+  #        "id": "D62F993B-E036-417C-948B-FEA389480984",
+  #        "type": "state_set",
+  #        "device": "Projector",
+  #        "var": "power",
+  #        "value": true
+  #     }
   #
   # This will produce an ACK, which lets the client know that the request
   # was received.
   #
-  #   {
-  #      "id": "D62F993B-E036-417C-948B-FEA389480984",
-  #      "ack": true
-  #   }
+  #     {
+  #        "id": "D62F993B-E036-417C-948B-FEA389480984",
+  #        "ack": true
+  #     }
   #
   # In order to know if this was successful, the client must wait for a
   # change in the variable (power, in this case) and ensure that it has
@@ -61,15 +61,42 @@ module Wescontrol
   # ###command
   # Executes a command
   #
-  #   {
-  #      "id": "D62F993B-E036-417C-948B-FEA389481512",
-  #      "type": "command",
-  #      "device": "IREmitter",
-  #      "name": "send_command",
-  #      "args": ["play"]
-  #   }
+  #     {
+  #        "id": "D62F993B-E036-417C-948B-FEA389481512",
+  #        "type": "command",
+  #        "device": "IREmitter",
+  #        "name": "send_command",
+  #        "args": ["play"]
+  #     }
   #
   # This will also produce an ACK, as above.
+  #
+  # ## Server -> Client
+  # ### connected
+  # When a client connects, the server sends it a bunch of useful information
+  # for setting itself up. The message looks like this:
+  #
+  #     {
+  #       "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
+  #       "type": "connection",
+  #       "building": {
+  #          "guid": "cc7e9b6fe3e2757deba97d8d83157515",
+  #          "name": "Albritton"
+  #       },
+  #       "room": {
+  #          "guid": "99b9b6d7bc4c69844b9b70ff601e3124",
+  #          "name": "004",
+  #          "projector: "Projector",
+  #          "switcher": "Extron",
+  #          "volume": "Extron",
+  #          "dvdplayer": "dvdplayer"
+  #       },
+  #       "devices": [
+  #         {
+  #            "guid": "0552c56cf2517e5d4b65d859541273fe",
+  #         }
+  #       ]
+  #     }
   class WescontrolWebsocket
     def initialize
       @connections = {}
