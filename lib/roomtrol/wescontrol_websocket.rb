@@ -106,7 +106,7 @@ module Wescontrol
         @update_channel = EM::Channel.new
         @deferred_responses = {}
 
-        @queue_name = 'roomtroll:http:#{self.object_id}'
+        @queue_name = 'roomtrol:http:#{self.object_id}'
         @queue = @amq.queue(@queue_name)
 
         @queue.subscribe{ |json|
@@ -159,11 +159,10 @@ module Wescontrol
           end
 
           ws.onmessage do |json|
-
-            resp = {'id' => message['id'], 'received' => true}.to_json
-            ws.send resp
-
             begin
+              resp = {'id' => message['id'], 'received' => true}.to_json
+              ws.send resp
+            
               message = JSON.parse(json)
 
               device_req = {
@@ -173,7 +172,6 @@ module Wescontrol
               }
               
               case message['type']
-              
               when "get"
                 device_req[:type] = :state_get
                 device_req[:var] = message['var']
@@ -217,7 +215,6 @@ module Wescontrol
           ws.onerror do
             DaemonKit.logger.debug "Error on #{ws.signature}"
           end
-
           
         end
       end
