@@ -11,6 +11,14 @@ module EventMachine
 		# in recent version of EM. We need it, though, for AMQP.
 		end
 	end
+  class << self
+    # This method has a bug in it in the official EM implementation.
+    # Apparently nobody cares about pure_em, because it hasn't been
+    # fixed in a very long time.
+    def add_oneshot_timer interval
+      Reactor.instance.install_oneshot_timer(interval / 1000.0)
+    end
+  end
 end
 
 module Wescontrol
