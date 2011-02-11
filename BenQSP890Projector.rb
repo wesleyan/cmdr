@@ -11,6 +11,7 @@
 class BenQSP890Projector < Projector
 	configure do
     message_end(/\n\r|\r\n/)
+    message_delay 0.5
 	end
 	
 	managed_state_var :power, 
@@ -22,7 +23,7 @@ class BenQSP890Projector < Projector
 	
 	managed_state_var :input, 
 		:type => :option,
-		:options => ['VGA', 'HDMI', 'YPBR', 'RGB', 'RGB2', 'VID', 'SVID'],
+		:options => ['HDMI', 'YPBR', 'RGB', 'RGB2', 'VID', 'SVID'],
 		:display_order => 2,
 		:action => proc{|source|
 			"*sour=#{source.downcase}#"
