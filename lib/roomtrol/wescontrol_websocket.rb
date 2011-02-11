@@ -97,30 +97,131 @@ module Wescontrol
   #         }
   #       ]
   #     }
+  
   class WescontrolWebsocket
-    def initialize
-      @connections = {}
-      @old_connections = {}
-    end
 
     def run
       AMQP.start(:host => "localhost") do
         @mq = MQ.new
+        @update_channel = EM::Channel.new
+        @deferred_responses = {}
+
+        @queue_name = 'roomtroll:http:#{self.object_id}'
+        @queue = @amq.queue(@queue_name)
+
+        @queue.subscribe{ |json|
+          msg = JSON.parse(json)
+
+          if msg['type'] == 'update'
+            @update_channel.push(msg)
+
+          elsif msg['type'] == 'response'
+            if @deferred_responses[msg["id"]]
+              @deferred_responses.delete(msg["id"]).succeed(msg) 
+            end
+                 
+          end
+        }
         
-        EM::WebSocket.start(:host => "0.0.0.0", :port => 8000) do |ws|
-          ws.onopen do
+        EM::WebSocket.start({
+                              :host => "0.0.0.0",
+                              :port => 8000,
+                              :debug => true
+                              #:secure => true  
+                            }) do |ws|
+
+          ws.onopen do 
             DaemonKit.logger.debug "New connection on #{ws.signature}"
+
+
+            # subscribe to channel that gets the
+            # updates directly from the mq
+            
+            sid = @update_channel.subscribe { |msg|
+              ws.send msg
+            }
+
+            # send the client the required
+            # information about room, devices, etc.
+            # to set it up
+            
+            init_message = {
+              'id' => UUIDTools::UUID.random_create.to_s,
+              'type' => 'init'
+              #'building' =>
+              #'room' =>
+              #'devices' =>
+              #etc
+            }
+
+            ws.send init_message.to_json
+              
           end
 
           ws.onmessage do |json|
-            message = JSON.parse(json)
+
+            resp = {'id' => message['id'], 'received' => true}.to_json
+            ws.send resp
+
+            begin
+              message = JSON.parse(json)
+
+              device_req = {
+                :id => message['id'],
+                :queue => @queue_name,
+                :device => message['device']
+              }
+              
+              case message['type']
+              
+              when "get"
+                device_req[:type] = :state_get
+                device_req[:var] = message['var']
+
+              when "set"
+                device_req[:type] = :state_get
+                device_req[:var] = message['var']
+                
+              when "command"
+                device_req[:type] = :state_get
+                device_req[:command] = message['name']
+                device_req[:args] = message['args']
+              end
+
+              deferrable = EM::DefaultDeferrable.new
+              deferrable.callback {|msg|
+
+                if msg['success']
+                  response = {'id' => msg['id'], 'success' => true}.to_json
+                else
+                  response = {'id' => msg['id'], 'success' => false}.to_json
+                end
+                
+                ws.send response
+              }
+
+              @deferred_responses[device_req[:id]] = deferrable
+              @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
+              
+            rescue JSON::ParserError, TypeError
+              DaemonKit.logger.debug "Invalid JSON message from #{ws.signature}: #{message}"
+            end
+              
           end
 
           ws.onclose do
-            
+            @update_channel.unsubscribe(sid)
+            DaemonKit.logger.debug "Connection on #{ws.signature} closed"
           end
+
+          ws.onerror do
+            DaemonKit.logger.debug "Error on #{ws.signature}"
+          end
+
+          
         end
       end
     end
   end
 end
+
