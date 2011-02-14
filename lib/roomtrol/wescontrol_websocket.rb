@@ -37,19 +37,16 @@ module Wescontrol
   #     }
   #
   # The allowed resource/var pairs are listed here:
-  # #### projector
-  #  - **state** (on/off/warming/cooling)
-  #  - **video_mute** (true/false)
   #
-  # #### volume
-  #  - **level** (0-1.0)
-  #  - **mute** (true/false)
-  #
-  # #### source
-  #  - **current** (source name)
-  #  - **list** (array of source names)
-  #
-  # #### 
+  #  - projector
+  #    - **state** (on/off/warming/cooling)
+  #    - **video_mute** (true/false)
+  #  - volume
+  #    - **level** (0-1.0)
+  #    - **mute** (true/false)
+  #  - source
+  #    - **current** (source name)
+  #    - **list** (array of source names)
   #
   # ###state_set
   # Sets the state of a variable
@@ -57,7 +54,7 @@ module Wescontrol
   #     {
   #        "id": "D62F993B-E036-417C-948B-FEA389480984",
   #        "type": "state_set",
-  #        "device": "Projector",
+  #        "resource": "projector",
   #        "var": "power",
   #        "value": true
   #     }
@@ -73,6 +70,17 @@ module Wescontrol
   # In order to know if this was successful, the client must wait for a
   # change in the variable (power, in this case) and ensure that it has
   # become the expected value.
+  #
+  # The allowed resource/var pairs are:
+  #
+  #  - projector
+  #    - **power** (true/false)
+  #    - **mute** (true/false)
+  #  - volume
+  #    - **level** (0-1.0)
+  #    - **mute** (true/false)
+  #  - source
+  #    - **current** (string name of a source)
   #
   # ###command
   # Executes a command
@@ -95,27 +103,32 @@ module Wescontrol
   #     {
   #       "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
   #       "type": "connection",
-  #       "building": {
-  #          "guid": "cc7e9b6fe3e2757deba97d8d83157515",
-  #          "name": "Albritton"
-  #       },
-  #       "room": {
-  #          "guid": "99b9b6d7bc4c69844b9b70ff601e3124",
-  #          "name": "004",
-  #          "projector": "Projector",
-  #          "switcher": "Extron",
-  #          "volume": "Extron",
-  #          "dvdplayer": "dvdplayer"
-  #       },
-  #       "devices": [
+  #       "building": "Albritton",
+  #       "room": "004",
+  #       "sources": [
   #         {
-  #            "guid": "0552c56cf2517e5d4b65d859541273fe",
-  #            "name": "Extron",
-  #            "state_vars": {
-  #               "
-  #            }
+  #           "name": "Laptop",
+  #           "icon": "Laptop.png"
+  #         }
+  #       ],
+  #       "actions": [
+  #         {
+  #           "name": "Play DVD",
+  #           "prompt_projector": true,
+  #           "source: "DVD"
   #         }
   #       ]
+  #     }
+  #
+  # ### state_changed
+  #
+  #     {
+  #       "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA441",
+  #       "type": "state_changed",
+  #       "resource": projector,
+  #       "var": "state",
+  #       "old": "cooling",
+  #       "new": "off"
   #     }
   class WescontrolWebsocket
     def initialize
@@ -130,6 +143,7 @@ module Wescontrol
         EM::WebSocket.start(:host => "0.0.0.0", :port => 8000) do |ws|
           ws.onopen do
             DaemonKit.logger.debug "New connection on #{ws.signature}"
+            
           end
 
           ws.onmessage do |json|
