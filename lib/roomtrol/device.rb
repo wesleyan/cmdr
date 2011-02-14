@@ -252,7 +252,7 @@ module Wescontrol
 							resp["error"] = error
 							@amq_responder.queue(req["queue"]).publish(resp.to_json)
 						end
-					elsif !feedback
+					elsif feedback == nil
 						@amq_responder.queue(req["queue"]).publish(resp.to_json)
 					else
 						resp["result"] = feedback
