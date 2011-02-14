@@ -46,7 +46,11 @@ module Wescontrol
   #  - **mute** (true/false)
   #
   # #### source
-  #  - **
+  #  - **current** (source name)
+  #  - **list** (array of source names)
+  #
+  # #### 
+  #
   # ###state_set
   # Sets the state of a variable
   #
