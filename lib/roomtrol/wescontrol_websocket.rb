@@ -2,6 +2,7 @@ require 'rubygems'
 require 'em-websocket'
 require 'json'
 require 'mq'
+require 'couchrest'
 
 module Wescontrol
   # Wescontrol websocket server. Used to provide better interactivity to
@@ -134,6 +135,13 @@ module Wescontrol
     def initialize
       @connections = {}
       @old_connections = {}
+
+      @db = CouchRest.database(Wescontrol::DB_URI)
+      @room = db.get("_design/room").view("by_mac", {:key => MAC.addr})['rows'][0]
+      @projector = @room["attributes"]["projector"]
+      @switcher = @room["attributes"]["switcher"]
+      @dvdplayer = @room["attributes"]["dvdplayer"]
+      @volume = @room["attributes"]["volume"]
     end
 
     def run
