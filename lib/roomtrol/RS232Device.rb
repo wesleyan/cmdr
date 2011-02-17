@@ -125,7 +125,7 @@ module Wescontrol
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
       @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
-      @_serial_buffer = []
+      @_serial_buffer = ""
       @_serial_lock = false
       Thread.new do
         while true do
@@ -146,9 +146,10 @@ module Wescontrol
 		# Sends a string to the serial device
 		# @param [String] string The string to send
 		def send_string(string)
-      Thread.new do
+      DaemonKit.logger.debug("Writing: #{string}")
+      #Thread.new do
         @_serialport.write string if @_serialport
-      end
+      #end
 		end
 		
 		# Run is a blocking call that starts the device. While run is running, the device will
@@ -162,11 +163,11 @@ module Wescontrol
 						self.ready_to_send = @_ready_to_send
 					end
 
-          EM::add_periodic_timer 0.05 do
+          EM::add_periodic_timer 0.1 do
             if @_serial_buffer.size > 0
               @_serial_lock = true
               buffer = @_serial_buffer.dup
-              @_serial_buffer = []
+              @_serial_buffer = ""
               @serial_lock = false
               
               self.read buffer
@@ -402,6 +403,7 @@ module Wescontrol
 		# is called and the result is sent back to the user or ignored. Also sets ready_to_send,
 		# which causes the next request or command to be sent.
 		def read data
+      DaemonKit.logger.debug("Read called with #{data}")
 			@_buffer ||= ""
 			@_responses ||= {}
 			@_buffer << data

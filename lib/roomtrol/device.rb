@@ -1,4 +1,4 @@
-$eventmachine_library = :pure_ruby
+# $eventmachine_library = :pure_ruby
 require 'couchrest'
 require 'mq'
 require 'json'
