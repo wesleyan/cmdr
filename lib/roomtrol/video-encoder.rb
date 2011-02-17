@@ -5,7 +5,7 @@ require 'tempfile'
 module RoomtrolVideo
 	class EncodingProcessMonitor < ProcessMonitor
 		# ffmpeg command to encode a video
-		ENCODING_COMMAND = "ffmpeg -i INPUT -acodec libfaac -ab 96k -vcodec libx264 -vpre slow -crf 22 -threads 0 OUTPUT 2>&1"
+		ENCODING_COMMAND = "ffmpeg -i INPUT -acodec libfaac -ab 96k -vcodec libx264 -vpre slow -crf 22 -threads 3 OUTPUT 2>&1"
 		# maximum number of times to retry encoding before giving up
 		MAX_RESTARTS = 4
 		
@@ -42,6 +42,24 @@ module RoomtrolVideo
 			@queue = []
 			@db = CouchRest.database!(RemoteRecorder::VIDEO_DB)
 			@processes = {}
+
+      doc = {
+        "_id" => "_design/video_encoder",
+        "views" => {
+          "unencoded" => {
+            "map" => "function(doc) {
+              if(doc['couchrest-type'] === 'Video' && doc.encoded === false){
+                emit(doc.recorded_at, doc);
+              }
+            }"
+          }
+        }
+      }
+      begin
+        doc["_rev"] = @db.get("_design/video_encoder").rev
+      rescue
+      end
+      @db.save_doc(doc)
 		end
 					
 		# Starts the encoding server
@@ -65,6 +83,18 @@ module RoomtrolVideo
 					watch
 					process_queue
 				end
+        # periodically check whether we for some reason missed a video
+        # which is sitting unencoded somewhere
+        EM.add_periodic_timer(15) do
+          @db.get("_design/video_encoder").view("unencoded")['rows'].each{|v|
+            unless @queue.collect{|x| x[:id]}.include? v["value"]["_id"]
+              @queue.unshift({
+                               :id => v["value"]["_id"],
+                               :files => v["value"]["files"]
+                             })
+            end
+          }
+        end
 			end
 		end
 		
