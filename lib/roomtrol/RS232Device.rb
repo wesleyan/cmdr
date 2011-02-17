@@ -1,6 +1,6 @@
-require 'rubygems'
+require 'serialport'
 require 'strscan'
-require 'roomtrol/em-serialport'
+#require 'roomtrol/em-serialport'
 require 'bit-struct'
 
 module Wescontrol
@@ -124,7 +124,19 @@ module Wescontrol
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
-			@connection = RS232Connection.dup
+      @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
+      @_serial_buffer = []
+      @_serial_lock = false
+      Thread.new do
+        while true do
+          if @_serial_lock
+            sleep 0.1
+            next
+          end
+          @_serial_buffer << @_serialport.getc
+        end
+      end
+                                    
 			@connection.instance_variable_set(:@receiver, self)
 			@_send_queue = []
 			@_ready_to_send = true
@@ -134,7 +146,9 @@ module Wescontrol
 		# Sends a string to the serial device
 		# @param [String] string The string to send
 		def send_string(string)
-			@serialport.send_data(string) if @serialport
+      Thread.new do
+        @_serialport.write string if @_serialport
+      end
 		end
 		
 		# Run is a blocking call that starts the device. While run is running, the device will
@@ -144,15 +158,21 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(configuration[:message_timeout]) {
+					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
-					}
-					EM::open_serial configuration[:port], 
-						configuration[:baud], 
-						configuration[:data_bits], 
-						configuration[:stop_bits], 
-						configuration[:parity], 
-						@connection
+					end
+
+          EM::add_periodic_timer 0.05 do
+            if @_serial_buffer.size > 0
+              @_serial_lock = true
+              buffer = @_serial_buffer.dup
+              @_serial_buffer = []
+              @serial_lock = false
+              
+              self.read buffer
+            end
+          end
+          
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
