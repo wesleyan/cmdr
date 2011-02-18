@@ -2,140 +2,142 @@ require 'rubygems'
 require 'em-websocket'
 require 'json'
 require 'mq'
+require 'couchrest'
 
-module Wescontrol
-  # Wescontrol websocket server. Used to provide better interactivity to
-  # the touchscreen interface. Communication is through JSON, like for
-  # Wescontrol HTTP. Due to the nature of web sockets, message can either
-  # be sent from the server to the client or the other direction. In general,
-  # messages sent to the client are to notify of state changes, like a projector
-  # turning on or a source being changed, while those from the client are
-  # requests to change to state of a device or send a command. Note that every
-  # message has an "id" field, which is merely a unique identifier for that
-  # message. All responses to a request (whichever direction it travels) should
-  # include the id of the request. Any string can be used as an id, but GUIDs
-  # are recommended.
-  #
-  # #Messages
-  # ##Client -> Server
-  # ###State get requests
-  # Gets information about the current state of elements in the system. Requests
-  # look like this:
-  #
-  # {
-  # "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
-  # "type": "state_get",
-  # "resource": "projector",
-  # "var": "power"
-  # }
-  #
-  # This should produce the response:
-  #
-  # {
-  # "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
-  # "result": true
-  # }
-  #
-  # The allowed resource/var pairs are listed here:
-  #
-  # - projector
-  # - **state** (on/off/warming/cooling)
-  # - **video_mute** (true/false)
-  # - volume
-  # - **level** (0-1.0)
-  # - **mute** (true/false)
-  # - source
-  # - **current** (source name)
-  # - **list** (array of source names)
-  #
-  # ###state_set
-  # Sets the state of a variable
-  #
-  # {
-  # "id": "D62F993B-E036-417C-948B-FEA389480984",
-  # "type": "state_set",
-  # "resource": "projector",
-  # "var": "power",
-  # "value": true
-  # }
-  #
-  # This will produce an ACK, which lets the client know that the request
-  # was received.
-  #
-  # {
-  # "id": "D62F993B-E036-417C-948B-FEA389480984",
-  # "ack": true
-  # }
-  #
-  # In order to know if this was successful, the client must wait for a
-  # change in the variable (power, in this case) and ensure that it has
-  # become the expected value.
-  #
-  # The allowed resource/var pairs are:
-  #
-  # - projector
-  # - **power** (true/false)
-  # - **mute** (true/false)
-  # - volume
-  # - **level** (0-1.0)
-  # - **mute** (true/false)
-  # - source
-  # - **current** (string name of a source)
-  #
-  # ###command
-  # Executes a command
-  #
-  # {
-  # "id": "D62F993B-E036-417C-948B-FEA389481512",
-  # "type": "command",
-  # "device": "IREmitter",
-  # "name": "send_command",
-  # "args": ["play"]
-  # }
-  #
-  # This will also produce an ACK, as above.
-  #
-  # ## Server -> Client
-  # ### connected
-  # When a client connects, the server sends it a bunch of useful information
-  # for setting itself up. The message looks like this:
-  #
-  # {
-  # "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
-  # "type": "connection",
-  # "building": "Albritton",
-  # "room": "004",
-  # "sources": [
-  # {
-  # "name": "Laptop",
-  # "icon": "Laptop.png"
-  # }
-  # ],
-  # "actions": [
-  # {
-  # "name": "Play DVD",
-  # "prompt_projector": true,
-  # "source: "DVD"
-  # }
-  # ]
-  # }
-  #
-  # ### state_changed
-  #
-  # {
-  # "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA441",
-  # "type": "state_changed",
-  # "resource": projector,
-  # "var": "state",
-  # "old": "cooling",
-  # "new": "off"
-  # }
-  
-  class WescontrolWebsocket
+# database at http://roomtrol-allb004.class.wesleyan.edu:5984
+
+# # Wescontrol websocket server. Used to provide better interactivity to
+# the touchscreen interface. Communication is through JSON, like for
+# Wescontrol HTTP. Due to the nature of web sockets, message can either
+# be sent from the server to the client or the other direction. In general,
+# messages sent to the client are to notify of state changes, like a projector
+# turning on or a source being changed, while those from the client are
+# requests to change to state of a device or send a command. Note that every
+# message has an "id" field, which is merely a unique identifier for that
+# message. All responses to a request (whichever direction it travels) should
+# include the id of the request. Any string can be used as an id, but GUIDs
+# are recommended.
+#
+# #Messages
+# ##Client -> Server
+# ###State get requests
+# Gets information about the current state of elements in the system. Requests
+# look like this:
+#
+# {
+# "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
+# "type": "state_get",
+# "resource": "projector",
+# "var": "power"
+# }
+#
+# This should produce the response:
+#
+# {
+# "id": "DD2297B4-6982-4804-976A-AEA868564DF3",
+# "result": true
+# }
+#
+# The allowed resource/var pairs are listed here:
+#
+# - projector
+# - **state** (on/off/warming/cooling)
+# - **video_mute** (true/false)
+# - volume
+# - **level** (0-1.0)
+# - **mute** (true/false)
+# - source
+# - **current** (source name)
+# - **list** (array of source names)
+#
+# ###state_set
+# Sets the state of a variable
+#
+# {
+# "id": "D62F993B-E036-417C-948B-FEA389480984",
+# "type": "state_set",
+# "resource": "projector",
+# "var": "power",
+# "value": true
+# }
+#
+# This will produce an ACK, which lets the client know that the request
+# was received.
+#
+# {
+# "id": "D62F993B-E036-417C-948B-FEA389480984",
+# "ack": true
+# }
+#
+# In order to know if this was successful, the client must wait for a
+# change in the variable (power, in this case) and ensure that it has
+# become the expected value.
+#
+# The allowed resource/var pairs are:
+#
+# - projector
+# - **power** (true/false)
+# - **mute** (true/false)
+# - volume
+# - **level** (0-1.0)
+# - **mute** (true/false)
+# - source
+# - **current** (string name of a source)
+#
+# ###command
+# Executes a command
+#
+# {
+# "id": "D62F993B-E036-417C-948B-FEA389481512",
+# "type": "command",
+# "device": "IREmitter",
+# "name": "send_command",
+# "args": ["play"]
+# }
+#
+# This will also produce an ACK, as above.
+#
+# ## Server -> Client
+# ### connected
+# When a client connects, the server sends it a bunch of useful information
+# for setting itself up. The message looks like this:
+#
+# {
+# "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
+# "type": "connection",
+# "building": "Albritton",
+# "room": "004",
+# "sources": [
+# {
+# "name": "Laptop",
+# "icon": "Laptop.png"
+# }
+# ],
+# "actions": [
+# {
+# "name": "Play DVD",
+# "prompt_projector": true,
+# "source: "DVD"
+# }
+# ]
+# }
+#
+# ### state_changed
+#
+# {
+# "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA441",
+# "type": "state_changed",
+# "resource": projector,
+# "var": "state",
+# "old": "cooling",
+# "new": "off"
+# }
+# 
+# 
+
+
+class WescontrolWebsocket
     def initialize
-        @connections = {}
-        @old_connections = {}
-
         @db = CouchRest.database(Wescontrol::DB_URI)
         @room = db.get("_design/room").view("by_mac", {:key => MAC.addr})['rows'][0]
         @projector = @room["attributes"]["projector"]
@@ -156,10 +158,12 @@ module Wescontrol
         @queue.subscribe{ |json|
           msg = JSON.parse(json)
 
-          if msg['type'] == 'update'
+          if msg['state_update']
+            # update the database?
+            
             @update_channel.push(msg)
 
-          elsif msg['type'] == 'response'
+          else
             if @deferred_responses[msg["id"]]
               @deferred_responses.delete(msg["id"]).succeed(msg) 
             end
@@ -175,14 +179,21 @@ module Wescontrol
                             }) do |ws|
 
           ws.onopen do 
-            DaemonKit.logger.debug "New connection on #{ws.signature}"
 
+            DaemonKit.logger.debug "New connection on #{ws.signature}"
 
             # subscribe to channel that gets the
             # updates directly from the mq
             
             sid = @update_channel.subscribe { |msg|
-              ws.send msg
+              update_msg = {
+                'id' => UUIDTools::UUID.random_create.to_s,
+                'type' => 'state_changed'
+                'var' => msg['var']
+                'old' => msg['was']
+                'new' => msg['now']
+              }
+              ws.send update_msg
             }
 
             # send the client the required
@@ -191,8 +202,8 @@ module Wescontrol
             
             init_message = {
               'id' => UUIDTools::UUID.random_create.to_s,
-              'type' => 'init'
-              #'building' =>
+              'type' => 'connection'
+              'building' => @room["attributes"]["building"]
               #'room' =>
               #'devices' =>
               #etc
@@ -204,41 +215,80 @@ module Wescontrol
 
           ws.onmessage do |json|
             begin
-              resp = {'id' => message['id'], 'received' => true}.to_json
+              
+              message = JSON.parse(json)
+              
+              resp = {'id' => message['id'], 'ack' => true}.to_json
               ws.send resp
             
-              message = JSON.parse(json)
-
-              device_req = {
-                :id => message['id'],
-                :queue => @queue_name,
-                :device => message['device']
-              }
-              
               case message['type']
-              when "get"
-                device_req[:type] = :state_get
-                device_req[:var] = message['var']
-
-              when "set"
-                device_req[:type] = :state_get
-                device_req[:var] = message['var']
                 
+              when "state_get"
+                response {'id' => message['id']}
+                case message['resource']
+                when "projector"
+                  variable = message['var']
+                  if variable in ['power', 'mute']
+                    get_response['value'] = @projector[message['var']]
+                  else
+                    Daemonkit.logger.debug "Uknown projector variable #{variable}"
+                  end
+                    
+                when "volume"
+                  variable = message['var']
+                  if variable in ['level', 'mute']
+                    get_response['value'] = @volume[message['var']]
+                  else
+                    Daemonkit.logger.debug "Unknown volume variable #{variable}"
+                  end
+                    
+                when "source"
+                  variable = message['var']
+                  if variable in ['current']
+                    get_response['value'] = @room["attributes"]["current"]
+                  else
+                    Daemonkit.logger.debug "Uknown source variable #{variable}"
+                  end 
+                  
+                else
+                  Daemonkit.logger.debug "Unknown resource #{message['resource']}"
+              
+                ws.send get_response
+                return
+              end
+                            
+              device_req = {
+                  :id => message['id'],
+                  :queue => @queue_name
+              }
+                              
+              when "state_set" 
+                device_req[:type] = :state_set
+                device_req[:var] = message['var']
+                device_req[:value] = message['value']
+              end
+              
+                                
               when "command"
-                device_req[:type] = :state_get
-                device_req[:command] = message['name']
-                device_req[:args] = message['args']
+                device[:type] = :command
+                device[:method] = message['method']
+                device[:args] = message['args']
               end
 
               deferrable = EM::DefaultDeferrable.new
               deferrable.callback {|msg|
-
-                if msg['success']
-                  response = {'id' => msg['id'], 'success' => true}.to_json
-                else
-                  response = {'id' => msg['id'], 'success' => false}.to_json
-                end
+                msg = JSON.parse(json)
                 
+                response = {
+                  'id' => msg['id']
+                }
+                
+                case msg['type']
+                when 'state_get'
+                  response['value'] = msg['value']
+                when 'state_set'
+                  if response['result']
+                    
                 ws.send response
               }
 
@@ -265,4 +315,3 @@ module Wescontrol
     end
   end
 end
-
