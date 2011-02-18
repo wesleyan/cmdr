@@ -140,6 +140,12 @@ class WescontrolWebsocket
     def initialize
         @db = CouchRest.database(Wescontrol::DB_URI)
         @room = db.get("_design/room").view("by_mac", {:key => MAC.addr})['rows'][0]
+        @room_devices = db.get('_design/room').view('devices_for_room', {:key => @room['_id']})['rows']
+        @building = db.get(@room['attributes']['belongs_to'])['rows'][0]['attributes']['name']
+        @room_name = @room['attributes']['name']
+        @actions = @room_devices.collect{|device|
+          device['attributes']['commands']
+          }
         @projector = @room["attributes"]["projector"]
         @switcher = @room["attributes"]["switcher"]
         @dvdplayer = @room["attributes"]["dvdplayer"]
@@ -185,7 +191,9 @@ class WescontrolWebsocket
             # subscribe to channel that gets the
             # updates directly from the mq
             
+            
             sid = @update_channel.subscribe { |msg|
+              puts "State update: #{msg}"
               update_msg = {
                 'id' => UUIDTools::UUID.random_create.to_s,
                 'type' => 'state_changed'
@@ -200,11 +208,12 @@ class WescontrolWebsocket
             # information about room, devices, etc.
             # to set it up
             
+
             init_message = {
               'id' => UUIDTools::UUID.random_create.to_s,
-              'type' => 'connection'
-              'building' => @room["attributes"]["building"]
-              #'room' =>
+              'type' => 'connection',
+              'building' => @building,
+              'room' => @room_name
               #'devices' =>
               #etc
             }
@@ -278,6 +287,8 @@ class WescontrolWebsocket
               deferrable = EM::DefaultDeferrable.new
               deferrable.callback {|msg|
                 msg = JSON.parse(json)
+                
+                puts "Message queue response: #{msg}"
                 
                 response = {
                   'id' => msg['id']
