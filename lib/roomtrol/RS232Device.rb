@@ -124,20 +124,7 @@ module Wescontrol
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
-      @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
-      @_serial_buffer = ""
-      @_serial_lock = false
-      Thread.new do
-        while true do
-          if @_serial_lock
-            sleep 0.1
-            next
-          end
-          @_serial_buffer << @_serialport.getc
-        end
-      end
-                                    
-			@connection.instance_variable_set(:@receiver, self)
+
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
@@ -151,6 +138,33 @@ module Wescontrol
         @_serialport.write string if @_serialport
       #end
 		end
+
+    # Creates a fake evented serial connection, which calls the passed-in callback when
+    # data is received. Note that you should only call this method once.
+    # @param [Proc] cb A callback that should handle serial data
+    def serial_reader cb
+      sp = SerialPort.new(configuration[:port], configuration[:baud])
+      
+      deferrable = EM::DefaultDeferrable.new
+      deferrable.callback &cb
+      Thread.new do
+        loop do
+          begin
+            data = sp.sysread(4096)
+          rescue Errno::EAGAIN, Errno::EWOULDBLOCK, EOFError
+            # no-op
+          rescue Errno::ECONNRESET, Errno::ECONNREFUSED
+            DaemonKit.logger.error("Connection refused")
+            break
+          end
+
+          deferrable.succeed(data)
+          deferrable = EM::DefaultDeferrable.new
+          deferrable.callback &cb
+        end
+      end
+    end
+
 		
 		# Run is a blocking call that starts the device. While run is running, the device will
 		# watch for AMQP events as well as whatever communication channels the device uses and
@@ -163,17 +177,7 @@ module Wescontrol
 						self.ready_to_send = @_ready_to_send
 					end
 
-          EM::add_periodic_timer 0.1 do
-            if @_serial_buffer.size > 0
-              @_serial_lock = true
-              buffer = @_serial_buffer.dup
-              @_serial_buffer = ""
-              @serial_lock = false
-              
-              self.read buffer
-            end
-          end
-          
+          serial_reader {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -520,21 +524,5 @@ module Wescontrol
 			@_request_iter += 1
 			request_scheduler[@_request_iter % request_scheduler.size][1]
 		end
-		
 	end
-end
-
-# @private
-# Creates an EM::Connection for use with EM::Serialport. Because the main RS232Device class must
-# subclass from Device, it cannot subclass from EM::Connection. Therefore, we must create a dummy
-# connection subclass to use instead. All it does is call @receiver.read when data is received,
-# where @receiver is automatically set to the RS232Device subclass.
-class RS232Connection < EM::Connection
-	def initialize
-		@receiver ||= self.class.instance_variable_get(:@receiver)
-		@receiver.serialport = self
-	end
-	def receive_data data
-		@receiver.read data if @receiver
-	end	
 end
