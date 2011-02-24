@@ -98,6 +98,11 @@ module Wescontrol
 	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
 	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
 	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
+  # + *message_timeout*: the number of seconds to wait before sending the next message after a message fails to
+  #   elicit a response
+  # + *message_delay*: The number of seconds to wait before sending the next message after a message has
+  #   successfully gotten a response. Some devices can't take a constant barrage of message, so a delay is
+  #   necessary
 	class RS232Device < Device
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
@@ -110,6 +115,7 @@ module Wescontrol
 			parity 0
 			message_end "\r\n"
 			message_timeout 0.2
+      message_delay 0
 		end
 		
 		# Creates a new RS232Device instance
@@ -131,6 +137,7 @@ module Wescontrol
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
+      @_waiting = false
 		end
 
 		# Sends a string to the serial device
@@ -490,15 +497,19 @@ module Wescontrol
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
-				DaemonKit.logger.debug("#{self.name}: Request timed out: #{}") unless state
+				DaemonKit.logger.debug("#{self.name}: Request timed out") unless state
 				@_ready_to_send = true
 			end
-			if @_ready_to_send
-				if @_send_queue.size == 0
-					request = choose_request
-					do_message request if request
-				end
-				send_from_queue
+			if @_ready_to_send && !@_waiting
+        @_waiting = true
+        EM::add_timer(configuration[:message_delay]) do
+				  if @_send_queue.size == 0
+					  request = choose_request
+					  do_message request if request
+				  end
+				  send_from_queue
+          @_waiting = false
+        end
 			end
 		end
 
@@ -510,11 +521,11 @@ module Wescontrol
 		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
 			if message = @_send_queue.pop
-				@_last_sent_time = Time.now
-				@_ready_to_send = false
-				@_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
-				@_message_handler.timeout(configuration[:message_timeout])
-				send_string message[0]
+        DaemonKit.logger.debug(message.inspect)
+        @_last_sent_time = Time.now
+        @_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
+        @_message_handler.timeout(configuration[:message_timeout])
+        send_string message[0]
 			end
 		end
 		
