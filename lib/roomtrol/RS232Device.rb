@@ -120,11 +120,14 @@ module Wescontrol
 		# @param [String] db_uri The URI of the CouchDB database where updates should be saved
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+      Thread.abort_on_exception = true
+      
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
 
+      @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
@@ -133,32 +136,33 @@ module Wescontrol
 		# Sends a string to the serial device
 		# @param [String] string The string to send
 		def send_string(string)
-      DaemonKit.logger.debug("Writing: #{string}")
-      #Thread.new do
+      Thread.new do
         @_serialport.write string if @_serialport
-      #end
+      end
 		end
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
     # @param [Proc] cb A callback that should handle serial data
-    def serial_reader cb
-      sp = SerialPort.new(configuration[:port], configuration[:baud])
-      
+    def serial_reader &cb
       deferrable = EM::DefaultDeferrable.new
       deferrable.callback &cb
       Thread.new do
         loop do
           begin
-            data = sp.sysread(4096)
+            data = @_serialport.sysread(4096)
           rescue Errno::EAGAIN, Errno::EWOULDBLOCK, EOFError
-            # no-op
+            sleep(0.05)
           rescue Errno::ECONNRESET, Errno::ECONNREFUSED
             DaemonKit.logger.error("Connection refused")
             break
           end
 
-          deferrable.succeed(data)
+          if data
+            deferrable.succeed(data)
+          else
+            deferrable.fail
+          end
           deferrable = EM::DefaultDeferrable.new
           deferrable.callback &cb
         end
@@ -176,7 +180,6 @@ module Wescontrol
 					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
 					end
-
           serial_reader {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
@@ -407,7 +410,6 @@ module Wescontrol
 		# is called and the result is sent back to the user or ignored. Also sets ready_to_send,
 		# which causes the next request or command to be sent.
 		def read data
-      DaemonKit.logger.debug("Read called with #{data}")
 			@_buffer ||= ""
 			@_responses ||= {}
 			@_buffer << data
