@@ -521,7 +521,6 @@ module Wescontrol
 		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
 			if message = @_send_queue.pop
-        DaemonKit.logger.debug(message.inspect)
         @_last_sent_time = Time.now
         @_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
         @_message_handler.timeout(configuration[:message_timeout])
