@@ -1,4 +1,3 @@
-$eventmachine_library = :pure_ruby
 require 'eventmachine'
 
 TEST_DB = "http://localhost:5984/rooms_test"

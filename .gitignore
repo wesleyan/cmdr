@@ -6,3 +6,5 @@ doc/
 *.log
 *.pid
 *.gem
+
+.gitpusshuten/**/*

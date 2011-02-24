@@ -1,6 +1,6 @@
-require 'rubygems'
+require 'serialport'
 require 'strscan'
-require 'roomtrol/em-serialport'
+#require 'roomtrol/em-serialport'
 require 'bit-struct'
 
 module Wescontrol
@@ -98,6 +98,11 @@ module Wescontrol
 	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
 	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
 	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
+  # + *message_timeout*: the number of seconds to wait before sending the next message after a message fails to
+  #   elicit a response
+  # + *message_delay*: The number of seconds to wait before sending the next message after a message has
+  #   successfully gotten a response. Some devices can't take a constant barrage of message, so a delay is
+  #   necessary
 	class RS232Device < Device
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
@@ -110,6 +115,7 @@ module Wescontrol
 			parity 0
 			message_end "\r\n"
 			message_timeout 0.2
+      message_delay 0
 		end
 		
 		# Creates a new RS232Device instance
@@ -120,22 +126,56 @@ module Wescontrol
 		# @param [String] db_uri The URI of the CouchDB database where updates should be saved
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+      Thread.abort_on_exception = true
+      
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
-			@connection = RS232Connection.dup
-			@connection.instance_variable_set(:@receiver, self)
+
+      @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
+      @_waiting = false
 		end
 
 		# Sends a string to the serial device
 		# @param [String] string The string to send
 		def send_string(string)
-			@serialport.send_data(string) if @serialport
+      Thread.new do
+        @_serialport.write string if @_serialport
+      end
 		end
+
+    # Creates a fake evented serial connection, which calls the passed-in callback when
+    # data is received. Note that you should only call this method once.
+    # @param [Proc] cb A callback that should handle serial data
+    def serial_reader &cb
+      deferrable = EM::DefaultDeferrable.new
+      deferrable.callback &cb
+      Thread.new do
+        loop do
+          begin
+            data = @_serialport.sysread(4096)
+          rescue Errno::EAGAIN, Errno::EWOULDBLOCK, EOFError
+            sleep(0.05)
+          rescue Errno::ECONNRESET, Errno::ECONNREFUSED
+            DaemonKit.logger.error("Connection refused")
+            break
+          end
+
+          if data
+            deferrable.succeed(data)
+          else
+            deferrable.fail
+          end
+          deferrable = EM::DefaultDeferrable.new
+          deferrable.callback &cb
+        end
+      end
+    end
+
 		
 		# Run is a blocking call that starts the device. While run is running, the device will
 		# watch for AMQP events as well as whatever communication channels the device uses and
@@ -144,15 +184,10 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(configuration[:message_timeout]) {
+					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
-					}
-					EM::open_serial configuration[:port], 
-						configuration[:baud], 
-						configuration[:data_bits], 
-						configuration[:stop_bits], 
-						configuration[:parity], 
-						@connection
+					end
+          serial_reader {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -462,15 +497,19 @@ module Wescontrol
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
-				DaemonKit.logger.debug("#{self.name}: Request timed out: #{}") unless state
+				DaemonKit.logger.debug("#{self.name}: Request timed out") unless state
 				@_ready_to_send = true
 			end
-			if @_ready_to_send
-				if @_send_queue.size == 0
-					request = choose_request
-					do_message request if request
-				end
-				send_from_queue
+			if @_ready_to_send && !@_waiting
+        @_waiting = true
+        EM::add_timer(configuration[:message_delay]) do
+				  if @_send_queue.size == 0
+					  request = choose_request
+					  do_message request if request
+				  end
+				  send_from_queue
+          @_waiting = false
+        end
 			end
 		end
 
@@ -482,11 +521,10 @@ module Wescontrol
 		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
 			if message = @_send_queue.pop
-				@_last_sent_time = Time.now
-				@_ready_to_send = false
-				@_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
-				@_message_handler.timeout(configuration[:message_timeout])
-				send_string message[0]
+        @_last_sent_time = Time.now
+        @_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
+        @_message_handler.timeout(configuration[:message_timeout])
+        send_string message[0]
 			end
 		end
 		
@@ -498,21 +536,5 @@ module Wescontrol
 			@_request_iter += 1
 			request_scheduler[@_request_iter % request_scheduler.size][1]
 		end
-		
 	end
-end
-
-# @private
-# Creates an EM::Connection for use with EM::Serialport. Because the main RS232Device class must
-# subclass from Device, it cannot subclass from EM::Connection. Therefore, we must create a dummy
-# connection subclass to use instead. All it does is call @receiver.read when data is received,
-# where @receiver is automatically set to the RS232Device subclass.
-class RS232Connection < EM::Connection
-	def initialize
-		@receiver ||= self.class.instance_variable_get(:@receiver)
-		@receiver.serialport = self
-	end
-	def receive_data data
-		@receiver.read data if @receiver
-	end	
 end
