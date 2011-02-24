@@ -12,6 +12,7 @@ class ATPA100 < Wescontrol::RS232Device
   configure do
     baud 9600
     message_end "\r\n"
+    message_delay 0.1
   end
 
   managed_state_var :mute,
@@ -30,7 +31,7 @@ class ATPA100 < Wescontrol::RS232Device
     else
       @fake_mute = false
       this.mute = false
-      "7#{"%02" % (@old_vol * 60)}"
+      "7#{"%02" % (@old_vol * 60)}%"
     end
   }
 
@@ -42,14 +43,14 @@ class ATPA100 < Wescontrol::RS232Device
   :type => :percentage,
   :display_order => 2,
   :action => proc{|vol|
-    "5#{"%02d" % (vol * 60)}"
+    "5#{"%02d" % (vol * 60)}%"
   }
 
   managed_state_var :volume,
   :type => :percentage,
   :display_order => 1,
   :action => proc{|vol|
-    "7#{"%02d" % (vol * 60)}"
+    "7#{"%02d" % (vol * 60)}%"
   }
 
   managed_state_var :input,
