@@ -15,9 +15,11 @@ class VideoRecorder < Wescontrol::Device
 	SEND_QUEUE = "roomtrol:video:send:queue"
 	FANOUT_QUEUE = "roomtrol:video:messages"
 	state_var :state, :type => :option, :options => [:playing, :recording, :stopped]
+  state_var :course, :type => :string
 	state_var :recording_started, :type => :time, :editable => false
 	state_var :recording_stopped, :type => :time, :editable => false
 	state_var :restarts_remaining,:type => :integer, :editable => false
+
 	
 	def initialize(name, options)
 		Thread.abort_on_exception = true
@@ -86,10 +88,26 @@ class VideoRecorder < Wescontrol::Device
 			return
 		end
 
-		deferrable = EM::DefaultDeferrable.new
+    send_req req
+	end
+
+  def set_course course
+    DaemonKit.logger.debug("Setting course to #{course}")
+    req = {
+      :id => UUIDTools::UUID.random_create.to_s,
+      :queue => @response_queue,
+      :course => course
+    }
+
+    send_req req
+    self.course = course    
+  end
+
+  def send_req req
+    deferrable = EM::DefaultDeferrable.new
 		@requests[req[:id]] = deferrable
 		mq = MQ.new
 		mq.queue(SEND_QUEUE).publish(req.to_json)
 		deferrable
-	end
+  end
 end
