@@ -138,8 +138,10 @@ module RoomtrolVideo
 						@db.save_doc(doc)
 						frame_file = get_frame(process.output_video, process.video_duration)
 						@db.put_attachment(doc, "video_still.jpg", File.read(frame_file))
+            doc.files.each do |f|
+              File.delete(f)
+            end
 						next true
-						# TODO: delete source videos
 					else
 						if process.restarts < MAX_RESTARTS
 							process.start

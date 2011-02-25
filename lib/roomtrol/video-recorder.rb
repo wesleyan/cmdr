@@ -113,8 +113,8 @@ module RoomtrolVideo
 		# The command to start recording video
 		RECORD_CMD = %q?
 		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
-		    tee name=t_vid ! queue ! cairotextoverlay text="recording" valign=bottom halign=right ! \
-		    xvimagesink sync=false t_vid. ! queue ! \
+		    tee name=t_vid ! deinterlace ! queue ! cairotextoverlay text="recording" valign=bottom halign=right ! \
+		    xvimagesink sync=true t_vid. ! queue ! \
 		    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
 		    audiotestsrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
 		    audioconvert ! queue ! mux. avimux name=mux ! \
@@ -122,9 +122,9 @@ module RoomtrolVideo
 
 		# The command to start video playback, but not record
 		PLAY_CMD =  %q?
-		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
-		    queue ! \
-		    xvimagesink sync=false . ?
+    gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+        deinterlace ! queue ! \
+        xvimagesink sync=true . ?
 		
 		# The database where video information is stored
 		VIDEO_DB = "http://localhost:5984/videos"
@@ -186,6 +186,9 @@ module RoomtrolVideo
 						else
 							resp[:error] = "Invalid command"
 						end
+          elsif req['course']
+            @course = req['course']
+            res[:result] = true
 					else
 						resp[:error] = "Invalid message"
 					end
@@ -201,8 +204,12 @@ module RoomtrolVideo
 			@current_process.kill if @current_process
 			
 			self.state = PLAYING_STATE
-			@current_process = ProcessMonitor.new(PLAY_CMD, true)
-			@current_process.start
+      begin
+        @current_process = ProcessMonitor.new(PLAY_CMD, true)
+        @current_process.start
+      rescue
+        DaemonKit.logger.debug("Failed to start: $!")
+      end
 		end
 	
 		def start_recording
@@ -290,7 +297,8 @@ module RoomtrolVideo
 						"encoded" => false,
 						"files" => @video_files,
 						"length" => Time.now - @recording_start_time,
-						"recorded_at" => @recording_start_time
+            "recorded_at" => @recording_start_time,
+            "course_id" => @course                   
 					})
 					DaemonKit.logger.debug("Sending message on fanout")
 					send_fanout({
