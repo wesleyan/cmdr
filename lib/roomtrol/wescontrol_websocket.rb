@@ -138,20 +138,28 @@ require 'couchrest'
 
 class WescontrolWebsocket
     def initialize
-        @db = CouchRest.database(Wescontrol::DB_URI)
-        @room = db.get("_design/room").view("by_mac", {:key => MAC.addr})['rows'][0]
-        @room_devices = db.get('_design/room').view('devices_for_room', {:key => @room['_id']})['rows']
-        @building = db.get(@room['attributes']['belongs_to'])['rows'][0]['attributes']['name']
-        @room_name = @room['attributes']['name']
-        @actions = @room_devices.collect{|device|
-          device['attributes']['commands']
-          }
-        @projector = @room["attributes"]["projector"]
-        @switcher = @room["attributes"]["switcher"]
-        @dvdplayer = @room["attributes"]["dvdplayer"]
-        @volume = @room["attributes"]["volume"]
-    end
+      @db = CouchRest.database(Wescontrol::DB_URI)
+      @room = db.get("_design/room").view("by_mac", {:key => MAC.addr})['rows'][0]
+      @devices = db.get('_design/room').view('devices_for_room', {:key => @room['_id']})['rows']
+      @building = db.get(@room['attributes']['belongs_to'])['rows'][0]['attributes']['name']
 
+      @actions = db.get('_design/room').view('actions_for_room', {:key => @room['_id']})['rows'].collect { |action|
+        {
+          @sources
+        }
+      }
+
+      @sources = db.get('_design/room').view('sources_for_room', {:key => @room['_id']})['rows'].collect { |source|
+        0
+      }
+      
+      @room_name = @room['attributes']['name']
+      @projector = @room["attributes"]["projector"]
+      @switcher = @room["attributes"]["switcher"]
+      @dvdplayer = @room["attributes"]["dvdplayer"]
+      @volume = @room["attributes"]["volume"]
+    end
+    
     def run
       AMQP.start(:host => "localhost") do
         @mq = MQ.new
@@ -165,9 +173,14 @@ class WescontrolWebsocket
           msg = JSON.parse(json)
 
           if msg['state_update']
-            # update the database?
-            
-            @update_channel.push(msg)
+            update_msg = {
+              'id' => UUIDTools::UUID.random_create.to_s,
+              'type' => 'state_changed',
+              'var' => msg['var'],
+              'value' => msg['now'],
+              'severity' => msg['severity']
+            }
+            @update_channel.push(update_msg)
 
           else
             if @deferred_responses[msg["id"]]
@@ -188,34 +201,30 @@ class WescontrolWebsocket
 
             DaemonKit.logger.debug "New connection on #{ws.signature}"
 
-            # subscribe to channel that gets the
-            # updates directly from the mq
-            
-            
             sid = @update_channel.subscribe { |msg|
               puts "State update: #{msg}"
-              update_msg = {
-                'id' => UUIDTools::UUID.random_create.to_s,
-                'type' => 'state_changed'
-                'var' => msg['var']
-                'old' => msg['was']
-                'new' => msg['now']
-              }
               ws.send update_msg
             }
-
-            # send the client the required
-            # information about room, devices, etc.
-            # to set it up
-            
 
             init_message = {
               'id' => UUIDTools::UUID.random_create.to_s,
               'type' => 'connection',
               'building' => @building,
-              'room' => @room_name
-              #'devices' =>
-              #etc
+              'room' => @room_name,
+              'sources' => @sources.collect { |source|
+                {
+                  'name' => source['name']
+                  #'icon' => 
+                }
+              },
+              'actions' => @actions.collect { |action|
+                {
+                  'name' => action['name'],
+                  'prompt_projector' => action['prompt_projector']
+                  #'source' => 
+                }
+              }
+
             }
 
             ws.send init_message.to_json
@@ -229,59 +238,60 @@ class WescontrolWebsocket
               
               resp = {'id' => message['id'], 'ack' => true}.to_json
               ws.send resp
-            
-              case message['type']
-                
-              when "state_get"
-                response {'id' => message['id']}
-                case message['resource']
-                when "projector"
-                  variable = message['var']
-                  if variable in ['power', 'mute']
-                    get_response['value'] = @projector[message['var']]
-                  else
-                    Daemonkit.logger.debug "Uknown projector variable #{variable}"
-                  end
-                    
-                when "volume"
-                  variable = message['var']
-                  if variable in ['level', 'mute']
-                    get_response['value'] = @volume[message['var']]
-                  else
-                    Daemonkit.logger.debug "Unknown volume variable #{variable}"
-                  end
-                    
-                when "source"
-                  variable = message['var']
-                  if variable in ['current']
-                    get_response['value'] = @room["attributes"]["current"]
-                  else
-                    Daemonkit.logger.debug "Uknown source variable #{variable}"
-                  end 
-                  
-                else
-                  Daemonkit.logger.debug "Unknown resource #{message['resource']}"
-              
-                ws.send get_response
-                return
-              end
-                            
+
               device_req = {
                   :id => message['id'],
                   :queue => @queue_name
-              }
+              }                
+            
+              case message['type']
+
+              when "state_get"
+                # response =  {'id' => message['id']}
+                # case message['resource']
+                # when "projector"
+                #   variable = message['var']
+                #   if variable == power or variable == mute
+                #     get_response['value'] = @projector[message['var']]
+                #   else
+                #     Daemonkit.logger.debug "Uknown projector variable #{variable}"
+                #   end
+                    
+                # when "volume"
+                #   variable = message['var']
+                #   if variable == 'level' or variable == 'mute'
+                #     get_response['value'] = @volume[message['var']]
+                #   else
+                #     Daemonkit.logger.debug "Unknown volume variable #{variable}"
+                #   end
+                    
+                # when "source"
+                #   variable = message['var']
+                #   if variable == 'current'
+                #     get_response['value'] = @room["attributes"]["current"]
+                #   else
+                #     Daemonkit.logger.debug "Uknown source variable #{variable}"
+                #   end 
+                  
+                # else
+                #   Daemonkit.logger.debug "Unknown resource #{message['resource']}"
+              
+                # ws.send get_response
+                # return
+
+                device_req[:type] = :state_get
+                device_req[:var] = message['var']
                               
               when "state_set" 
                 device_req[:type] = :state_set
                 device_req[:var] = message['var']
                 device_req[:value] = message['value']
-              end
-              
                                 
               when "command"
                 device[:type] = :command
                 device[:method] = message['method']
                 device[:args] = message['args']
+
               end
 
               deferrable = EM::DefaultDeferrable.new
@@ -291,17 +301,12 @@ class WescontrolWebsocket
                 puts "Message queue response: #{msg}"
                 
                 response = {
-                  'id' => msg['id']
+                  'id' => msg['id'],
+                  'result' => msg['result']
                 }
                 
-                case msg['type']
-                when 'state_get'
-                  response['value'] = msg['value']
-                when 'state_set'
-                  if response['result']
-                    
                 ws.send response
-              }
+               }
 
               @deferred_responses[device_req[:id]] = deferrable
               @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)

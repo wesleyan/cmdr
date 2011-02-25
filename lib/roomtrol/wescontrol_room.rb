@@ -77,7 +77,20 @@ module Wescontrol
 								emit(doc.belongs_to, doc);
 							}
 						}".gsub(/\s/, "")
-					}
+					},
+          :actions_for_room => {
+            :map => "function(doc) {
+              if (doc.action) {
+               emit(doc.belongs_to, {'name': doc.name, 'prompt_projector': doc.settings.prompt_projector, 'source': doc.settings.source});
+            }".gsub(/\s/, "")
+          },
+          :sources_for_room => {
+            :map => "function(doc) {
+               if (doc.source) {
+                emit(doc.belongs_to, {'name': doc.name, 'icon': doc['_attachments']});
+               } 
+             }".gsub(/\s/, "")
+          }
 				}
 			}
 			begin 
