@@ -143,14 +143,26 @@ class WescontrolWebsocket
       @devices = db.get('_design/room').view('devices_for_room', {:key => @room['_id']})['rows']
       @building = db.get(@room['attributes']['belongs_to'])['rows'][0]['attributes']['name']
 
-      @actions = db.get('_design/room').view('actions_for_room', {:key => @room['_id']})['rows'].collect { |action|
-        {
-          @sources
-        }
-      }
-
       @sources = db.get('_design/room').view('sources_for_room', {:key => @room['_id']})['rows'].collect { |source|
-        0
+        {
+          'name' => action['name'],
+          'icon' => action.fetch_attachment(action['name'] + '.png')
+        }
+      } 
+        
+      @actions = db.get('_design/room').view('actions_for_room', {:key => @room['_id']})['rows'].collect { |action|
+        for source in @sources
+          if source['_id'] == action['source']
+            action_source = source['name']
+            break
+          end
+        end
+          
+        {
+          'name' => source['name'],
+          'prompt_projector' => source['prompt_projector'],
+          'source' => action_source
+        }
       }
       
       @room_name = @room['attributes']['name']
@@ -211,20 +223,8 @@ class WescontrolWebsocket
               'type' => 'connection',
               'building' => @building,
               'room' => @room_name,
-              'sources' => @sources.collect { |source|
-                {
-                  'name' => source['name']
-                  #'icon' => 
-                }
-              },
-              'actions' => @actions.collect { |action|
-                {
-                  'name' => action['name'],
-                  'prompt_projector' => action['prompt_projector']
-                  #'source' => 
-                }
-              }
-
+              'sources' => @sources,
+              'actions' => @actions
             }
 
             ws.send init_message.to_json
@@ -240,8 +240,8 @@ class WescontrolWebsocket
               ws.send resp
 
               device_req = {
-                  :id => message['id'],
-                  :queue => @queue_name
+                :id => message['id'],
+                :queue => @queue_name
               }                
             
               case message['type']
@@ -306,7 +306,7 @@ class WescontrolWebsocket
                 }
                 
                 ws.send response
-               }
+              }
 
               @deferred_responses[device_req[:id]] = deferrable
               @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
@@ -316,7 +316,7 @@ class WescontrolWebsocket
             end
               
           end
-
+          
           ws.onclose do
             @update_channel.unsubscribe(sid)
             DaemonKit.logger.debug "Connection on #{ws.signature} closed"
@@ -326,7 +326,6 @@ class WescontrolWebsocket
             DaemonKit.logger.debug "Error on #{ws.signature}"
           end
           
-        end
       end
     end
   end
