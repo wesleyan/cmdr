@@ -2,12 +2,13 @@ require 'mq'
 require 'fileutils'
 
 module RoomtrolVideo
-	# This class is reponsible for recording video and playing back the current state of
-	# the camera. It is controlled over AMQP. There are several kinds of messages you can
-	# send over the wire, all of which should be encoded via JSON. In each of these messages,
-	# id is a unique id which the client can use to recognize a response (as each response
-	# will also include this id) and queue is the queue to which the client wants the response
-	# sent.
+	# This class is reponsible for recording video and playing back the
+	# current state of the camera. It is controlled over AMQP. There are
+	# several kinds of messages you can send over the wire, all of which
+	# should be encoded via JSON. In each of these messages, id is a
+	# unique id which the client can use to recognize a response (as
+	# each response will also include this id) and queue is the queue to
+	# which the client wants the response sent.
 	# 
 	# ###start_time_get
 	# To get the time that recording started at, send a message like this:
@@ -88,9 +89,10 @@ module RoomtrolVideo
 	# 	}
 	#
 	#
-	# If you register yourself on the message fanout exchange (at 
-	# RemoteRecorder::FANOUT_EXCHANGE), you will receive messages when interesting
-	# things happen. Below are the messages you might receive:
+	# If you register yourself on the message fanout exchange (at
+	# RemoteRecorder::FANOUT_EXCHANGE), you will receive messages when
+	# interesting things happen. Below are the messages you might
+	# receive:
 	#
 	# 	!!!json
 	# 	{
@@ -112,7 +114,7 @@ module RoomtrolVideo
 	class RemoteRecorder
 		# The command to start recording video
 		RECORD_CMD = %q?
-		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+		gst-launch videotestsrc ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
 		    tee name=t_vid ! deinterlace ! queue ! cairotextoverlay text="recording" valign=bottom halign=right ! \
 		    xvimagesink sync=true t_vid. ! queue ! \
 		    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
@@ -122,7 +124,7 @@ module RoomtrolVideo
 
 		# The command to start video playback, but not record
 		PLAY_CMD =  %q?
-    gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+    gst-launch videotestsrc ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
         deinterlace ! queue ! \
         xvimagesink sync=true . ?
 		
@@ -188,7 +190,8 @@ module RoomtrolVideo
 						end
           elsif req['course']
             @course = req['course']
-            res[:result] = true
+            DaemonKit.logger.debug("Setting course to #{@course}")
+            resp[:result] = true
 					else
 						resp[:error] = "Invalid message"
 					end
@@ -298,7 +301,7 @@ module RoomtrolVideo
 						"files" => @video_files,
 						"length" => Time.now - @recording_start_time,
             "recorded_at" => @recording_start_time,
-            "course_id" => @course                   
+            "course_id" => @course
 					})
 					DaemonKit.logger.debug("Sending message on fanout")
 					send_fanout({
