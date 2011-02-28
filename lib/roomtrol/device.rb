@@ -1,5 +1,4 @@
-# $eventmachine_library = :pure_ruby
-require 'couchrest'
+require 'em-couchdb'
 require 'mq'
 require 'json'
 
@@ -229,15 +228,15 @@ module Wescontrol
 		# the CouchDB database where updates should be saved @param
 		# [String] dqueue The AMQP queue that the device watches for
 		# messages
-		def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+		def initialize(name, hash = {}, db_host="localhost", db_port="5984", db_name="rooms", dqueue = nil)
 			hash_s = hash.symbolize_keys
 			@name = name
 			hash.each{|var, value|
 				configuration[var.to_sym] = value
 			} if configuration
 			#TODO: The database uri should not be hard-coded
-			@db = CouchRest.database(db_uri)
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
+      @_db_info = {:host => db_host, :port => db_port, :name => db_name}
 		end
 		
 		# Run is a blocking call that starts the device. While run is
@@ -246,6 +245,7 @@ module Wescontrol
 		# appropriately to events.
 		def run
 			AMQP.start(:host => '127.0.0.1'){
+        @couch = EventMachine::Protocols::CouchDB.connect @_db_info
 				self.amqp_setup
 				@amq_responder = MQ.new
 				handle_feedback = proc {|feedback, req, resp, job|
@@ -663,8 +663,10 @@ b				raise "Must have type field" unless options[:type]
 		# @param [String] id The id of a CouchDB document for the device
 		# @return [Device] A device instance created by downloading the specified CouchDB
 		# 	document and running {Device::from_couch} on it.
-		def self.from_doc(id)
-			from_couch(CouchRest.database(@database).get(id))
+		def self.from_doc(id, &cb)
+      @couch.get(@_db_info[:name], id) do |doc|
+        cb.call(from_couch(doc))
+      end
 		end
 		
 		# Registers an error, which involves sending it as an event
@@ -715,7 +717,9 @@ b				raise "Must have type field" unless options[:type]
 					doc["_id"] = @_id
 					doc["_rev"] = @_rev
 				end
-				@_rev = @db.save_doc(doc)['rev']
+        @couch.save(@db_config[:name], doc) do |doc|
+          @_rev = doc['rev']
+        end
 			rescue => e
 				if !retried
 					retried = true

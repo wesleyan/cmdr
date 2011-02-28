@@ -1,11 +1,14 @@
 require 'eventmachine'
 
-TEST_DB = "http://localhost:5984/rooms_test"
+TEST_DB_HOST = "localhost"
+TEST_DB_PORT = 5984
+TEST_DB_NAME = "rooms_test"
 DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 
 begin
 	require 'rspec'
 	require 'mq'
+  require_relative '../lib/roomtrol'
 	require_relative '../lib/roomtrol/device.rb'
 	require_relative '../lib/roomtrol/constants.rb'
 rescue LoadError
@@ -41,11 +44,11 @@ end
 class Wescontrol::Device
 	# We change the default db_uri to the test database, so that we don't
 	# insert fake data into the real database
-	def new_initialize name, hash = {}, db_uri = TEST_DB, dqueue = nil
+	def new_initialize name, hash = {}, db_host = TEST_DB_HOST, db_port = TEST_DB_PORT, db_name = TEST_DB_NAME, dqueue = nil
 		if dqueue
-			old_initialize(name, hash, db_uri, dqueue)
+			old_initialize(name, hash, db_host, db_port, db_name, dqueue)
 		else
-			old_initialize(name, hash, db_uri)
+			old_initialize(name, hash, db_host, db_port, db_name)
 		end
 	end
 	alias_method :old_initialize, :initialize
@@ -55,8 +58,8 @@ end
 RSpec.configure do |config|
 	config.before(:each) {
 		# Clear the test DB
-		CouchRest.database!(TEST_DB).delete!
-		CouchRest.database!(TEST_DB)
+		CouchRest.database!("http://#{TEST_DB_HOST}:#{TEST_DB_PORT}/#{TEST_DB_NAME}").delete!
+		CouchRest.database!("http://#{TEST_DB_HOST}:#{TEST_DB_PORT}/#{TEST_DB_NAME}")
 	}
 	
 	
