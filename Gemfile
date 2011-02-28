@@ -17,7 +17,6 @@ gem 'json'
 gem 'serialport'
 gem 'bit-struct'
 gem 'couchrest'
-gem 'em-couchdb', :git => "git://github.com/saivenkat/em-couchdb.git"
 gem 'eventmachine'
 gem 'eventmachine_httpserver'
 gem 'chronic'
@@ -31,3 +30,6 @@ gem 'highline'
 gem 'net-ssh'
 gem 'net-scp' 
 gem 'git'
+
+# em-couch
+gem 'em-http-request'

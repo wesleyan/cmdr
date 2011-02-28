@@ -1,4 +1,4 @@
-require 'em-couchdb'
+require_relative '../../vendor/em-couchdb-0.1.1/lib/em-couchdb'
 require 'mq'
 require 'json'
 
@@ -710,24 +710,24 @@ b				raise "Must have type field" unless options[:type]
 		# @param [#to_json] old_val The value of `changed` before it, well, changed
 		def save changed = nil, old_val = nil
 			retried = false
-			begin
+#			begin
 				hash = self.to_couch
 				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
 				if @_id && @_rev
 					doc["_id"] = @_id
 					doc["_rev"] = @_rev
 				end
-        @couch.save(@db_config[:name], doc) do |doc|
+        @couch.save(@_db_info[:name], doc) do |doc|
           @_rev = doc['rev']
         end
-			rescue => e
-				if !retried
-					retried = true
-					retry
-				else
-					DaemonKit.logger.exception e
-				end
-			end
+			# rescue => e
+			# 	if !retried
+			# 		retried = true
+			# 		retry
+			# 	else
+			# 		DaemonKit.logger.exception e
+			# 	end
+			# end
 			if changed
 				update = {
 					'state_update' => true,

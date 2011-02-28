@@ -1,6 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    addressable (2.2.4)
     amqp (0.6.7)
       eventmachine (>= 0.12.4)
     bit-struct (0.13.6)
@@ -14,6 +15,11 @@ GEM
     daemon-kit (0.1.8.1)
       eventmachine (>= 0.12.10)
     diff-lcs (1.1.2)
+    em-http-request (0.3.0)
+      addressable (>= 2.0.0)
+      escape_utils
+      eventmachine (>= 0.12.9)
+    escape_utils (0.2.2)
     eventmachine (0.12.10)
     eventmachine_httpserver (0.2.0)
     git (1.2.5)
@@ -61,6 +67,7 @@ DEPENDENCIES
   chronic
   couchrest
   daemon-kit
+  em-http-request
   eventmachine
   eventmachine_httpserver
   git

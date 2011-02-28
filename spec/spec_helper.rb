@@ -3,19 +3,22 @@ require 'eventmachine'
 TEST_DB_HOST = "localhost"
 TEST_DB_PORT = 5984
 TEST_DB_NAME = "rooms_test"
+TEST_DB = "http://#{TEST_DB_HOST}:#{TEST_DB_PORT}/#{TEST_DB_NAME}"
+
 DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 
 begin
 	require 'rspec'
-	require 'mq'
-  require_relative '../lib/roomtrol'
-	require_relative '../lib/roomtrol/device.rb'
-	require_relative '../lib/roomtrol/constants.rb'
 rescue LoadError
 	require 'rubygems'
 	gem 'rspec'
 	require 'rspec'
 end
+
+require 'mq'
+
+require_relative '../lib/roomtrol/device.rb'
+require_relative '../lib/roomtrol/constants.rb'
 
 #require File.dirname(__FILE__) + '/../config/environment'
 #DaemonKit::Application.running!
@@ -58,8 +61,8 @@ end
 RSpec.configure do |config|
 	config.before(:each) {
 		# Clear the test DB
-		CouchRest.database!("http://#{TEST_DB_HOST}:#{TEST_DB_PORT}/#{TEST_DB_NAME}").delete!
-		CouchRest.database!("http://#{TEST_DB_HOST}:#{TEST_DB_PORT}/#{TEST_DB_NAME}")
+		CouchRest.database!(TEST_DB).delete!
+		CouchRest.database!(TEST_DB)
 	}
 	
 	

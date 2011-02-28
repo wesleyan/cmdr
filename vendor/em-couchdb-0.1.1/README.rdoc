@@ -1,0 +1,25 @@
+em-couchdb is a simple, convenient, and non blocking client for CouchDBi built as an EventMachine protocol. CouchDB (simplistically speaking) is a document store, which essentially means that objects can be stored in a schema-less environment.
+
+What it is?
+-----------
+With em-couchdb, you can easily save, query, delete documents, databases to/from a CouchDB database in your favourite language - Ruby. 
+
+Why?
+----
+I love NoSQL. As well I love working with EventMachine and have too much time in hand :).
+
+Contributors
+------------
+
+- Sai Venkatakrishnan (http://www.github.com/saivenkat)
+- Justin Langhorst (http://www.github.com/langhorst)
+
+Requirements
+------------
+ - Ruby 1.8.5 or above (http://www.ruby-lang.org)
+ - rubygems 0.9.4 (http://rubygems.org)
+ - JSON gem (http://json.rubyforge.org) [Used for JSON encoding/decoding]
+ - EventMachine
+ - em-http
+ - CouchDB 0.8.0 and upwards ( http://incubator.apache.org/couchdb/community/code.html ) [Some specs require running CouchDB at localhost:5984]
+ 
