@@ -237,6 +237,7 @@ module Wescontrol
 			#TODO: The database uri should not be hard-coded
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
       @_db_info = {:host => db_host, :port => db_port, :name => db_name}
+      @couch = EventMachine::Protocols::CouchDB.connect @_db_info
 		end
 		
 		# Run is a blocking call that starts the device. While run is
@@ -245,7 +246,6 @@ module Wescontrol
 		# appropriately to events.
 		def run
 			AMQP.start(:host => '127.0.0.1'){
-        @couch = EventMachine::Protocols::CouchDB.connect @_db_info
 				self.amqp_setup
 				@amq_responder = MQ.new
 				handle_feedback = proc {|feedback, req, resp, job|
@@ -457,7 +457,7 @@ module Wescontrol
 		def self.state_var name, options
 			sym = name.to_sym
 			self.class_eval do
-b				raise "Must have type field" unless options[:type]
+				raise "Must have type field" unless options[:type]
 				@state_vars ||= {}
 				@state_vars[sym] = options
 			end
@@ -477,12 +477,12 @@ b				raise "Must have type field" unless options[:type]
 						DaemonKit.logger.debug sprintf("%-10s = %s\n", "#{sym}", val.to_s)
 						if virtuals = self.state_vars[:#{sym}][:affects]
 							virtuals.each{|var|
-								begin
+								#begin
 									transformation = self.instance_eval &state_vars[var][:transformation]
 									self.send("\#{var}=", transformation)
-								rescue
-									DaemonKit.logger.error "Transformation on \#{var} failed: \#{$!}"
-								end
+								#rescue
+								#	DaemonKit.logger.error "Transformation on \#{var} failed: \#{$!}"
+								#end
 							}
 						end
 						if @change_deferrable
@@ -720,14 +720,14 @@ b				raise "Must have type field" unless options[:type]
         @couch.save(@_db_info[:name], doc) do |doc|
           @_rev = doc['rev']
         end
-			# rescue => e
-			# 	if !retried
-			# 		retried = true
-			# 		retry
-			# 	else
-			# 		DaemonKit.logger.exception e
-			# 	end
-			# end
+#			rescue => e
+#				if !retried
+#					retried = true
+#					retry
+#				else
+#					DaemonKit.logger.exception e
+#				end
+#			end
 			if changed
 				update = {
 					'state_update' => true,
@@ -739,16 +739,19 @@ b				raise "Must have type field" unless options[:type]
 			end
 		end
 		
-		# @return [EventMachine::Deferrable] A deferrable which is notified when a state var
-		# 	changes. Look at the EventMachine documentation for more information about deferrables,
+		# @return [EventMachine::Deferrable] A deferrable which is
+		# 	notified when a state var changes. Look at the EventMachine
+		# 	documentation for more information about deferrables,
 		def register_for_changes
 			@change_deferrable ||= EM::DefaultDeferrable.new
 			@change_deferrable
 		end
 		
-		# Takes in a block which is specified as the callback for the deferrable returned by
-		# {Device#register_for_changes} automatically whenever a state var changes. Thus, the
-		# code in the block will be run every time a change occurs, rather than just once.
+		# Takes in a block which is specified as the callback for the
+		# deferrable returned by {Device#register_for_changes}
+		# automatically whenever a state var changes. Thus, the code in
+		# the block will be run every time a change occurs, rather than
+		# just once.
 		def auto_register_for_changes(&block)
 			@auto_register ||= []
 			@auto_register << block
@@ -759,9 +762,9 @@ end
 
 # @private
 class Object
-	# @private
-	# These methods dup all objects inside the hash/array as well as the data structure itself
-	# However, because we don't check for cycles, they will cause an infinite loop if present.
+	# @private These methods dup all objects inside the hash/array as
+	# well as the data structure itself However, because we don't check
+	# for cycles, they will cause an infinite loop if present.
 	def deep_dup
 		begin
       if self.is_a? Symbol or self.is_a? TrueClass or self.is_a? FalseClass

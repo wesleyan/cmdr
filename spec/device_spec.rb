@@ -116,7 +116,7 @@ describe "deal with state_vars properly" do
 	end
 
 	it "should create accessor methods for state_var" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :text, :type => :string
 		end
 		ds = DeviceSubclass.new("device")
@@ -125,7 +125,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should inherit state_vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -138,7 +138,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should not share state_var values between subclasses" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -166,7 +166,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should set all state_vars in state_vars hash and allow access" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :text, :type => :string
 			state_var :something, :type => :option, :options => (1..6).to_a
 		end
@@ -178,7 +178,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should create set_ methods if :action is provided" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :power, :type => :string, :action => proc {|x| "hello #{x}"}
 		end
 		ds = DeviceSubclass.new("device")
@@ -188,7 +188,7 @@ end
 
 describe "do virtual vars" do
 	it "should allow creation of virtual vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -209,7 +209,7 @@ describe "do virtual vars" do
 		}.should raise_error
 	end
 	it "should recalculate virtual vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -223,7 +223,7 @@ describe "do virtual vars" do
 		ds.capital_name.should == "MICAH"
 	end
 	it "should work with multiple depends_on vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -239,7 +239,7 @@ describe "do virtual vars" do
 		ds.full_name.should == "Micah Wylde"
 	end
 	it "should inherit virtual_vars properly" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -307,7 +307,7 @@ end
 
 describe "persist to couchdb database" do
 	it "should create hash representation of device" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			configure do
 				data_bits 8
 				baud :type => :integer, :default => 9600
@@ -345,7 +345,7 @@ describe "persist to couchdb database" do
 	end
 	
 	it "should load a new device from hash" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < NoSaveDevice
 			configure do
 				data_bits 8
 				baud :type => :integer, :default => 9600
@@ -505,10 +505,8 @@ describe "handling requests from amqp" do
 				end
 			}
 			
-			EM::add_periodic_timer(3) do
-				AMQP.stop do
-					EM.stop
-				end
+			EM::add_timer(3) do
+        EM::stop_event_loop
 			end
 		end
 		JSON.parse(@msg).should == {
@@ -535,10 +533,8 @@ describe "handling requests from amqp" do
 		@recv = 0
 		srand(124209350982)
 		AMQP.start(:host => '127.0.0.1') do
-			EM::add_periodic_timer(10) do
-				AMQP.stop do
-					EM.stop
-				end
+			EM::add_timer(10) do
+        EM::stop_event_loop
 			end
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
@@ -554,9 +550,7 @@ describe "handling requests from amqp" do
 				end
 				@recv+=1
 				if @recv == @times
-					AMQP.stop do
-						EM.stop
-					end
+					EM::stop_event_loop
 				end
 			}
 			@times.times{|i|
@@ -587,10 +581,8 @@ describe "handling requests from amqp" do
 			AMQP.start(:host => '127.0.0.1') do
 				amq = MQ.new
 				amq.queue(Wescontrol::EVENT_QUEUE).purge
-				EM::add_periodic_timer(0.5) do
-					AMQP.stop do
-						EM.stop
-					end
+				EM::add_timer(0.5) do
+          EM::stop_event_loop
 				end
 			end
 			class DeviceSubclass < Wescontrol::Device
@@ -607,10 +599,8 @@ describe "handling requests from amqp" do
 				@recv.times{|i|
 					ds.text = "model#{ds.text[-1].to_i-1}"
 				}
-				EM::add_periodic_timer(5) do
-					AMQP.stop do
-						EM.stop
-					end
+				EM::add_timer(5) do
+					EM::stop_event_loop
 				end
 				amq = MQ.new
 				amq.queue(Wescontrol::EVENT_QUEUE).subscribe{|json|
@@ -628,9 +618,7 @@ describe "handling requests from amqp" do
 					}
 					@recv -= 1
 					if @recv == 0
-						AMQP.stop do
-							EM.stop
-						end
+						EM::stop_event_loop
 					end
 				}
 			end

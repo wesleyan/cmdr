@@ -58,6 +58,13 @@ class Wescontrol::Device
 	alias_method :initialize, :new_initialize
 end
 
+# a version of Device that doesn't save to the DB, so we can do tests outside
+# of EM
+class NoSaveDevice < Wescontrol::Device
+  def save changed = nil, old_val = nil
+  end
+end
+
 RSpec.configure do |config|
 	config.before(:each) {
 		# Clear the test DB
