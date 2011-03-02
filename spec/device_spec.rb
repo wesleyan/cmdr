@@ -133,8 +133,6 @@ describe "deal with state_vars properly" do
 		dss = DeviceSubSubclass.new("device")
 		dss.text = "name"
 		dss.text.should == "name"
-		
-		dss.state_vars[:text].should == {:type => :string, :state => "name"}
 	end
 	
 	it "should not share state_var values between subclasses" do
@@ -313,12 +311,12 @@ describe "persist to couchdb database" do
 				baud :type => :integer, :default => 9600
 				port :type => :port
 			end
-			state_var :name, :type => :string
+			state_var :var, :type => :string
 			state_var :brightness, :type => :percentage
 			command :focus, :type => :percentage
 		end
 		ds = DeviceSubclass.new("device")
-		ds.name = "Projector"
+		ds.var = "hello"
 		ds.brightness = 0.8
 		ds.to_couch.should == {
 			:config => {
@@ -327,9 +325,9 @@ describe "persist to couchdb database" do
 				:port => nil
 			},
 			:state_vars => {
-				:name => {
+				:var => {
 					:type => :string,
-					:state => "Projector"
+					:state => "hello"
 				},
 				:brightness => {
 					:type => :percentage,
@@ -340,7 +338,8 @@ describe "persist to couchdb database" do
 				:focus => {
 					:type => :percentage
 				}
-			}
+			},
+      :name => "device"
 		}
 	end
 	
@@ -351,7 +350,7 @@ describe "persist to couchdb database" do
 				baud :type => :integer, :default => 9600
 				port :type => :port
 			end
-			state_var :name, :type => :string
+			state_var :var, :type => :string
 			state_var :brightness, :type => :percentage
 			command :focus, :type => :percentage
 		end
@@ -383,9 +382,8 @@ describe "persist to couchdb database" do
 		
 		ds.name.should == "Projector"
 		ds.brightness.should == 0.8
-		ds.name = "Extron"
-		ds.name.should == "Extron"
-		ds.state_vars[:name].should == {:type => :string, :state => "Extron"}
+		ds.var = "hello"
+		ds.var.should == "hello"
 		ds.configuration[:data_bits].should == 8
 		ds.configuration[:port].should == "/dev/null"
 		ds.configuration[:baud].should == 19200
@@ -403,8 +401,6 @@ describe "handling requests from amqp" do
 		end
 		
 		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:1")
-		ds.power = false
-		ds.power.should == false
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
 			"queue": "roomtrol:test:3",
@@ -413,23 +409,30 @@ describe "handling requests from amqp" do
 			"value": true
 		}'
 		AMQP.start(:host => '127.0.0.1') do
+      EM::add_timer(3) do
+        DaemonKit.logger.debug("Stop!!!")
+        EM::stop_event_loop
+			end
+
+      EM::add_timer(0.1) do
+        #puts "Setting power"
+        #ds.power = false
+        #DaemonKit.logger.debug("No longer")
+        #ds.power.should == false
+      end
+      
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
 			amq.queue('roomtrol:test:3').purge
 			ds.run
-			amq.queue(ds.dqueue).publish(json)
+
 			amq.queue('roomtrol:test:3').subscribe{|msg|
+        DaemonKit.logger.debug("Hello!")
 				@msg = msg
-				AMQP.stop do
-					EM.stop
-				end
-			}
-			
-			EM::add_periodic_timer(3) do
-				AMQP.stop do
-					EM.stop
-				end
-			end
+        EM::stop_event_loop
+			}			
+
+      amq.queue(ds.dqueue).publish(json)
 		end
 		@msg.class.should == String
 		JSON.parse(@msg).should == {

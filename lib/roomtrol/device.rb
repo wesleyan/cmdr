@@ -709,6 +709,7 @@ module Wescontrol
 		# @param [Symbol] changed The variable whose changing prompted this save
 		# @param [#to_json] old_val The value of `changed` before it, well, changed
 		def save changed = nil, old_val = nil
+      DaemonKit.logger.debug("Saving!")
 			retried = false
 #			begin
 				hash = self.to_couch
