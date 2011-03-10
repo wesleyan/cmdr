@@ -1,8 +1,9 @@
 require 'rubygems'
 require 'eventmachine'
-require "em-http"
-require "json"
-require "uri"
+require 'em-http'
+require 'json'
+require 'uri'
+require 'uuidtools'
 
 module EventMachine
   module Protocols
@@ -66,11 +67,15 @@ module EventMachine
         }
       end
       def save(database, doc, &callback)
-        http = EventMachine::HttpRequest.new("http://#{@host}:#{@port}/#{database}/").post :body => JSON.dump(doc)
+        id = doc['_id']
+        id ||= UUIDTools::UUID.random_create.to_s
+        puts "Making request to: #{"http://#{@host}:#{@port}/#{database}/#{id}"}"
+        http = EventMachine::HttpRequest.new("http://#{@host}:#{@port}/#{database}/#{id}").put :body => JSON.dump(doc)
         http.callback {
           callback.call(JSON.load(http.response))
         }
         http.errback {
+          puts "Failed"
           raise "CouchDB Exception. Unable to save document"
         }
       end

@@ -400,7 +400,7 @@ describe "handling requests from amqp" do
 			end
 		end
 		
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:1")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB_HOST, TEST_DB_PORT, TEST_DB_NAME, "roomtrol:test:dqueue:1")
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
 			"queue": "roomtrol:test:3",
@@ -409,17 +409,13 @@ describe "handling requests from amqp" do
 			"value": true
 		}'
 		AMQP.start(:host => '127.0.0.1') do
+      ds.power = false
+      ds.power.should == false
+
       EM::add_timer(3) do
         DaemonKit.logger.debug("Stop!!!")
         EM::stop_event_loop
 			end
-
-      EM::add_timer(0.1) do
-        #puts "Setting power"
-        #ds.power = false
-        #DaemonKit.logger.debug("No longer")
-        #ds.power.should == false
-      end
       
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
@@ -446,8 +442,8 @@ describe "handling requests from amqp" do
 		class DeviceSubclass < Wescontrol::Device
 			command :power, :action => proc{|on| "power=#{on}"}
 		end
-		
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:2")
+
+    ds = DeviceSubclass.new("Extron", {}, TEST_DB_HOST, TEST_DB_PORT, TEST_DB_NAME, "roomtrol:test:dqueue:1")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -464,15 +460,11 @@ describe "handling requests from amqp" do
 			amq.queue(ds.dqueue).publish(json)
 			amq.queue('roomtrol:test:2').subscribe{|msg|
 				@msg = msg
-				AMQP.stop do
-					EM.stop
-				end
+        EM::stop_event_loop
 			}
 			
-			EM::add_periodic_timer(3) do
-				AMQP.stop do
-					EM.stop
-				end
+			EM::add_timer(3) do
+        EM::stop_event_loop
 			end
 		end
 		@msg.class.should == String
@@ -486,8 +478,8 @@ describe "handling requests from amqp" do
 		class DeviceSubclass < Wescontrol::Device
 			state_var :name, :type => :string
 		end
-		
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:3")
+
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB_HOST, TEST_DB_PORT, "roomtrol:test:dqueue:2")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
@@ -503,9 +495,7 @@ describe "handling requests from amqp" do
 			amq.queue(ds.dqueue).publish(json)
 			amq.queue('roomtrol:test:1').subscribe{|msg|
 				@msg = msg
-				AMQP.stop do
-					EM.stop
-				end
+        EM::stop_event_loop
 			}
 			
 			EM::add_timer(3) do
@@ -526,8 +516,8 @@ describe "handling requests from amqp" do
 			state_var :brightness, :type => :integer, :action => proc{|v| self.brightness = v}
 			state_var :volume, :type => :integer, :action => proc{|v| self.volume = v}
 		end
-				
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:4")	
+
+    ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:3")
 		
 		@states = {:brightness => 1, :volume => 1}
 		
@@ -536,7 +526,7 @@ describe "handling requests from amqp" do
 		@recv = 0
 		srand(124209350982)
 		AMQP.start(:host => '127.0.0.1') do
-			EM::add_timer(10) do
+			EM::add_timer(5) do
         EM::stop_event_loop
 			end
 			amq = MQ.new
@@ -588,7 +578,7 @@ describe "handling requests from amqp" do
           EM::stop_event_loop
 				end
 			end
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < NoSaveDevice
 				state_var :text, :type => :string
 			end
 			
@@ -602,7 +592,7 @@ describe "handling requests from amqp" do
 				@recv.times{|i|
 					ds.text = "model#{ds.text[-1].to_i-1}"
 				}
-				EM::add_timer(5) do
+				EM::add_timer(2) do
 					EM::stop_event_loop
 				end
 				amq = MQ.new

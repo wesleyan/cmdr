@@ -19,6 +19,7 @@ GEM
       addressable (>= 2.0.0)
       escape_utils
       eventmachine (>= 0.12.9)
+    em-spec (0.2.1)
     escape_utils (0.2.2)
     eventmachine (0.12.10)
     eventmachine_httpserver (0.2.0)
@@ -68,6 +69,7 @@ DEPENDENCIES
   couchrest
   daemon-kit
   em-http-request
+  em-spec
   eventmachine
   eventmachine_httpserver
   git

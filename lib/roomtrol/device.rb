@@ -228,7 +228,7 @@ module Wescontrol
 		# the CouchDB database where updates should be saved @param
 		# [String] dqueue The AMQP queue that the device watches for
 		# messages
-		def initialize(name, hash = {}, db_host="localhost", db_port="5984", db_name="rooms", dqueue = nil)
+		def initialize(name, hash = {}, db_host="localhost", db_port=5984, db_name="rooms", dqueue = nil)
 			hash_s = hash.symbolize_keys
 			@name = name
 			hash.each{|var, value|
@@ -709,26 +709,31 @@ module Wescontrol
 		# @param [Symbol] changed The variable whose changing prompted this save
 		# @param [#to_json] old_val The value of `changed` before it, well, changed
 		def save changed = nil, old_val = nil
-      DaemonKit.logger.debug("Saving!")
 			retried = false
-#			begin
+			begin
 				hash = self.to_couch
-				doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
+        doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
 				if @_id && @_rev
 					doc["_id"] = @_id
 					doc["_rev"] = @_rev
 				end
+        puts "Saving: #{doc.inspect}"
+
         @couch.save(@_db_info[:name], doc) do |doc|
+          puts "Saved doc: #{doc.inspect}"
+          @_id = doc['id']
           @_rev = doc['rev']
         end
-#			rescue => e
-#				if !retried
-#					retried = true
-#					retry
-#				else
-#					DaemonKit.logger.exception e
-#				end
-#			end
+      rescue
+			rescue => e
+				if !retried
+					retried = true
+					retry
+				else
+          raise e
+					#DaemonKit.logger.exception e
+				end
+			end
 			if changed
 				update = {
 					'state_update' => true,

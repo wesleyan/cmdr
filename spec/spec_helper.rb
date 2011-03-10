@@ -71,14 +71,27 @@ RSpec.configure do |config|
 		CouchRest.database!(TEST_DB).delete!
 		CouchRest.database!(TEST_DB)
 	}
-	
-	
-	# == Mock Framework
-	#
-	# RSpec uses it's own mocking framework by default. If you prefer to
-	# use mocha, flexmock or RR, uncomment the appropriate line:
-	#
-	# config.mock_with :mocha
-	# config.mock_with :flexmock
-	# config.mock_with :rr
+end
+
+module EMSpec
+  def run_in_fiber( run_options )
+    ($em_spec_fiber = Fiber.new{
+       run_without_em( run_options )
+       EM.stop_event_loop if EM.reactor_running?b
+     }).resume
+  end
+
+  def run( run_options )
+    EM.run do
+      run_in_fiber( run_options )
+    end
+    true
+  end
+
+  def done
+    EM.next_tick{
+      :done.should == :done
+      $em_spec_fiber.resume if $em_spec_fiber
+    }
+  end
 end
