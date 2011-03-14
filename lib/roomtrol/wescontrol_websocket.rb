@@ -4,6 +4,7 @@ require 'json'
 require 'mq'
 require 'couchrest'
 
+
 module Wescontrol
   # Wescontrol websocket server. Used to provide better interactivity to
   # the touchscreen interface. Communication is through JSON, like for
@@ -39,33 +40,33 @@ module Wescontrol
   #
   # The allowed resource/var pairs are listed here:
   #
-  #  - projector
-  #    - **state** (on/off/warming/cooling)
-  #    - **video_mute** (true/false)
-  #  - volume
-  #    - **level** (0-1.0)
-  #    - **mute** (true/false)
-  #  - source
-  #    - **current** (source name)
-  #    - **list** (array of source names)
+  # - projector
+  #   - **state** (on/off/warming/cooling)
+  #   - **video_mute** (true/false)
+  # - volume
+  #   - **level** (0-1.0)
+  #   - **mute** (true/false)
+  # - source
+  #   - **current** (source name)
+  #   - **list** (array of source names)
   #
   # ###state_set
   # Sets the state of a variable
   #
   #     {
-  #        "id": "D62F993B-E036-417C-948B-FEA389480984",
-  #        "type": "state_set",
-  #        "resource": "projector",
-  #        "var": "power",
-  #        "value": true
+  #       "id": "D62F993B-E036-417C-948B-FEA389480984",
+  #       "type": "state_set",
+  #       "resource": "projector",
+  #       "var": "power",
+  #       "value": true
   #     }
   #
   # This will produce an ACK, which lets the client know that the request
   # was received.
   #
   #     {
-  #        "id": "D62F993B-E036-417C-948B-FEA389480984",
-  #        "ack": true
+  #       "id": "D62F993B-E036-417C-948B-FEA389480984",
+  #       "ack": true
   #     }
   #
   # In order to know if this was successful, the client must wait for a
@@ -74,24 +75,24 @@ module Wescontrol
   #
   # The allowed resource/var pairs are:
   #
-  #  - projector
-  #    - **power** (true/false)
-  #    - **mute** (true/false)
-  #  - volume
-  #    - **level** (0-1.0)
-  #    - **mute** (true/false)
-  #  - source
-  #    - **current** (string name of a source)
+  # - projector
+  #   - **power** (true/false)
+  #   - **mute** (true/false)
+  # - volume
+  #   - **level** (0-1.0)
+  #   - **mute** (true/false)
+  # - source
+  #   - **current** (string name of a source)
   #
   # ###command
   # Executes a command
   #
   #     {
-  #        "id": "D62F993B-E036-417C-948B-FEA389481512",
-  #        "type": "command",
-  #        "device": "IREmitter",
-  #        "name": "send_command",
-  #        "args": ["play"]
+  #       "id": "D62F993B-E036-417C-948B-FEA389481512",
+  #       "type": "command",
+  #       "device": "IREmitter",
+  #       "name": "send_command",
+  #       "args": ["play"]
   #     }
   #
   # This will also produce an ACK, as above.
@@ -101,68 +102,245 @@ module Wescontrol
   # When a client connects, the server sends it a bunch of useful information
   # for setting itself up. The message looks like this:
   #
-  #     {
-  #       "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
-  #       "type": "connection",
-  #       "building": "Albritton",
-  #       "room": "004",
-  #       "sources": [
-  #         {
-  #           "name": "Laptop",
-  #           "icon": "Laptop.png"
-  #         }
-  #       ],
-  #       "actions": [
-  #         {
-  #           "name": "Play DVD",
-  #           "prompt_projector": true,
-  #           "source: "DVD"
-  #         }
-  #       ]
-  #     }
+  #    {
+  #      "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
+  #      "type": "connection",
+  #      "building": "Albritton",
+  #      "room": "004",
+  #      "sources": [
+  #        {
+  #         "name": "Laptop",
+  #         "icon": "Laptop.png"
+  #        }
+  #      ],
+  #      "actions": [
+  #        {
+  #          "name": "Play DVD",
+  #          "prompt_projector": true,
+  #          "source: "DVD"
+  #        }
+  #      ]
+  #    }
   #
   # ### state_changed
   #
-  #     {
-  #       "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA441",
-  #       "type": "state_changed",
-  #       "resource": projector,
-  #       "var": "state",
-  #       "old": "cooling",
-  #       "new": "off"
-  #     }
-  class WescontrolWebsocket
+  #    {
+  #      "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA441",
+  #      "type": "state_changed",
+  #      "resource": projector,
+  #      "var": "state",
+  #      "old": "cooling",
+  #      "new": "off"
+  #    }
+  class RoomtrolWebsocket
+    # How long to wait for responses from the daemon
+    TIMEOUT = 4.0
+    # The resources that can be accessed
+    RESOURCES = ["projector", "volume", "source"]
+    
     def initialize
-      @connections = {}
-      @old_connections = {}
-
       @db = CouchRest.database(Wescontrol::DB_URI)
-      @room = db.get("_design/room").view("by_mac", {:key => MAC.addr})['rows'][0]
+
+      @room = db.get("_design/room").
+        view("by_mac", {:key => MAC.addr})['rows'][0]
+
+      @devices = db.get('_design/room').
+        view('devices_for_room', {:key => @room['_id']})['rows']
+
+      @building = db.get(@room['attributes']['belongs_to']
+                         )['rows'][0]['attributes']['name']
+
+      @sources = db.get('_design/wescontrol_web').
+        view('sources', {:key => @room['_id']})['rows']
+        
+      @actions = db.get('_design/wescontrol_web').
+        view('actions', {:key => @room['_id']})['rows']
+          
+      @room_name = @room['attributes']['name']
       @projector = @room["attributes"]["projector"]
       @switcher = @room["attributes"]["switcher"]
       @dvdplayer = @room["attributes"]["dvdplayer"]
       @volume = @room["attributes"]["volume"]
     end
 
+    # Starts the websockets server. This is a blocking call if run
+    # outside of an EventMachine reactor.
     def run
       AMQP.start(:host => "localhost") do
         @mq = MQ.new
+        @update_channel = EM::Channel.new
+        @deferred_responses = {}
+
+        @queue_name = "roomtrol:websocket:#{self.object_id}"
+        @queue = @amq.queue(@queue_name)
         
-        EM::WebSocket.start(:host => "0.0.0.0", :port => 8000) do |ws|
-          ws.onopen do
-            DaemonKit.logger.debug "New connection on #{ws.signature}"
-            
+        # watch for responses from devices
+        @queue.subscribe{|json|
+          msg = JSON.parse(json)
+          if @deferred_responses[msg["id"]]
+            @deferred_responses.delete(msg["id"]).succeed(msg)
           end
+        }
 
-          ws.onmessage do |json|
-            message = JSON.parse(json)
+        
+        @mq.queue(EVENT_QUEUE).subscribe do |json|
+          msg = JSON.parse(json)
+
+          if msg['state_update']
+            update_msg = {
+              'id' => UUIDTools::UUID.random_create.to_s,
+              'type' => 'state_changed',
+              'var' => msg['var'],
+              'value' => msg['now'],
+              'severity' => msg['severity']
+            }
+            @update_channel.push(update_msg)
           end
+        end
 
+        EM::WebSocket.start({
+                              :host => "0.0.0.0",
+                              :port => 8000,
+                              :debug => true
+                              #:secure => true  
+                            }) do |ws|
+
+          ws.onopen { onopen ws }
+
+          ws.onmessage {|json| onmessage ws, json}
+          
           ws.onclose do
-            
+            @update_channel.unsubscribe(sid)
+            DaemonKit.logger.debug "Connection on #{ws.signature} closed"
+          end
+
+          ws.onerror do
+            DaemonKit.logger.debug "Error on #{ws.signature}"
+          end
+        end
+      end
+      
+      private
+      def onopen ws
+        sid = @update_channel.subscribe { |msg|
+          DaemonKit.logger.debug "State update: #{msg}"
+          ws.send update_msg
+        }
+
+        init_message = {
+          'id' => UUIDTools::UUID.random_create.to_s,
+          'type' => 'connection',
+          'building' => @building,
+          'room' => @room_name,
+          'sources' => @sources,
+          'actions' => @actions
+        }
+
+        ws.send init_message.to_json
+      end
+
+      def onmessage ws, json
+        begin
+          msg = JSON.parse(json)
+
+          deferrable = EM::DefaultDeferrable.new
+          deferrable.callback {|resp|
+            resp['id'] = msg['id']
+            ws.send response
+          }
+          deferrable.timeout TIMEOUT
+          
+          case message['type']
+          when "state_get" then state_get msg, deferrable
+          when "state_set" then state_set msg, deferrable
+          when "command" then command msg, deferrable
+          end
+          
+        rescue JSON::ParserError, TypeError
+          DaemonKit.logger.debug "Invalid JSON message from #{ws.signature}: #{message}"
+        end
+      end
+      
+      def state_get req, df
+        if RESOURCES.include? req[:resource]
+          self.send "handle_#{req[:resource]}_get", req, df
+        end
+      end
+
+      def daemon_get var, device, df
+        device_req = {
+          id => UUIDTools::UUID.random_create.to_s,
+          :queue => @queue_name,
+          :type => :state_get,
+          :var => var
+        }
+        deferrable = EM::DefaultDeferrable.new
+        deferrable.timeout TIMEOUT
+        deferrable.callback {|result|
+          df.succeed({:result => result})
+        }
+        deferrable.errback {|error|
+          df.succeed({:error => error})
+        }
+        defer_device_operation device_req, device, df
+      end
+
+      def set_projector_state state
+        ### implement
+      end
+      
+      def defer_device_operation device_req, device, df        
+        @deferred_responses[device_req[:id]] = df
+        @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
+      end
+
+      def db_get req
+        
+      end
+
+      ##################### Client code ####################
+
+      def handle_projector_get req, df
+        daemon_get req[:var], @projector, df
+      end
+
+      def handle_volume_get req, df
+        daemon_get req[:var], @volume, df
+      end
+
+      def handle_source_get req, df
+        
+      end
+    end
+  end
+
+  def make_state_machine parent, sources
+    klass = Class.new
+    klass.class_eval do
+      sources.each do |source|
+        this_state = source['name'].to_sym
+        if p = source['input']['projector']
+          if !@switcher
+            event "projector_to_#{p}".to_sym do
+              transition all => this_state
+            end
+          end
+          after_transition any => this_state do
+            set_projector_state p
+          end
+        end
+        if s = source['input']['switcher']
+          if @switcher
+            event "switcher_to_#{s}" do
+              transition all => this_state
+            end
+          end
+          after_transition any => this_state do
+            set_switcher_state s
           end
         end
       end
     end
+    klass
   end
 end
