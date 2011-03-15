@@ -16,6 +16,7 @@ require 'roomtrol/MAC.rb'
 require 'roomtrol/process'
 require 'roomtrol/video-recorder'
 require 'roomtrol/video-encoder'
+require 'roomtrol/wescontrol_websocket'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
@@ -51,6 +52,7 @@ module Wescontrol
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				EventMonitor.run
+        RoomtrolWebsocket.new.run
 				@devices.each{|device|
 					Thread.new do
 						begin

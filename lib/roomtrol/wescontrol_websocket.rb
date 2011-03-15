@@ -161,6 +161,16 @@ module Wescontrol
       @switcher = @room["attributes"]["switcher"]
       @dvdplayer = @room["attributes"]["dvdplayer"]
       @volume = @room["attributes"]["volume"]
+
+      @devices_by_id = {}
+      {@projector => "projector",
+        @switcher => "switcher",
+        @dvdplayer => "dvdplayer",
+        @volume => "volume"
+      }.each do |k, v|
+        d = @devices.find {|d| d['attributes'] && d['attributes']['name'] == k}
+        @devices_by_id[d['_id']] = v
+      end
     end
 
     # Starts the websockets server. This is a blocking call if run
@@ -182,20 +192,10 @@ module Wescontrol
           end
         }
 
+        @source_fsm = make_state_machine @sources
         
         @mq.queue(EVENT_QUEUE).subscribe do |json|
-          msg = JSON.parse(json)
-
-          if msg['state_update']
-            update_msg = {
-              'id' => UUIDTools::UUID.random_create.to_s,
-              'type' => 'state_changed',
-              'var' => msg['var'],
-              'value' => msg['now'],
-              'severity' => msg['severity']
-            }
-            @update_channel.push(update_msg)
-          end
+          handle_event json
         end
 
         EM::WebSocket.start({
@@ -221,6 +221,34 @@ module Wescontrol
       end
       
       private
+      def handle_event json
+        msg = JSON.parse(json)
+        if msg['state_update'] && msg['var'] && msg['now'] && msg['device']
+          resource = @devices_by_id[msg['device']]
+          if resource
+            send_update resource, msg['var'], msg['was'], msg['now']
+            case resource
+            when "projector"
+              @source_fsm.send("projector_to_#{msg['now']}")
+            when "switcher"
+              @source_fms.send("switcher_to_#{msg['now']}")
+            end
+          end
+        end
+      end
+
+      def send_update resource, var, old, new
+        update_msg = {
+          'id' => UUIDTools::UUID.random_create.to_s,
+          'type' => 'state_changed',
+          'resource' => resource,
+          'var' => var,
+          'old' => old,
+          'new' => new
+        }
+        @update_channel.push(update_msg)        
+      end
+      
       def onopen ws
         sid = @update_channel.subscribe { |msg|
           DaemonKit.logger.debug "State update: #{msg}"
@@ -285,17 +313,36 @@ module Wescontrol
         defer_device_operation device_req, device, df
       end
 
-      def set_projector_state state
-        ### implement
+      def daemon_set var, value, device, df
+        device_req = {
+          id => UUIDTools::UUID.random_create.to_s,
+          :queue => @queue_name,
+          :type => :state_set,
+          :var => var,
+          :value => value
+        }
+        deferrable = EM::DefaultDeferrable.new
+        deferrable.timeout TIMEOUT
+        deferrable.callback {|result|
+          df.succeed({:ack => true})
+        }
+        deferrable.errback {|error|
+          df.succeed({:error => error})
+        }
+        defer_device_operation device_req, device, deferrable
+      end
+
+      def set_projector_state state, df = EM::DefaultDeferrable
+        daemon_set :input, state, @projector, df
+      end
+
+      def set_switcher_state state, df = EM::DefaultDeferrable
+        daemon_set :input, state, @switcher, df
       end
       
       def defer_device_operation device_req, device, df        
         @deferred_responses[device_req[:id]] = df
         @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
-      end
-
-      def db_get req
-        
       end
 
       ##################### Client code ####################
@@ -309,34 +356,45 @@ module Wescontrol
       end
 
       def handle_source_get req, df
-        
+        df.suceeed({:result => @source_fsm})
       end
     end
   end
 
-  def make_state_machine parent, sources
+  def make_state_machine sources
     klass = Class.new
     klass.class_eval do
-      sources.each do |source|
-        this_state = source['name'].to_sym
-        if p = source['input']['projector']
-          if !@switcher
-            event "projector_to_#{p}".to_sym do
-              transition all => this_state
-            end
-          end
-          after_transition any => this_state do
-            set_projector_state p
-          end
+      def initialize parent
+        @parent = parent
+        super
+      end
+
+      state_machine :source do
+        after_transition any => any do |fsm, transition|
+          @parent.send_update :source, nil, transition.from, transition.to 
         end
-        if s = source['input']['switcher']
-          if @switcher
-            event "switcher_to_#{s}" do
-              transition all => this_state
+        sources.each do |source|
+          this_state = source['name'].to_sym
+          if p = source['input']['projector']
+            if !@switcher
+              event "projector_to_#{p}".to_sym do
+                transition all => this_state
+              end
+            end
+            after_transition any => this_state do
+              @parent.set_projector_state p
             end
           end
-          after_transition any => this_state do
-            set_switcher_state s
+          if s = source['input']['switcher']
+            if @switcher
+              event "switcher_to_#{s}" do
+                transition all => this_state
+                @parent.set_projector_state p if p = source['input']['project']
+              end
+            end
+            after_transition any => this_state do
+              @parent.set_switcher_state s
+            end
           end
         end
       end
