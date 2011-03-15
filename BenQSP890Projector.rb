@@ -11,7 +11,7 @@
 class BenQSP890Projector < Projector
 	configure do
     message_end(/\n\r|\r\n/)
-    message_delay 0.5
+    message_delay 0.2
 	end
 	
 	managed_state_var :power, 
@@ -44,9 +44,9 @@ class BenQSP890Projector < Projector
 		
 	responses do
     ack /\*[a-z]+?=.+#/
-		match :power,  /\*POW=(.+)#/, proc{|m| 
-			self.power = !(m[1] == "OFF")
-			self.cooling = (m[1].downcase == "COOL DOWN")
+		match :power,  /\*POW=(.+)#/, proc{|m|
+			self.power = !(m[1].upcase == "OFF")
+			self.cooling = (m[1].upcase == "COOL DOWN")
 		}
 		match :mute,       /\*MUTE=(.+)#/, proc{|m| self.mute = (m[1] == "ON")}
 		match :video_mute, /\*BLANK=(.+)#/, proc{|m| self.video_mute = (m[1] == "ON")}
