@@ -9,6 +9,20 @@
 #---
 
 class NECProjector < Projector
+  class NECProjectorFormat < RubyBits::Structure
+    unsigned :id1,     8,    "Identification data assigned to each command"
+    unsigned :id2,     8,    "Identification data assigned to each command"
+    unsigned :p_id,    8,    "Projector ID"
+    unsigned :m_code,  4,    "Model code for projector"
+    unsigned :len,     12,   "Length of data in bytes"
+    variable :data,          "Packet data", :length => :len, :unit => :byte
+    unsigned :checksum,8,    "Checksum"
+    
+    checksum :checksum do |s|
+      s[0..-2].inject{|sum, byte| sum + byte} & 255
+    end
+  end
+  
   class << self
     # Given an index into @_commands, this function gives the binary
     # string that does that request
@@ -22,13 +36,28 @@ class NECProjector < Projector
       package_message(*cmd)
     end
 
+    def unpack_unsigned s, offset, length
+      number = 0
+      s_iter = s.bytes
+      byte = 0
+      # advance the iterator by the number of whole or partial bytes in the offset (offset div 8)
+      ((offset.to_f/8).ceil).times{|i| byte = s_iter.next}
+      
+      length.times{|bit|
+        byte = s_iter.next if offset % 8 == 0
+        src_bit = (7-offset%8)
+        number |= (1 << (length-1-bit)) if (byte & (1 << src_bit)) > 0
+        #puts "Reading: #{src_bit} from #{"%08b" % byte} => #{(byte & (1 << src_bit)) > 0 ? 1 : 0}"
+        offset += 1
+      }
+      number
+    end
+
     def package_message(id1, id2, data, projector_id = 0, model_code = 0)
       # create a new BitPack object to pack the message into
-      message = NECBitStruct.new
-      message.id1 = id1
-      message.id2 = id2
-      message.p_id = projector_id
-      message.m_code = model_code
+      message = NECProjectorFormat.new(:id1 => id1, :id2 => id2,
+                                       :p_id => projector_id,
+                                       :m_code => model_code)
       
       if data
         message.len = data.size
@@ -38,17 +67,11 @@ class NECProjector < Projector
         message.data = ""
       end
         
-      #now append the checksum, which is the last 8 bits of the sum of
-      #all the other stuff
-      sum = 0
-      message.each_byte{|byte| sum += byte}
-      message.data += (sum & 255).chr #mask by 255 to get just the last 8 bits
-      
       return message.to_s
     end
   
     def interpret_message(msg)
-      message = NECBitStruct.new(msg)
+      message = NECProjectorFormat.from_string(msg)[0]
 
       cm = {}
       cm["id1"] = message.id1
@@ -57,7 +80,7 @@ class NECProjector < Projector
       cm["model_code"] = message.m_code
       cm["data_size"] = message.len
 
-      cm["data"] = message.data.bytes.to_a[0..-2]
+      cm["data"] = message.data.bytes.to_a
 
       cm["checksum"] = message.data.bytes.to_a[-1]
     
@@ -99,12 +122,12 @@ class NECProjector < Projector
   @_commands = {
     #format is :name => [id1, id2, data, callback]
     :set_power      => [2, proc {|on| on ? 0 : 1}, nil, nil],
-    :set_video_mute   => [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
+    :set_video_mute => [2, proc {|on| on ? 0x10 : 0x11}, nil, nil],
     :set_input      => [2, 3, proc {|source| [1, INPUT_HASH[source]].pack("cc")}, nil],
-    :set_brightness   => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
+    :set_brightness => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
     :set_volume     => [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
-    :set_mute     => [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
-    :running_sense    => [0, 0x81, nil, proc {|frame|
+    :set_mute       => [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
+    :running_sense  => [0, 0x81, nil, proc {|frame|
       self.power       = frame["data"][0] & 2**1 != 0
       @cooling_maybe   = frame["data"][0] & 2**5 != 0
       if @cooling_maybe != @cooling
@@ -199,30 +222,20 @@ class NECProjector < Projector
     }]
   }
   
-  class NECBitStruct < BitStruct
-    unsigned :id1,     8,    "Identification data assigned to each command"
-    unsigned :id2,     8,    "Identification data assigned to each command"
-    unsigned :p_id,    8,    "Projector ID"
-    unsigned :m_code,  4,    "Model code for projector"
-    unsigned :len,     12,   "Length of data"
-    rest     :data,          "Data and checksum"
-  end
-  
   configure do
     baud 9600
     message_end lambda{|msg|
-      # get the NECBitStruct from the message
-      frame = self.class.interpret_message(msg)
+      return false unless msg.size >= 6
       bytes = msg.bytes.to_a
+      data_size = NECProjector.unpack_unsigned msg, 28, 12
       # we make sure that we have the right number of bytes given the given data_size
-      return false unless msg.size == 6 + frame["data_size"]
+      return false unless msg.size == 6 + data_size
       
       # we add up the bytes of the supposed frame, and see if it matches the checksum
       # if it does, it's probably a frame and we will treat it as such
-      return false unless bytes[-1] != 0 && bytes[-1] == bytes[0..-2].inject{|sum, byte| sum += byte} & 255
-
+      checksum_matched = NECProjectorFormat.checksum_field[1].call(bytes) == bytes[-1]
       # make sure id1 isn't zero
-      return frame["id2"] && frame['id1'] != 0
+      return checksum_matched && bytes[0] != 0
     }
   end
   
@@ -286,7 +299,7 @@ class NECProjector < Projector
       cmd = @_commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
       deferrable = EM::DefaultDeferrable.new
       do_message self.class.package_message(*cmd), deferrable
-      deferrable      
+      deferrable
     else
       super.method_missing(method_name, *args)
     end
