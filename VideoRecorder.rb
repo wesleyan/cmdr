@@ -99,8 +99,11 @@ class VideoRecorder < Wescontrol::Device
       :course => course
     }
 
-    send_req req
-    self.course = course    
+    df = send_req req
+    df.callback do
+      self.course = course
+    end
+    df
   end
 
   def send_req req

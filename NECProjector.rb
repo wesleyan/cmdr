@@ -225,17 +225,14 @@ class NECProjector < Projector
   configure do
     baud 9600
     message_end lambda{|msg|
-      return false unless msg.size >= 6
+      return false if msg.size < 6
       bytes = msg.bytes.to_a
+      return false if bytes[0] == 0
+      return false unless NECProjectorFormat.checksum_field[1].call(bytes) == bytes[-1]
       data_size = NECProjector.unpack_unsigned msg, 28, 12
       # we make sure that we have the right number of bytes given the given data_size
       return false unless msg.size == 6 + data_size
-      
-      # we add up the bytes of the supposed frame, and see if it matches the checksum
-      # if it does, it's probably a frame and we will treat it as such
-      checksum_matched = NECProjectorFormat.checksum_field[1].call(bytes) == bytes[-1]
-      # make sure id1 isn't zero
-      return checksum_matched && bytes[0] != 0
+      return true
     }
   end
   
