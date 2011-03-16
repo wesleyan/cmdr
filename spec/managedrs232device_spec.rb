@@ -134,6 +134,7 @@ describe "do responses" do
 			end
 		end
 		ds = MR232DeviceSubclass7a.new("Extron", :port => '/dev/null')
+    ds.read "asdf3234asdf\r\n"
 		ds.read "Chn4\r\n"
 		ds.read "Vol12\n\r"
 		ds.input.should == 4

@@ -3,7 +3,6 @@ GEM
   specs:
     amqp (0.6.7)
       eventmachine (>= 0.12.4)
-    bit-struct (0.13.6)
     bluecloth (2.0.9)
     chronic (0.2.3)
       hoe (>= 1.2.1)
@@ -40,6 +39,7 @@ GEM
     rspec-expectations (2.1.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.1.0)
+    rubybits (0.2.0)
     rubyforge (2.0.4)
       json_pure (>= 1.1.7)
     serialport (1.0.4)
@@ -56,7 +56,6 @@ PLATFORMS
 
 DEPENDENCIES
   amqp
-  bit-struct
   bluecloth
   chronic
   couchrest
@@ -71,6 +70,7 @@ DEPENDENCIES
   net-ssh
   rake
   rspec
+  rubybits
   serialport
   sinatra
   uuidtools

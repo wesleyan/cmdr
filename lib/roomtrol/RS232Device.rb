@@ -1,7 +1,7 @@
-require 'rubygems'
+require 'serialport'
 require 'strscan'
-require 'roomtrol/em-serialport'
-require 'bit-struct'
+#require 'roomtrol/em-serialport'
+require 'rubybits'
 
 module Wescontrol
 	# RS232Device is a subclass of {Wescontrol::Device} that makes the job of controlling
@@ -74,22 +74,27 @@ module Wescontrol
 	# 2. The device processes the event and sends back a response, either an acknowledge or a full response.
 	# 3. The device is now ready for a new message, starting the cycle over.
 	# 
-	# In particular, since many devices can only handle one message at a time, RS232Device waits
-	# until a response is received or message_timeout seconds have passed before
-	# sending the next message in the queue. Devices with more complex message handling (for example,
-	# those with multiple message queues) may not work optimally with this strategy. In those cases,
-	# writing the message handling system yourself may be preferable. It is also very important that
-	# devices are synchronous; i.e., they always send responses in the order that requests or commands
-	# are received. If this assumption does not hold, users may get incorrect responses.
+	# In particular, since many devices can only handle one message at a
+	# time, RS232Device waits until a response is received or
+	# message_timeout seconds have passed before sending the next
+	# message in the queue. Devices with more complex message handling
+	# (for example, those with multiple message queues) may not work
+	# optimally with this strategy. In those cases, writing the message
+	# handling system yourself may be preferable. It is also very
+	# important that devices are synchronous; i.e., they always send
+	# responses in the order that requests or commands are received. If
+	# this assumption does not hold, users may get incorrect responses.
 	# 
 	# ##Configuration
-	# RS232Devices have addition configuration parameters, which can be placed in the normal {Device::configure}
-	# block.
+	# RS232Devices have addition configuration parameters, which can be
+  # placed in the normal {Device::configure} block.
 	# 
-	# + *port*: the serial port the device is connected to. You shouldn't set this directly, because it
-	# 	should be modifiable by the user
-	# + *baud*: the baud rate at which communication occurs. You can either set this, if the device uses a
-	# 	fixed baud rate, or let the user set it if the device supports variable baud rates
+	# + *port*: the serial port the device is connected to. You
+  #   shouldn't set this directly, because it should be modifiable by
+  #   the user
+	# + *baud*: the baud rate at which communication occurs. You can
+  #   either set this, if the device uses a fixed baud rate, or let
+  #   the user set it if the device supports variable baud rates 
 	# + *data_bits*: the number of data bits used by the device (usually 7 or 8)
 	# + *stop_bits*: the number of stop bits used by the device (either 1 or 2)
 	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
@@ -98,6 +103,11 @@ module Wescontrol
 	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
 	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
 	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
+  # + *message_timeout*: the number of seconds to wait before sending the next message after a message fails to
+  #   elicit a response
+  # + *message_delay*: The number of seconds to wait before sending the next message after a message has
+  #   successfully gotten a response. Some devices can't take a constant barrage of message, so a delay is
+  #   necessary
 	class RS232Device < Device
 		# The SerialPort object over which data is sent and received from the device
 		attr_accessor :serialport
@@ -110,6 +120,7 @@ module Wescontrol
 			parity 0
 			message_end "\r\n"
 			message_timeout 0.2
+      message_delay 0
 		end
 		
 		# Creates a new RS232Device instance
@@ -120,21 +131,56 @@ module Wescontrol
 		# @param [String] db_uri The URI of the CouchDB database where updates should be saved
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+      Thread.abort_on_exception = true
+      
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
 			throw "Must supply serial port parameter" unless configuration[:port]
-			@connection = RS232Connection.dup
-			@connection.instance_variable_set(:@receiver, self)
+      DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
+
+      @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
+      @_waiting = false
 		end
 
 		# Sends a string to the serial device
 		# @param [String] string The string to send
 		def send_string(string)
-			@serialport.send_data(string) if @serialport
+      EM.defer do
+        @_serialport.write string if @_serialport
+      end
 		end
+
+    # Creates a fake evented serial connection, which calls the passed-in callback when
+    # data is received. Note that you should only call this method once.
+    # @param [Proc] cb A callback that should handle serial data
+    def serial_reader &cb
+      deferrable = EM::DefaultDeferrable.new
+      deferrable.callback &cb
+      Thread.new do
+        loop do
+          begin
+            data = @_serialport.sysread(4096)
+          rescue Errno::EAGAIN, Errno::EWOULDBLOCK, EOFError
+            sleep(0.05)
+          rescue Errno::ECONNRESET, Errno::ECONNREFUSED
+            DaemonKit.logger.error("Connection refused")
+            break
+          end
+
+          if data
+            deferrable.succeed(data)
+          else
+            deferrable.fail
+          end
+          deferrable = EM::DefaultDeferrable.new
+          deferrable.callback &cb
+        end
+      end
+    end
+
 		
 		# Run is a blocking call that starts the device. While run is running, the device will
 		# watch for AMQP events as well as whatever communication channels the device uses and
@@ -143,15 +189,10 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer(configuration[:message_timeout]) {
+					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
-					}
-					EM::open_serial configuration[:port], 
-						configuration[:baud], 
-						configuration[:data_bits], 
-						configuration[:stop_bits], 
-						configuration[:parity], 
-						@connection
+					end
+          serial_reader {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -160,38 +201,40 @@ module Wescontrol
 			
 		end
 		
-		# This method, when called in a class body, creates a managed state var. A managed state
-		# var is very much like a normal {Device::state_var state_var}, but expects that a proc
-		# be supplied to action which returns the string to send to the device. It then creates 
-		# the set_* method automatically and handles all device communication for you.
-		# @param [Symbol] name The name for the managed state var. Should follow the general
-		# 	naming conventions: all lowercase, with multiple words connected\_by\_underscores.
-		# @param [Hash] options Options for configuring the managed\_state\_var
-		# @option options [Symbol] :type [mandatory] the type of the variable; this is
-		# 	used by the web interface to decide what kind of interface to show. Possible
-		# 	values are :boolean, :string, :percentage, :number, :decimal, :option, and
-		# 	:array.
-		# @option options [Boolean] :editable (true) whether or not this variable can be set
-		# 	by the user.
-		# @option options [Integer] :display_order Used by the web interface to decide which
-		# 	variables are visible and in which order they are displayed. For a particular
-		# 	device, the var with the lowest :display_order is ranked highest, followed by
-		# 	the next lowest up to 6. Leave out if the variable should not be shown.
-		# @option options [Array<#to_json>] :options If :option is selected for type, the
-		# 	elements in this array serve as the allowable options.
-		# @option options [Proc] :action [mandatory] If a proc is supplied to :action, then
-		# 	managed\_state\_varwill automatically create a set_varname method (where varname
-		# 	is the name of the state variable) which executes the code provided. This proc 
-		# 	should return the string which, when sent to the device, will cause it to enter
-		# 	the chosen state.
-		# @example
-		# 	managed_state_var :input, 
-		# 		:type => :option, 
-		# 		:display_order => 1, 
-		# 		:options => ("1".."6").to_a,
-		# 		:action => proc{|input|
-		# 			"{input}!\r\n"
-		# 		}
+		# This method, when called in a class body, creates a managed
+		# state var. A managed state var is very much like a normal
+		# {Device::state_var state_var}, but expects that a proc be
+		# supplied to action which returns the string to send to the
+		# device. It then creates the set_* method automatically and
+		# handles all device communication for you. 
+		# @param [Symbol] name The name for the managed state var. Should
+		# 	follow the general naming conventions: all lowercase, with
+		# 	multiple words connected\_by\_underscores.
+		# @param [Hash] options Options for configuring the
+    #   managed\_state\_var
+		# @option options [Symbol] :type [mandatory] the type of the
+		# 	variable; this is used by the web interface to decide what
+		# 	kind of interface to show. Possible values are :boolean,
+		# 	:string, :percentage, :number, :decimal, :option, and :array.
+		# @option options [Boolean] :editable (true) whether or not this
+		# 	variable can be set by the user.
+    # @option options [Integer] :display_order Used by the web
+		# 	interface to decide which variables are visible and in which
+		# 	order they are displayed. For a particular device, the var
+		# 	with the lowest :display_order is ranked highest, followed by
+		# 	the next lowest up to 6. Leave out if the variable should not
+		# 	be shown.
+		# @option options [Array<#to_json>] :options If :option is
+		# 	selected for type, the elements in this array serve as the
+		# 	allowable options.
+		# @option options [Proc] :action [mandatory] If a proc is supplied
+		# 	to :action, then managed\_state\_varwill automatically create
+		# 	a set_varname method (where varname is the name of the state
+		# 	variable) which executes the code provided. This proc should
+		# 	return the string which, when sent to the device, will cause
+		# 	it to enter the chosen state.  @example managed_state_var
+		# 	:input, :type => :option, :display_order => 1, :options =>
+		# 	("1".."6").to_a, :action => proc{|input| "{input}!\r\n" }
 		def self.managed_state_var name, options
 			throw "Must supply a proc to :action" unless options[:action].is_a? Proc
 			state_var name, options
@@ -233,37 +276,50 @@ module Wescontrol
 			end
 		end
 		
-		# Starts a responses block, wherein statements which describe the various kinds of
-		# responses the device can send are placed. There are four kinds of responses:
+		# Starts a responses block, wherein statements which describe the
+		# various kinds of responses the device can send are placed. There
+		# are four kinds of responses:
 		# 
 		# + *match*, which is used for general responses
-		# + *ack*, which is used for acknowledge responses, sent by devices to announce
-		# 	that the message has been received and the next can be sent
-		# + *nack*, not acknowledged, meaning that the message was received but could not
-		# 	be interpretted or executed
-		# + *error*, meaning that there was some error running the previous message
+		# + *ack*, which is used for acknowledge responses, sent by
+		# 	devices to announce that the message has been received and the
+		# 	next can be sent
+		# + *nack*, not acknowledged, meaning that the message was
+		# 	received but could not be interpretted or executed
+		# + *error*, meaning that there was some error running the
+		#    previous message
 		# 
-		# Match is used most frequently, whereas the others are applicable only to some devices
-		# which have those features. Each response takes a matcher, which can either be a string,
-		# regular expression or a proc. Whenever a message is received, it is compared to each
-		# of the matchers that have been defined in order, and the first matcher to match (defined
-		# as being equal for strings, returning a non-nil value from `String#match` for regular
-		# expression, or returning a true value when supplied the message for procs) is used.
-		# When a response created with `match` is selected, the supplied "interpreter" proc is called,
-		# which will generally update state vars. The argument to the interpreter depends on the
-		# matcher type. For strings, no argument is supplied; for regular expressions, the matcher
-		# object is supplied; for procs, the original message is supplied. When an `error` response is 
-		# matched, the supplied message is returned to the user. When either an `ack` or `nack` response 
-		# is matched, the next message is sent and no futher action taken.
+		# Match is used most frequently, whereas the others are applicable
+		# only to some devices which have those features. Each response
+		# takes a matcher, which can either be a string, regular
+		# expression or a proc. Whenever a message is received, it is
+		# compared to each of the matchers that have been defined in
+		# order, and the first matcher to match (defined as being equal
+		# for strings, returning a non-nil value from `String#match` for
+		# regular expression, or returning a true value when supplied the
+		# message for procs) is used.  When a response created with
+		# `match` is selected, the supplied "interpreter" proc is called,
+		# which will generally update state vars. The argument to the
+		# interpreter depends on the matcher type. For strings, no
+		# argument is supplied; for regular expressions, the matcher
+		# object is supplied; for procs, the original message is
+		# supplied. When an `error` response is matched, the supplied
+		# message is returned to the user. When either an `ack` or `nack`
+		# response is matched, the next message is sent and no futher
+		# action taken.
 		# 
-		# `match` takes three arguments: a name, a matcher and an interpreter. `nack` and `ack` each
-		# take only a matcher. `error` takes a name, a matcher and a string message.
+		# `match` takes three arguments: a name, a matcher and an
+    # interpreter. `nack` and `ack` each take only a matcher. `error`
+    # takes a name, a matcher and a string message.
 		#
-		# Note that response can be used in two ways: a in the first example, in which case the provided
-		# block is evaluated in the context of a special class (which means code inside of the block has no
-		# access to local variables or methods), or by providing a parameter into the block, in which
-		# case the block is evaluated in the context of the class (*not the instance*), but response methods 
-		# (like `match`) must be called on that argument (see the second example).
+		# Note that response can be used in two ways: a in the first
+		# example, in which case the provided block is evaluated in the
+		# context of a special class (which means code inside of the block
+		# has no access to local variables or methods), or by providing a
+		# parameter into the block, in which case the block is evaluated
+		# in the context of the class (*not the instance*), but response
+		# methods (like `match`) must be called on that argument (see the
+		# second example).
 		# @example
 		# 	responses do
 		# 		#regular expression matcher
@@ -303,36 +359,49 @@ module Wescontrol
 			end
 		end
 		
-		# Starts a requests block, wherein statements describing the various requests that should
-		# be made of the device are placed. Many devices do not proactively report state changes
-		# to their controller and need to be constantly polled to determine whether anything has
-		# changed. In order to provide the user a feeling of control, it is important that the
-		# current system state always reflect the device's real state as closely as possible.
-		# For example, the default touchscreen interface does not allow you to turn on a projector
-		# that is already on. However, if the controller does not poll for the power state, the
-		# projector could be manually turned off and the controller would be unaware. Now, the
-		# projector is off but the system still thinks it's on, and the user is unable to turn it
+		# Starts a requests block, wherein statements describing the
+		# various requests that should be made of the device are
+		# placed. Many devices do not proactively report state changes to
+		# their controller and need to be constantly polled to determine
+		# whether anything has changed. In order to provide the user a
+		# feeling of control, it is important that the current system
+		# state always reflect the device's real state as closely as
+		# possible.  For example, the default touchscreen interface does
+		# not allow you to turn on a projector that is already
+		# on. However, if the controller does not poll for the power
+		# state, the projector could be manually turned off and the
+		# controller would be unaware. Now, the projector is off but the
+		# system still thinks it's on, and the user is unable to turn it
 		# back on using the touchscreen.
 		# 
-		# Creating requests is very simple. Each request needs three things: a name, the string to
-		# send, and its priority compared to other requests. The priority is a floating point number
-		# which determines how often the request is sent. If we have two requests, A with priority 1.0
-		# and B with priority 0.5, request A will be sent roughly twice as often as request B. The
-		# numbers are entirely relative, so you can use whatever scale you like. The system will send
-		# a request whenever the channel is clear (we are not waiting for a response) and there are
-		# no commands waiting to be sent, so user commands are still prioritized but states are kept
-		# as up to date as possible. When requests are defined a vector is created with the sequence
-		# of requests to send. Every time a request can be sent, the next request is taken from this
-		# vector. The number of copies of each request in this vector is determined by the priorities.
-		# In essence, we scale all of the priorities such that the smallest is one; these scaled
-		# priorities are then the number of copies. We then interleave them as much as possible so that
+		# Creating requests is very simple. Each request needs three
+		# things: a name, the string to send, and its priority compared to
+		# other requests. The priority is a floating point number which
+		# determines how often the request is sent. If we have two
+		# requests, A with priority 1.0 and B with priority 0.5, request A
+		# will be sent roughly twice as often as request B. The numbers
+		# are entirely relative, so you can use whatever scale you
+		# like. The system will send a request whenever the channel is
+		# clear (we are not waiting for a response) and there are no
+		# commands waiting to be sent, so user commands are still
+		# prioritized but states are kept as up to date as possible. When
+		# requests are defined a vector is created with the sequence of
+		# requests to send. Every time a request can be sent, the next
+		# request is taken from this vector. The number of copies of each
+		# request in this vector is determined by the priorities.  In
+		# essence, we scale all of the priorities such that the smallest
+		# is one; these scaled priorities are then the number of
+		# copies. We then interleave them as much as possible so that
 		# there is a regular spacing between requests.
 		#
-		# Note that requests can be used in two ways: a in the first example, in which case the provided
-		# block is evaluated in the context of a special class (which means code inside of the block has no
-		# access to local variables or methods), or by providing a parameter into the block, in which
-		# case the block is evaluated in the context of the class (*not the instance*), but request methods 
-		# (specifically `send`) must be called on that argument (see the second example).
+		# Note that requests can be used in two ways: a in the first
+		# example, in which case the provided block is evaluated in the
+		# context of a special class (which means code inside of the block
+		# has no access to local variables or methods), or by providing a
+		# parameter into the block, in which case the block is evaluated
+		# in the context of the class (*not the instance*), but request
+		# methods (specifically `send`) must be called on that argument
+		# (see the second example).
 		# @example
 		# 	requests do
 		# 		send :input,  "I\r\n", 1.5
@@ -353,7 +422,8 @@ module Wescontrol
 			@_requests ||= []
 			@_requests += rh.requests
 			@_request_scheduler = []
-			#The multiplier is the number which scales everything such that the smallest is 1.0
+			#The multiplier is the number which scales everything such that
+			#the smallest is 1.0
 			multiplier = 1.0/@_requests.collect{|x| x[2]}.min
 			#Multiply all of the priorities by the multiplier
 			r = @_requests.collect{|x| [x[0], x[1], (x[2]*multiplier).to_i]}
@@ -374,20 +444,24 @@ module Wescontrol
 			self.class.instance_variable_get(:@_request_scheduler)
 		end
 		
-		# @private
-		# Reads in each block of data from EM::Serialport, and processes it by splitting it into
-		# discrete messages by means of message_end, then matching each message against the
-		# responses that have been defined by {RS232::responses}. If one is matched, its handler
-		# is called and the result is sent back to the user or ignored. Also sets ready_to_send,
-		# which causes the next request or command to be sent.
+		# @private Reads in each block of data from EM::Serialport, and
+		# processes it by splitting it into discrete messages by means of
+		# message_end, then matching each message against the responses
+		# that have been defined by {RS232::responses}. If one is matched,
+		# its handler is called and the result is sent back to the user or
+		# ignored. Also sets ready_to_send, which causes the next request
+		# or command to be sent.
 		def read data
 			@_buffer ||= ""
 			@_responses ||= {}
+      # if the buffer has gotten really big, it's probably because we
+      # failed to read a message at some point and junk data at the
+      # beginning is preventing us from reading any others. In such a
+      # case we just want to start fresh with this data.
+      @_buffer = "" if @_buffer.size > 50
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
-#      DaemonKit.logger.debug("message: #{@_buffer.inspect}")
 			handle_message = proc {|msg|
-#        DaemonKit.logger.debug("Received: #{msg}")
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
 						when "Regexp" then msg.match(matcher[1])
@@ -424,10 +498,10 @@ module Wescontrol
       elsif configuration[:message_end].is_a? Proc
 				loop do
 					loop_message_received = false
-					@_buffer.size.times{|start|
+					# @_buffer.size.times{|start|
+            start = 0
 						(start+1).upto(@_buffer.size){|_end|
 							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
-								#DaemonKit.logger.debug("Y: #{@_buffer.bytes.to_a[0..i].collect{|x| x.to_s(16)}.join(" ")}")
 								handle_message.call(@_buffer[start.._end])
 								@_buffer = @_buffer[(_end+1)..-1]
 								loop_message_received = true
@@ -435,18 +509,17 @@ module Wescontrol
 								break
 							end
 						}
-					}
+					# }
 					break unless loop_message_received
 				end
 			elsif me = configuration[:message_end]
-        regex = /.+?#{me}/
+        regex = /.*?#{me}/
 				while msg = s.scan(regex) do
 					msg.gsub!(me, "")
 					handle_message.call(msg)
 					message_received = true
 				end
 				@_buffer = s.rest
-				#DaemonKit.logger.debug("N: #{@_buffer.bytes.to_a.collect{|x| x.to_s(16)}.join(" ")}") if !message_received if @_buffer
 			end
 			#if we got the message end signal, we're safe to send the next thing
 			if message_received
@@ -455,22 +528,26 @@ module Wescontrol
 		end
 		
 		# @private
-		# When set to true, sends the next thing in the send queue or the next request if send_queue
-		# is empty. When set to false, will set itself to true if message_timeout seconds have
-		# passed sent the last message was sent.
+    # When set to true, sends the next thing in the send queue or the
+		# next request if send_queue is empty. When set to false, will set
+		# itself to true if message_timeout seconds have passed since the
+		# last message was sent.
 		def ready_to_send=(state)
 			@_ready_to_send = state
 			if Time.now - @_last_sent_time > configuration[:message_timeout]
-				DaemonKit.logger.debug("#{self.name}: Request timed out: #{}") unless state
+				DaemonKit.logger.debug("#{self.name}: Request timed out") unless state
 				@_ready_to_send = true
 			end
-			if @_ready_to_send
-				if @_send_queue.size == 0
-					request = choose_request
-          DaemonKit.logger.debug("#{self.name}: Sending request: #{request}")
-					do_message request if request
-				end
-				send_from_queue
+			if @_ready_to_send && !@_waiting
+        @_waiting = true
+        EM::add_timer(configuration[:message_delay]) do
+				  if @_send_queue.size == 0
+					  request = choose_request
+					  do_message request if request
+				  end
+				  send_from_queue
+          @_waiting = false
+        end
 			end
 		end
 
@@ -482,11 +559,10 @@ module Wescontrol
 		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
 			if message = @_send_queue.pop
-				@_last_sent_time = Time.now
-				@_ready_to_send = false
-				@_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
-				@_message_handler.timeout(configuration[:message_timeout])
-				send_string message[0]
+        @_last_sent_time = Time.now
+        @_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
+        @_message_handler.timeout(configuration[:message_timeout])
+        send_string message[0]
 			end
 		end
 		
@@ -498,21 +574,5 @@ module Wescontrol
 			@_request_iter += 1
 			request_scheduler[@_request_iter % request_scheduler.size][1]
 		end
-		
 	end
-end
-
-# @private
-# Creates an EM::Connection for use with EM::Serialport. Because the main RS232Device class must
-# subclass from Device, it cannot subclass from EM::Connection. Therefore, we must create a dummy
-# connection subclass to use instead. All it does is call @receiver.read when data is received,
-# where @receiver is automatically set to the RS232Device subclass.
-class RS232Connection < EM::Connection
-	def initialize
-		@receiver ||= self.class.instance_variable_get(:@receiver)
-		@receiver.serialport = self
-	end
-	def receive_data data
-		@receiver.read data if @receiver
-	end	
 end

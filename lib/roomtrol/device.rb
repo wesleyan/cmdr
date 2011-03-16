@@ -1,17 +1,7 @@
-$eventmachine_library = :pure_ruby
+# $eventmachine_library = :pure_ruby
 require 'couchrest'
 require 'mq'
 require 'json'
-
-#@private
-module EventMachine
-	class Connection
-		def associate_callback_target(sig)
-		# For reasons unknown, this method was commented out
-		# in recent version of EM. We need it, though, for AMQP.
-		end
-	end
-end
 
 module Wescontrol
 	# Device provides a DSL for describing devices of all kinds. Anything that
@@ -28,24 +18,26 @@ module Wescontrol
 	# care of for you, letting you focus on just implementing the device's features.
 	# 
 	# #Device Variables
-	# The basis for this
-	# DSL is the concept of state variables, defined by the state_var method.
-	# State vars are--as their name suggests--variables that track the state
-	# of something about the device. For example, a projector device might
-	# have have a state var "power," which is true if the projector is on
-	# and false if the projector is off. There are two kinds of state vars:
-	# those that are immutable (e.g., the model number of the projector) and
-	# those that are mutable (e.g., the aforementioned power state var).
-	# Mutability is specified when the state var is created by the :editable
-	# parameter, which defaults to true. Note that even an immutable state var
-	# can be changed programatically by calling its `device.varname=` method,
-	# but controls for it will not be created in the web interface. For mutable
-	# vars you are responsible for creating a method called set_varname, which
-	# takes in one argument of the type specified and which should affect the 
-	# device in such a way as to transition it to the state described by the argument.
-	# Alternatively, by passing a Proc to the :action parameter, state_var will
-	# create the set method for you. State vars can be created by placing a line 
-	# like this in your class body:
+  #
+	# The basis for this DSL is the concept of state variables, defined
+	# by the state_var method.  State vars are--as their name
+	# suggests--variables that track the state of something about the
+	# device. For example, a projector device might have have a state
+	# var "power," which is true if the projector is on and false if the
+	# projector is off. There are two kinds of state vars: those that
+	# are immutable (e.g., the model number of the projector) and those
+	# that are mutable (e.g., the aforementioned power state var).
+	# Mutability is specified when the state var is created by the
+	# :editable parameter, which defaults to true. Note that even an
+	# immutable state var can be changed programatically by calling its
+	# `device.varname=` method, but controls for it will not be created
+	# in the web interface. For mutable vars you are responsible for
+	# creating a method called set_varname, which takes in one argument
+	# of the type specified and which should affect the device in such a
+	# way as to transition it to the state described by the argument.
+	# Alternatively, by passing a Proc to the :action parameter,
+	# state_var will create the set method for you. State vars can be
+	# created by placing a line like this in your class body:
 	# 
 	# 	state_var power, :type => :boolean
 	# 
@@ -96,38 +88,49 @@ module Wescontrol
 	# 		message_end "\r\n"
 	# 	end
 	# 
-	# Here we can see two kind of configuration statements: system defined and user defined.
-	# The first two, port and baud, are user defined, while the rest are system defined. User
-	# defined config vars are intended to be set by the user in the web interface. The type
-	# parameter is a hint to the web interface about what kind of control to show and what
-	# kind of validation to do on the input. For example, setting a type of :port will display
-	# a drop-down of the serial ports defined for the system. A type of :integer will display
-	# a text box whose input is restricted to numbers. Other possibilities are :password,
-	# :string, :decimal, :boolean and :percentage. If you supply a type that is not defined
-	# in the system, a simple text box will be used. An optional :default parameter can be
-	# used to set the initial value.
+	# Here we can see two kind of configuration statements: system
+	# defined and user defined.  The first two, port and baud, are user
+	# defined, while the rest are system defined. User defined config
+	# vars are intended to be set by the user in the web interface. The
+	# type parameter is a hint to the web interface about what kind of
+	# control to show and what kind of validation to do on the
+	# input. For example, setting a type of :port will display a
+	# drop-down of the serial ports defined for the system. A type of
+	# :integer will display a text box whose input is restricted to
+	# numbers. Other possibilities are :password, :string, :decimal,
+	# :boolean and :percentage. If you supply a type that is not defined
+	# in the system, a simple text box will be used. An optional
+	# :default parameter can be used to set the initial value.
 	# 
-	# System defined config vars, on the other hand, are not modifiable by the user. They are
-	# specified in the device definition (as can be seen here) and cannot change. You can add
-	# whatever configuration variables you need, though they should be named using lowercase
-	# letters connected\_by\_underscores. Configuration information is accessible through the
-	# {Device#configuration} method, which returns a hash mapping between a symbol of the name
-	# to the value. More information in the {Device::configure} method definition.
+	# System defined config vars, on the other hand, are not modifiable
+	# by the user. They are specified in the device definition (as can
+	# be seen here) and cannot change. You can add whatever
+	# configuration variables you need, though they should be named
+	# using lowercase letters connected\_by\_underscores. Configuration
+	# information is accessible through the {Device#configuration}
+	# method, which returns a hash mapping between a symbol of the name
+	# to the value. More information in the {Device::configure} method
+	# definition.
 	# 
 	# #Controlling Devices
-	# Devices are controlled externally through the use of a message queue which speaks
-	# the [AMQP](http://www.amqp.org/) protocol. At the moment we use
-	# [RabbitMQ](http://www.rabbitmq.com/) as the message broker, but technically everything
-	# should work with another broker and RabbitMQ should not be assumed. AMQP is a very
-	# complicated protocol which can support several different messaging strategies. The only
-	# one used here is the simplest: direct messaging, wherein there is one sender and one
-	# recipient. AMQP messages travel over "queues," which are named structures that carry
-	# messages in one direction. Each device has a queue, named roomtrol:dqueue:{name} (replace
-	# {name} with the actual name of the device), which it watches for messages. Messages are
-	# JSON documents with at least three pieces of information: a unique ID (GUIDs are recommended
-	# to ensure uniqueness), a response queue which the sender is watching, and a type. The device
-	# will carry out the instructions in the message and send the response as a json message to the
-	# queue specified.
+  #
+  # Devices are controlled externally through the use of a message
+	# queue which speaks the [AMQP](http://www.amqp.org/) protocol. At
+	# the moment we use [RabbitMQ](http://www.rabbitmq.com/) as the
+	# message broker, but technically everything should work with
+	# another broker and RabbitMQ should not be assumed. AMQP is a very
+	# complicated protocol which can support several different messaging
+	# strategies. The only one used here is the simplest: direct
+	# messaging, wherein there is one sender and one recipient. AMQP
+	# messages travel over "queues," which are named structures that
+	# carry messages in one direction. Each device has a queue, named
+	# roomtrol:dqueue:{name} (replace {name} with the actual name of the
+	# device), which it watches for messages. Messages are JSON
+	# documents with at least three pieces of information: a unique ID
+	# (GUIDs are recommended to ensure uniqueness), a response queue
+	# which the sender is watching, and a type. The device will carry
+	# out the instructions in the message and send the response as a
+	# json message to the queue specified.
 	# 
 	# ##Messages
 	# There are three kinds of messages one can send to a device:
@@ -200,9 +203,10 @@ module Wescontrol
 	# 		"error": "Failed to turn projector on"
 	# 	}
 	# 
-	# This and the rest of the documentation here should cover everything you need to know
-	# to write Device subclasses. More information can also be found in the tests, which
-	# define exactly what the device class must do and not do.
+	# This and the rest of the documentation here should cover
+	# everything you need to know to write Device subclasses. More
+	# information can also be found in the tests, which define exactly
+	# what the device class must do and not do.
 	class Device
 		# The id in CouchDB for this device
 		attr_accessor :_id
@@ -217,13 +221,14 @@ module Wescontrol
 		# The queue that the device watches for messages
 		attr_reader :dqueue
 		
-		# Creates a new Device instance
-		# @param [String, Symbol] name The name of the device, which is stored in the database
-		# 	and used to communicate with it over AMQP
-		# @param [Hash{String, Symbol => Object}] hash A hash of configuration definitions, from
-		# 	the name of the config var to its value
-		# @param [String] db_uri The URI of the CouchDB database where updates should be saved
-		# @param [String] dqueue The AMQP queue that the device watches for messages
+		# Creates a new Device instance @param [String, Symbol] name The
+		# name of the device, which is stored in the database and used to
+		# communicate with it over AMQP @param [Hash{String, Symbol =>
+		# Object}] hash A hash of configuration definitions, from the name
+		# of the config var to its value @param [String] db_uri The URI of
+		# the CouchDB database where updates should be saved @param
+		# [String] dqueue The AMQP queue that the device watches for
+		# messages
 		def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms", dqueue = nil)
 			hash_s = hash.symbolize_keys
 			@name = name
@@ -235,9 +240,10 @@ module Wescontrol
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
 		end
 		
-		# Run is a blocking call that starts the device. While run is running, the device will
-		# watch for AMQP events as well as whatever communication channels the device uses and
-		# react appropriately to events.
+		# Run is a blocking call that starts the device. While run is
+		# running, the device will watch for AMQP events as well as
+		# whatever communication channels the device uses and react
+		# appropriately to events.
 		def run
 			AMQP.start(:host => '127.0.0.1'){
 				self.amqp_setup
@@ -252,7 +258,7 @@ module Wescontrol
 							resp["error"] = error
 							@amq_responder.queue(req["queue"]).publish(resp.to_json)
 						end
-					elsif !feedback
+					elsif feedback == nil
 						@amq_responder.queue(req["queue"]).publish(resp.to_json)
 					else
 						resp["result"] = feedback
@@ -280,8 +286,8 @@ module Wescontrol
 			}
 		end
 		
-		# Subclasses can override this method to add addition AMQP setup, like setting their own
-		# callbacks and handlers
+		# Subclasses can override this method to add addition AMQP setup,
+		# like setting their own callbacks and handlers
 		def amqp_setup
 		end
 
@@ -390,30 +396,36 @@ module Wescontrol
 		# 	created.
 		def self.state_vars; @state_vars; end
 		
-		# This method, when called in a class definition, defines a new state variable for the
-		# device class. State vars are--as their name suggests--variables that track the state
-		# of something about the device. For example, a projector device might
-		# have have a state var "power," which is true if the projector is on
-		# and false if the projector is off. There are two kinds of state vars:
-		# those that are immutable (e.g., the model number of the projector) and
-		# those that are mutable (e.g., the aforementioned power state var).
-		# Mutability is specified when the state var is created by the :editable
-		# parameter, which defaults to true. Note that even an immutable state var
-		# can be changed programatically by calling its device.state_var= method,
-		# but controls for it will not be created in the web interface.
+		# This method, when called in a class definition, defines a new
+		# state variable for the device class. State vars are--as their
+		# name suggests--variables that track the state of something about
+		# the device. For example, a projector device might have have a
+		# state var "power," which is true if the projector is on and
+		# false if the projector is off. There are two kinds of state
+		# vars: those that are immutable (e.g., the model number of the
+		# projector) and those that are mutable (e.g., the aforementioned
+		# power state var).  Mutability is specified when the state var is
+		# created by the :editable parameter, which defaults to true. Note
+		# that even an immutable state var can be changed programatically
+		# by calling its device.state_var= method, but controls for it
+		# will not be created in the web interface.
 		# 
-		# Calling state_var can do a number of things. In every case, it will create
-		# a getter method for the variable with the name passed in, so that instances
-		# of your class will respond to #var_name. It will also create a setter method
-		# `#varname=` which should be used to update the state. You should always use 
-		# the setter to change state rather than access the instance variable directly
-		# because the setter will report changes to the database, which is neccessary
-		# for any user interface to update. It also forces recalculation on any virtual
-		# variables that are defined in terms of a particular state var. In addition to
-		# creating accessor methods, if supplied an :action parameter state_var will
-		# create a set_varname method using the proc supplied.
-		# @param [Symbol] name The name for the state var. Should follow the general
-		# 	naming conventions: all lowercase, with multiple words connected\_by\_underscores.
+		# Calling state_var can do a number of things. In every case, it
+		# will create a getter method for the variable with the name
+		# passed in, so that instances of your class will respond to
+		# #var_name. It will also create a setter method `#varname=` which
+		# should be used to update the state. You should always use the
+		# setter to change state rather than access the instance variable
+		# directly because the setter will report changes to the database,
+		# which is neccessary for any user interface to update. It also
+		# forces recalculation on any virtual variables that are defined
+		# in terms of a particular state var. In addition to creating
+		# accessor methods, if supplied an :action parameter state_var
+		# will create a set_varname method using the proc supplied.
+    #
+		# @param [Symbol] name The name for the state var. Should follow
+    #   the general naming conventions: all lowercase, with multiple
+    #   words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the state_var
 		# @option options [Symbol] :type [mandatory] the type of the variable; this is
 		# 	used by the web interface to decide what kind of interface to show. Possible
@@ -618,7 +630,9 @@ b				raise "Must have type field" unless options[:type]
 		def self.from_couch(hash)
 			config = {}
 			hash['attributes']['config'].each{|var, value|
-				config[var] = value
+				unless self.configuration[var.to_sym] && (@config_vars[var.to_sym] && !@config_vars[var.to_sym][:default])
+          config[var] = value
+        end
 			} if hash['attributes']['config']
 			device = self.new(hash['attributes']['name'], config)
 			device._id = hash['_id']
