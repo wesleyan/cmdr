@@ -1,7 +1,7 @@
 require 'serialport'
 require 'strscan'
 #require 'roomtrol/em-serialport'
-require 'bit-struct'
+require 'rubybits'
 
 module Wescontrol
 	# RS232Device is a subclass of {Wescontrol::Device} that makes the job of controlling
@@ -74,22 +74,27 @@ module Wescontrol
 	# 2. The device processes the event and sends back a response, either an acknowledge or a full response.
 	# 3. The device is now ready for a new message, starting the cycle over.
 	# 
-	# In particular, since many devices can only handle one message at a time, RS232Device waits
-	# until a response is received or message_timeout seconds have passed before
-	# sending the next message in the queue. Devices with more complex message handling (for example,
-	# those with multiple message queues) may not work optimally with this strategy. In those cases,
-	# writing the message handling system yourself may be preferable. It is also very important that
-	# devices are synchronous; i.e., they always send responses in the order that requests or commands
-	# are received. If this assumption does not hold, users may get incorrect responses.
+	# In particular, since many devices can only handle one message at a
+	# time, RS232Device waits until a response is received or
+	# message_timeout seconds have passed before sending the next
+	# message in the queue. Devices with more complex message handling
+	# (for example, those with multiple message queues) may not work
+	# optimally with this strategy. In those cases, writing the message
+	# handling system yourself may be preferable. It is also very
+	# important that devices are synchronous; i.e., they always send
+	# responses in the order that requests or commands are received. If
+	# this assumption does not hold, users may get incorrect responses.
 	# 
 	# ##Configuration
-	# RS232Devices have addition configuration parameters, which can be placed in the normal {Device::configure}
-	# block.
+	# RS232Devices have addition configuration parameters, which can be
+  # placed in the normal {Device::configure} block.
 	# 
-	# + *port*: the serial port the device is connected to. You shouldn't set this directly, because it
-	# 	should be modifiable by the user
-	# + *baud*: the baud rate at which communication occurs. You can either set this, if the device uses a
-	# 	fixed baud rate, or let the user set it if the device supports variable baud rates
+	# + *port*: the serial port the device is connected to. You
+  #   shouldn't set this directly, because it should be modifiable by
+  #   the user
+	# + *baud*: the baud rate at which communication occurs. You can
+  #   either set this, if the device uses a fixed baud rate, or let
+  #   the user set it if the device supports variable baud rates 
 	# + *data_bits*: the number of data bits used by the device (usually 7 or 8)
 	# + *stop_bits*: the number of stop bits used by the device (either 1 or 2)
 	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
@@ -143,7 +148,8 @@ module Wescontrol
 		# Sends a string to the serial device
 		# @param [String] string The string to send
 		def send_string(string)
-      Thread.new do
+      DaemonKit.logger.debug("Sending: #{string.bytes.to_a.map{|x| x.to_s(16)}.join(" ")}")
+      EM.defer do
         @_serialport.write string if @_serialport
       end
 		end
@@ -419,6 +425,11 @@ module Wescontrol
 		def read data
 			@_buffer ||= ""
 			@_responses ||= {}
+      # if the buffer has gotten really big, it's probably because we
+      # failed to read a message at some point and junk data at the
+      # beginning is preventing us from reading any others. In such a
+      # case we just want to start fresh with this data.
+#      @_buffer = "" if @_buffer.size > 50
 			@_buffer << data
 			s = StringScanner.new(@_buffer)
 			handle_message = proc {|msg|
@@ -456,9 +467,11 @@ module Wescontrol
 					handle_message.call(msg.match(configuration[:message_format])[1])
 				end
       elsif configuration[:message_end].is_a? Proc
+        puts "Buffer = #{@_buffer.bytes.to_a.map{|x| x.to_s(16)}.join(" ")}"
 				loop do
 					loop_message_received = false
-					@_buffer.size.times{|start|
+					# @_buffer.size.times{|start|
+            start = 0
 						(start+1).upto(@_buffer.size){|_end|
 							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
 								#DaemonKit.logger.debug("Y: #{@_buffer.bytes.to_a[0..i].collect{|x| x.to_s(16)}.join(" ")}")
@@ -469,7 +482,7 @@ module Wescontrol
 								break
 							end
 						}
-					}
+					#}
 					break unless loop_message_received
 				end
 			elsif me = configuration[:message_end]
