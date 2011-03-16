@@ -3,8 +3,7 @@ require 'em-websocket'
 require 'json'
 require 'mq'
 require 'couchrest'
-
-
+require 'state_machine'
 module Wescontrol
   # Wescontrol websocket server. Used to provide better interactivity to
   # the touchscreen interface. Communication is through JSON, like for
@@ -139,28 +138,29 @@ module Wescontrol
     RESOURCES = ["projector", "volume", "source"]
     
     def initialize
-      @db = CouchRest.database(DB_URI)
+      @db = CouchRest.database("http://localhost:5984/rooms")
 
-      @room = db.get("_design/room").
-        view("by_mac", {:key => MAC.addr})['rows'][0]
+      @room = @db.get("_design/room").
+        view("by_mac", {:key => MAC.addr})['rows'][0]['value']
 
-      @devices = db.get('_design/room').
-        view('devices_for_room', {:key => @room['_id']})['rows']
+      @devices = @db.get('_design/room').
+        view('devices_for_room', {:key => @room['_id']})['rows'].
+        map{|x| x['value']}
 
-      @building = db.get(@room['attributes']['belongs_to']
-                         )['rows'][0]['attributes']['name']
+      @building = @db.get(@room['belongs_to'])['attributes']['name']
 
-      @sources = db.get('_design/wescontrol_web').
-        view('sources', {:key => @room['_id']})['rows']
+      @sources = @db.get('_design/wescontrol_web').
+        view('sources', {:key => @room['_id']})['rows'].
+        map{|x| x['value']}
         
-      @actions = db.get('_design/wescontrol_web').
+      @actions = @db.get('_design/wescontrol_web').
         view('actions', {:key => @room['_id']})['rows']
           
       @room_name = @room['attributes']['name']
-      @projector = @room["attributes"]["projector"]
-      @switcher = @room["attributes"]["switcher"]
-      @dvdplayer = @room["attributes"]["dvdplayer"]
-      @volume = @room["attributes"]["volume"]
+      @projector = @room['attributes']['projector']
+      @switcher = @room['attributes']['switcher']
+      @dvdplayer = @room['attributes']['dvdplayer']
+      @volume = @room['attributes']['volume']
 
       @devices_by_id = {}
       {@projector => "projector",
@@ -168,9 +168,12 @@ module Wescontrol
         @dvdplayer => "dvdplayer",
         @volume => "volume"
       }.each do |k, v|
-        d = @devices.find {|d| d['attributes'] && d['attributes']['name'] == k}
-        @devices_by_id[d['_id']] = v
+        puts k
+        d = @devices.find {|d| d['attributes']['name'] == k}
+        @devices_by_id[d['_id']] = v if d
       end
+
+      @source_fsm = make_state_machine(@sources).new(self)
     end
 
     # Starts the websockets server. This is a blocking call if run
@@ -182,18 +185,17 @@ module Wescontrol
         @deferred_responses = {}
 
         @queue_name = "roomtrol:websocket:#{self.object_id}"
-        @queue = @amq.queue(@queue_name)
+        @queue = @mq.queue(@queue_name)
         
         # watch for responses from devices
         @queue.subscribe{|json|
           msg = JSON.parse(json)
+          puts "Got response: #{msg}"
           if @deferred_responses[msg["id"]]
             @deferred_responses.delete(msg["id"]).succeed(msg)
           end
         }
 
-        @source_fsm = make_state_machine @sources
-        
         @mq.queue(EVENT_QUEUE).subscribe do |json|
           handle_event json
         end
@@ -210,7 +212,7 @@ module Wescontrol
           ws.onmessage {|json| onmessage ws, json}
           
           ws.onclose do
-            @update_channel.unsubscribe(sid)
+            @update_channel.unsubscribe(@sid) if @sid
             DaemonKit.logger.debug "Connection on #{ws.signature} closed"
           end
 
@@ -220,7 +222,6 @@ module Wescontrol
         end
       end
       
-      private
       def handle_event json
         msg = JSON.parse(json)
         if msg['state_update'] && msg['var'] && msg['now'] && msg['device']
@@ -250,7 +251,7 @@ module Wescontrol
       end
       
       def onopen ws
-        sid = @update_channel.subscribe { |msg|
+        @sid = @update_channel.subscribe { |msg|
           DaemonKit.logger.debug "State update: #{msg}"
           ws.send update_msg
         }
@@ -271,33 +272,46 @@ module Wescontrol
         begin
           msg = JSON.parse(json)
 
+          puts "Got message: #{msg.inspect}"
+
           deferrable = EM::DefaultDeferrable.new
           deferrable.callback {|resp|
             resp['id'] = msg['id']
-            ws.send response
+            ws.send resp
           }
           deferrable.timeout TIMEOUT
           
-          case message['type']
+          case msg['type']
           when "state_get" then state_get msg, deferrable
           when "state_set" then state_set msg, deferrable
           when "command" then command msg, deferrable
+          else df.deferrable.succeed({:error => "Invalid message type"})
           end
           
         rescue JSON::ParserError, TypeError
-          DaemonKit.logger.debug "Invalid JSON message from #{ws.signature}: #{message}"
+          DaemonKit.logger.debug "Invalid JSON message from #{ws.signature}: #{json}"
         end
       end
       
       def state_get req, df
-        if RESOURCES.include? req[:resource]
-          self.send "handle_#{req[:resource]}_get", req, df
+        state_action req, df, "get"
+      end
+
+      def state_set req, df
+        state_action req, df, "set"
+      end
+      
+      def state_action req, df, action
+        if RESOURCES.include? req['resource']
+          self.send "handle_#{req['resource']}_#{action}", req, df
+        else
+          df.succeed({:error => "Invalid resource"})
         end
       end
 
       def daemon_get var, device, df
         device_req = {
-          id => UUIDTools::UUID.random_create.to_s,
+          :id => UUIDTools::UUID.random_create.to_s,
           :queue => @queue_name,
           :type => :state_get,
           :var => var
@@ -315,7 +329,7 @@ module Wescontrol
 
       def daemon_set var, value, device, df
         device_req = {
-          id => UUIDTools::UUID.random_create.to_s,
+          :id => UUIDTools::UUID.random_create.to_s,
           :queue => @queue_name,
           :type => :state_set,
           :var => var,
@@ -342,63 +356,76 @@ module Wescontrol
       
       def defer_device_operation device_req, device, df        
         @deferred_responses[device_req[:id]] = df
-        @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
+        @mq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
       end
 
       ##################### Client code ####################
 
       def handle_projector_get req, df
-        daemon_get req[:var], @projector, df
+        daemon_get req['var'], @projector, df
+      end
+
+      def handle_projector_set req, df
+        daemon_set req['var'], req['value'], @projector, df
       end
 
       def handle_volume_get req, df
-        daemon_get req[:var], @volume, df
+        daemon_get req['var'], @volume, df
       end
 
+      def handle_volume_set req, df
+        daemon_set req['var'], req['value'], @volume, df
+      end
+      
       def handle_source_get req, df
-        df.suceeed({:result => @source_fsm})
-      end
-    end
-  end
-
-  def make_state_machine sources
-    klass = Class.new
-    klass.class_eval do
-      def initialize parent
-        @parent = parent
-        super
+        df.succeed({:result => @source_fsm.source})
       end
 
-      state_machine :source do
-        after_transition any => any do |fsm, transition|
-          @parent.send_update :source, nil, transition.from, transition.to 
+      def handle_source_set req, df
+        @source_fsm.source = req['value']
+        df.succeed({:ack => true})
+      end
+    end
+    
+    def make_state_machine sources
+      klass = Class.new
+      klass.class_eval do
+        def initialize parent
+          @parent = parent
+          super
         end
-        sources.each do |source|
-          this_state = source['name'].to_sym
-          if p = source['input']['projector']
-            if !@switcher
-              event "projector_to_#{p}".to_sym do
-                transition all => this_state
-              end
-            end
-            after_transition any => this_state do
-              @parent.set_projector_state p
-            end
+
+        state_machine :source do
+          after_transition any => any do |fsm, transition|
+            @parent.send_update :source, nil, transition.from, transition.to 
           end
-          if s = source['input']['switcher']
-            if @switcher
-              event "switcher_to_#{s}" do
-                transition all => this_state
-                @parent.set_projector_state p if p = source['input']['project']
+          sources.each do |source|
+            this_state = source['name'].to_sym
+            if p = source['input']['projector']
+              if !@switcher
+                event "projector_to_#{p}".to_sym do
+                  transition all => this_state
+                end
+              end
+              after_transition any => this_state do
+                @parent.set_projector_state p
               end
             end
-            after_transition any => this_state do
-              @parent.set_switcher_state s
+            if s = source['input']['switcher']
+              if @switcher
+                event "switcher_to_#{s}" do
+                  transition all => this_state
+                  @parent.set_projector_state p if p = source['input']['project']
+                end
+              end
+              after_transition any => this_state do
+                @parent.set_switcher_state s
+              end
             end
           end
         end
       end
+      klass
     end
-    klass
   end
 end

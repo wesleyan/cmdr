@@ -50,6 +50,7 @@ GEM
     sinatra (1.1.0)
       rack (~> 1.1)
       tilt (~> 1.1)
+    state_machine (0.9.4)
     tilt (1.1)
     uuidtools (2.1.1)
     wol (0.4.0)
@@ -78,6 +79,7 @@ DEPENDENCIES
   rubybits
   serialport
   sinatra
+  state_machine
   uuidtools
   wol
   yard

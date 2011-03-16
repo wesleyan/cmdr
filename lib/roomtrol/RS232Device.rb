@@ -149,7 +149,10 @@ module Wescontrol
 		# @param [String] string The string to send
 		def send_string(string)
       EM.defer do
-        @_serialport.write string if @_serialport
+        begin
+          @_serialport.write string if @_serialport
+        rescue
+        end
       end
 		end
 
