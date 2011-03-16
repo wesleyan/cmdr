@@ -114,17 +114,17 @@ module RoomtrolVideo
 	class RemoteRecorder
 		# The command to start recording video
 		RECORD_CMD = %q?
-		gst-launch videotestsrc ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+		gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
 		    tee name=t_vid ! deinterlace ! queue ! cairotextoverlay text="recording" valign=bottom halign=right ! \
 		    xvimagesink sync=true t_vid. ! queue ! \
 		    videorate ! 'video/x-raw-yuv,framerate=30000/1001' ! deinterlace ! queue ! mux. \
-		    audiotestsrc ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
+		    osssrc device=/dev/dsp6 ! audio/x-raw-int,rate=48000,channels=2,depth=16 ! queue ! \
 		    audioconvert ! queue ! mux. avimux name=mux ! \
 		    filesink location=OUTPUT_FILE?
 
 		# The command to start video playback, but not record
 		PLAY_CMD =  %q?
-    gst-launch videotestsrc ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
+    gst-launch v4l2src ! 'video/x-raw-yuv,width=720,height=480,framerate=30000/1001' ! \
         deinterlace ! queue ! \
         xvimagesink sync=true . ?
 		
