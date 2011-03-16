@@ -32,7 +32,7 @@ module Wescontrol
           @deferred_responses.delete(msg["id"]).succeed(msg)
         end
       }
-      @room_id = Wescontrol::Room.find_by_mac(MAC.addr)["id"]
+      @room = Room.find_by_mac(MAC.addr)
     end
     
     def unbind
