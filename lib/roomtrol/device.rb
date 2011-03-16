@@ -1,25 +1,7 @@
-$eventmachine_library = :pure_ruby
+# $eventmachine_library = :pure_ruby
 require 'couchrest'
 require 'mq'
 require 'json'
-
-#@private
-module EventMachine
-	class Connection
-		def associate_callback_target(sig)
-		# For reasons unknown, this method was commented out
-		# in recent version of EM. We need it, though, for AMQP.
-		end
-	end
-  class << self
-    # This method has a bug in it in the official EM implementation.
-    # Apparently nobody cares about pure_em, because it hasn't been
-    # fixed in a very long time.
-    def add_oneshot_timer interval
-      Reactor.instance.install_oneshot_timer(interval / 1000.0)
-    end
-  end
-end
 
 module Wescontrol
 	# Device provides a DSL for describing devices of all kinds. Anything that
@@ -276,7 +258,7 @@ module Wescontrol
 							resp["error"] = error
 							@amq_responder.queue(req["queue"]).publish(resp.to_json)
 						end
-					elsif !feedback
+					elsif feedback == nil
 						@amq_responder.queue(req["queue"]).publish(resp.to_json)
 					else
 						resp["result"] = feedback

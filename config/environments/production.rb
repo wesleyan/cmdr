@@ -2,4 +2,4 @@
 # loaded afterwards and only in the production environment
 
 # Change the production log level to debug
-#config.log_level = :debug
+config.log_level = :info

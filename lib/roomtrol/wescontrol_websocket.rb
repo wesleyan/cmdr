@@ -139,7 +139,7 @@ module Wescontrol
     RESOURCES = ["projector", "volume", "source"]
     
     def initialize
-      @db = CouchRest.database(Wescontrol::DB_URI)
+      @db = CouchRest.database(DB_URI)
 
       @room = db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]
