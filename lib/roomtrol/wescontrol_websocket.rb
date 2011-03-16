@@ -89,7 +89,7 @@ module Wescontrol
   #     {
   #       "id": "D62F993B-E036-417C-948B-FEA389481512",
   #       "type": "command",
-  #       "device": "IREmitter",
+  #       "resource": "IREmitter",
   #       "name": "send_command",
   #       "args": ["play"]
   #     }
@@ -196,7 +196,9 @@ module Wescontrol
           end
         }
 
-        @mq.queue(EVENT_QUEUE).subscribe do |json|
+        topic = @mq.topic(EVENT_TOPIC)
+        @mq.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
+          puts "Got event: #{json}"
           handle_event json
         end
 
@@ -230,9 +232,9 @@ module Wescontrol
             send_update resource, msg['var'], msg['was'], msg['now']
             case resource
             when "projector"
-              @source_fsm.send("projector_to_#{msg['now']}")
+              @source_fsm.send("projector_to_#{msg['now']}") rescue nil
             when "switcher"
-              @source_fms.send("switcher_to_#{msg['now']}")
+              @source_fms.send("switcher_to_#{msg['now']}") rescue nil
             end
           end
         end
@@ -253,7 +255,7 @@ module Wescontrol
       def onopen ws
         @sid = @update_channel.subscribe { |msg|
           DaemonKit.logger.debug "State update: #{msg}"
-          ws.send update_msg
+          ws.send msg
         }
 
         init_message = {

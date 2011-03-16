@@ -696,9 +696,9 @@ b				raise "Must have type field" unless options[:type]
 			message[:update] = true
 			message[:severity] ||= 0.1
 			message[:time] ||= Time.now.to_i
-			@amq_responder.queue(EVENT_QUEUE).publish(
+			MQ.new.topic(EVENT_TOPIC).publish(
 				message.to_json,
-				:persistent => true
+        :key => "device.#{@name}"
 			) if @amq_responder
 		end
 		

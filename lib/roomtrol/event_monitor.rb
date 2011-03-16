@@ -14,8 +14,8 @@ module Wescontrol
 			buffer = {}
 			AMQP.start(:host => '127.0.0.1'){
 				db = CouchRest.database("http://localhost:5984/rooms")
-				amq = MQ.new
-				amq.queue(EVENT_QUEUE).subscribe do |json|
+        topic = MQ.new.topic(EVENT_TOPIC)
+				MQ.new.queue("roomtrol:event-monitor").bind(topic, :key => "*").subscribe do |json|
 					begin
 						msg = JSON.parse(json)
 						msg[:event] = true
