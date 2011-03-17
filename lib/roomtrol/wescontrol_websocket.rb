@@ -135,7 +135,7 @@ module Wescontrol
     # How long to wait for responses from the daemon
     TIMEOUT = 4.0
     # The resources that can be accessed
-    RESOURCES = ["projector", "volume", "source"]
+    RESOURCES = ["projector", "volume", "source", "ir_emitter"]
     
     def initialize
       @db = CouchRest.database("http://localhost:5984/rooms")
@@ -154,18 +154,19 @@ module Wescontrol
         map{|x| x['value']}
         
       @actions = @db.get('_design/wescontrol_web').
-        view('actions', {:key => @room['_id']})['rows']
+        view('actions', {:key => @room['_id']})['rows'].
+        map{|x| x['value']}
           
       @room_name = @room['attributes']['name']
       @projector = @room['attributes']['projector']
       @switcher = @room['attributes']['switcher']
-      @dvdplayer = @room['attributes']['dvdplayer']
+      @ir_emitter = @room['attributes']['dvdplayer']
       @volume = @room['attributes']['volume']
 
       @devices_by_id = {}
       {@projector => "projector",
         @switcher => "switcher",
-        @dvdplayer => "dvdplayer",
+        @ir_emitter => "ir_emitter",
         @volume => "volume"
       }.each do |k, v|
         puts k
@@ -369,6 +370,10 @@ module Wescontrol
 
       def handle_projector_set req, df
         daemon_set req['var'], req['value'], @projector, df
+      end
+
+      def handle_ir_emitter_get req, df
+        daemon_get req['var'], @ir_emitter, df
       end
 
       def handle_volume_get req, df
