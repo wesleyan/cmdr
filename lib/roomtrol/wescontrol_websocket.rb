@@ -264,7 +264,13 @@ module Wescontrol
           'type' => 'connection',
           'building' => @building,
           'room' => @room_name,
-          'sources' => @sources,
+          'sources' => @sources.map{|source|
+            {
+              :id => source['_id'],
+              :name => source['name'],
+              :icon => source['icon']
+            }
+          },
           'actions' => @actions
         }
 
@@ -280,7 +286,7 @@ module Wescontrol
           deferrable = EM::DefaultDeferrable.new
           deferrable.callback {|resp|
             resp['id'] = msg['id']
-            ws.send resp
+            ws.send resp.to_json
           }
           deferrable.timeout TIMEOUT
           
