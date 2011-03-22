@@ -4,18 +4,20 @@ require 'mq'
 require 'json'
 
 module Wescontrol
-	# Device provides a DSL for describing devices of all kinds. Anything that
-	# can be controlled by a computer--whether by IR, serial, ethernet, or laser
-	# pulse--can be described by this DSL. Furthermore, in order to be part of
-	# the Roomtrol system, a device _must_ be implemented as a Device. New devices
-	# are created by either subclassing Device directly or by subclassing one of
-	# its child classes, like RS232Device, Projector, or VideoSwitcher. If there
-	# exists a class like Projector which describes the category of devices
-	# that your device is pat of you should subclass it instead of Device directly.
-	# Doing so will give your projector the same basic interface as every other,
-	# making it easy to exchange for another. With Device, all of the details
-	# of communicating with the outside world and updating the database are taken
-	# care of for you, letting you focus on just implementing the device's features.
+	# Device provides a DSL for describing devices of all
+	# kinds. Anything that can be controlled by a computer--whether by
+	# IR, serial, ethernet, or laser pulse--can be described by this
+	# DSL. Furthermore, in order to be part of the Roomtrol system, a
+	# device _must_ be implemented as a Device. New devices are created
+	# by either subclassing Device directly or by subclassing one of its
+	# child classes, like RS232Device, Projector, or VideoSwitcher. If
+	# there exists a class like Projector which describes the category
+	# of devices that your device is pat of you should subclass it
+	# instead of Device directly.  Doing so will give your projector the
+	# same basic interface as every other, making it easy to exchange
+	# for another. With Device, all of the details of communicating with
+	# the outside world and updating the database are taken care of for
+	# you, letting you focus on just implementing the device's features.
 	# 
 	# #Device Variables
   #
@@ -41,40 +43,45 @@ module Wescontrol
 	# 
 	# 	state_var power, :type => :boolean
 	# 
-	# The type field is mandatory, but there are various other optional parameters
-	# which are described in the {Device::state_var} method definition.
+	# The type field is mandatory, but there are various other optional
+	# parameters which are described in the {Device::state_var} method
+	# definition.
 	# 
-	# However, not every action on a device fits into the state var paradigm,
-	# though you should try to use it if possible. For example, a camera may
-	# have a "zoom in" and "zoom out" feature, but no way to set the zoom level
-	# directly. In these cases, a command can be used instead. Calling a command
-	# sends a message to the device class but does not include any state
-	# information. To declare a command, the syntax below should be used:
+	# However, not every action on a device fits into the state var
+	# paradigm, though you should try to use it if possible. For
+	# example, a camera may have a "zoom in" and "zoom out" feature, but
+	# no way to set the zoom level directly. In these cases, a command
+	# can be used instead. Calling a command sends a message to the
+	# device class but does not include any state information. To
+	# declare a command, the syntax below should be used:
 	# 
 	# 	command zoom_in
 	# 
-	# In addition, you should create a method with the same name as the command
-	# (zoom_in in this case) which does the actual work of sending the command
-	# to the device. Command also has many options, which can be found in the 
-	# {Device::command} method definition.
+	# In addition, you should create a method with the same name as the
+	# command (zoom_in in this case) which does the actual work of
+	# sending the command to the device. Command also has many options,
+	# which can be found in the {Device::command} method definition.
 	# 
-	# Rounding out the trio of variable types, we have virtual_var. Virtual var is
-	# in some ways the opposite of command: instead of providing only control, it
-	# provides only information. More importantly, it is not set directly, but is
-	# computed from one or more other variables. The purpose of this is primarily
-	# to provide useful information for the web interface to display. For example,
-	# a projector may report the number of hours a lamp has been in use as well as
-	# the percentage of the lamp's life that is gone. However, the more useful metric
-	# for somebody evaluating when the lamp needs to be replaced is the number of
-	# hours that are left before the lamp dies. We can use simple algebra and a virtual
-	# var to compute this information:
+	# Rounding out the trio of variable types, we have
+	# virtual_var. Virtual var is in some ways the opposite of command:
+	# instead of providing only control, it provides only
+	# information. More importantly, it is not set directly, but is
+	# computed from one or more other variables. The purpose of this is
+	# primarily to provide useful information for the web interface to
+	# display. For example, a projector may report the number of hours a
+	# lamp has been in use as well as the percentage of the lamp's life
+	# that is gone. However, the more useful metric for somebody
+	# evaluating when the lamp needs to be replaced is the number of
+	# hours that are left before the lamp dies. We can use simple
+	# algebra and a virtual var to compute this information:
 	# 
 	# 	virtual_var :lamp_remaining, :type => :string, :depends_on => [:lamp_hours, :percent_lamp_used], :transformation => proc {
 	# 		"#{((lamp_hours/percent_lamp_used - lamp_hours)/(60*60.0)).round(1)} hours"
 	# 	}
 	# 
-	# Virtual vars are updated whenever the variables they depend on (which can be
-	# either state vars or other virtual vars) are updated.
+	# Virtual vars are updated whenever the variables they depend on
+	# (which can be either state vars or other virtual vars) are
+	# updated.
 	# 
 	# #Configuration
 	# Configuration is defined by a configure block, like this, from RS232Device:
@@ -135,9 +142,9 @@ module Wescontrol
 	# ##Messages
 	# There are three kinds of messages one can send to a device:
 	# 
-	# ###state_get
-	# To get information about the current state of a variable, send a state_get message, which looks 
-	# like the following:
+	# ###state_get To get information about the current state of a
+	# variable, send a state_get message, which looks like the
+	# following:
 	# 
 	# 	!!!json
 	# 	{
@@ -302,9 +309,10 @@ module Wescontrol
 					state_var(name, options.deep_dup)
 				end
 			} if self.instance_variable_get(:@state_vars)
-			
+
 			subclass.instance_variable_set(:@_configuration, @_configuration)
-						
+      subclass.instance_variable_set(:@_var_affects, @_var_affects)
+      
 			self.instance_variable_get(:@command_vars).each{|name, options|
 				subclass.class_eval do
 					command(name, options.deep_dup)
@@ -352,26 +360,34 @@ module Wescontrol
 			end
 		end
 		
-		# Starts a configuration block, wherein you can define config vars. Inside of the block 
-		# should be lines describing the configuration of the device. There are two kinds of 
-		# config variables you can define: user defined and system defined. User defined 
-		# config vars are intended to be set by the user in the web interface, whereas system
-		# defined config variables are given a value when created and cannot be modified by the
-		# user. This should be used for defining things that are intrinsic to the device, like
-		# RS232 connection parameters (i.e., data bits, stop bits, parity). Defining a system
-		# defined config variable is very simple: all it takes is the name and the value, on the
-		# same line. A user defined config variable has two options, which are given as parameters:
-		# the type and an optional default value. The type parameter is a hint to the web interface
-		# about what kind of control to show and what kind of validation to do on the input. For
-		# example, setting a type of :port will display a drop-down of the serial ports defined for
-		# the system. A type of :integer will display a text box whose input is restricted to
-		# numbers. Other possibilities are :password, :string, :decimal, :boolean and :percentage. If
-		# you supply a type that is not defined in the system, a simple text box will be used.
+		# Starts a configuration block, wherein you can define config
+		# vars. Inside of the block should be lines describing the
+		# configuration of the device. There are two kinds of config
+		# variables you can define: user defined and system defined. User
+		# defined config vars are intended to be set by the user in the
+		# web interface, whereas system defined config variables are given
+		# a value when created and cannot be modified by the user. This
+		# should be used for defining things that are intrinsic to the
+		# device, like RS232 connection parameters (i.e., data bits, stop
+		# bits, parity). Defining a system defined config variable is very
+		# simple: all it takes is the name and the value, on the same
+		# line. A user defined config variable has two options, which are
+		# given as parameters: the type and an optional default value. The
+		# type parameter is a hint to the web interface about what kind of
+		# control to show and what kind of validation to do on the
+		# input. For example, setting a type of :port will display a
+		# drop-down of the serial ports defined for the system. A type of
+		# :integer will display a text box whose input is restricted to
+		# numbers. Other possibilities are :password, :string, :decimal,
+		# :boolean and :percentage. If you supply a type that is not
+		# defined in the system, a simple text box will be used.
 		# 
-		# You can add whatever configuration variables you need, though they should be named using 
-		# lowercase letters connected\_by\_underscores. Configuration information is accessible through the
-		# {Device#configuration} method, which returns a hash mapping between a symbol of the name
-		# to the value.
+		# You can add whatever configuration variables you need, though
+		# they should be named using lowercase letters
+		# connected\_by\_underscores. Configuration information is
+		# accessible through the {Device#configuration} method, which
+		# returns a hash mapping between a symbol of the name to the
+		# value.
 		# 
 		# @example
 		# 	configure do
@@ -391,10 +407,15 @@ module Wescontrol
 			@config_vars = @config_vars.merge ch.config_vars
 		end
 		
-		# @return [Hash{Symbol => Hash}] A map from state var name to a hash containing
-		# 	information about the state var, as passed in to state_var when the var was
-		# 	created.
+		# @return [Hash{Symbol => Hash}] A map from state var name to a
+		# 	hash containing information about the state var, as passed in
+		# 	to state_var when the var was created.
 		def self.state_vars; @state_vars; end
+
+    # @return [Hash{Symbol => Array[Symbol]}] A map from a state var
+    # name to the list of virtual variables which depend on that state
+    # var's value.
+    def self.var_affects; @_var_affects; end
 		
 		# This method, when called in a class definition, defines a new
 		# state variable for the device class. State vars are--as their
@@ -427,25 +448,30 @@ module Wescontrol
     #   the general naming conventions: all lowercase, with multiple
     #   words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the state_var
-		# @option options [Symbol] :type [mandatory] the type of the variable; this is
-		# 	used by the web interface to decide what kind of interface to show. Possible
-		# 	values are :boolean, :string, :percentage, :number, :decimal, :option, and
-		# 	:array.
-		# @option options [Boolean] :editable (true) whether or not this variable can be set
-		# 	by the user.
-		# @option options [Integer] :display_order Used by the web interface to decide which
-		# 	variables are visible and in which order they are displayed. For a particular
-		# 	device, the var with the lowest :display_order is ranked highest, followed by
-		# 	the next lowest up to 6. Leave out if the variable should not be shown.
-		# @option options [Array<#to_json>] :options If :option is selected for type, the
-		# 	elements in this array serve as the allowable options.
-		# @option options [Proc] :action If a proc is supplied to :action, then state_var
-		# 	will automatically create a set_varname method (where varname is the name of
-		# 	the state variable) which executes the code provided. The difference between the
-		# 	set_varname method and `#varname=` method is this: the former is used to actually
-		# 	change the state of the device (i.e., it sends a command to the device that ideally
-		# 	results in it entering the desired state) whereas the latter informs roomtrol
-		# 	the actual state of the device.
+		# @option options [Symbol] :type [mandatory] the type of the
+		# 	variable; this is used by the web interface to decide what
+		# 	kind of interface to show. Possible values are :boolean,
+		# 	:string, :percentage, :number, :decimal, :option, and :array.
+		# @option options [Boolean] :editable (true) whether or not this
+		# 	variable can be set by the user.
+		# @option options [Integer] :display_order Used by the web
+		# 	interface to decide which variables are visible and in which
+		# 	order they are displayed. For a particular device, the var
+		# 	with the lowest :display_order is ranked highest, followed by
+		# 	the next lowest up to 6. Leave out if the variable should not
+		# 	be shown.
+		# @option options [Array<#to_json>] :options If :option is
+		# 	selected for type, the elements in this array serve as the
+		# 	allowable options.
+		# @option options [Proc] :action If a proc is supplied to :action,
+		# 	then state_var will automatically create a set_varname method
+		# 	(where varname is the name of the state variable) which
+		# 	executes the code provided. The difference between the
+		# 	set_varname method and `#varname=` method is this: the former
+		# 	is used to actually change the state of the device (i.e., it
+		# 	sends a command to the device that ideally results in it
+		# 	entering the desired state) whereas the latter informs
+		# 	roomtrol the actual state of the device.
 		# @example
 		# 	state_var :input, 
 		# 		:type => :option, 
@@ -460,6 +486,7 @@ module Wescontrol
 b				raise "Must have type field" unless options[:type]
 				@state_vars ||= {}
 				@state_vars[sym] = options
+        @_var_affects ||= {}
 			end
 			
 			self.instance_eval do
@@ -467,6 +494,10 @@ b				raise "Must have type field" unless options[:type]
 				define_method("state_vars") do
 					all_state_vars
 				end
+        all_var_affects = @_var_affects
+        define_method("var_affects") do
+          all_var_affects
+        end
 			end
 			
 			self.class_eval %{
@@ -475,8 +506,9 @@ b				raise "Must have type field" unless options[:type]
 						old_val = @#{sym}
 						@#{sym} = val
 						DaemonKit.logger.debug sprintf("%-10s = %s\n", "#{sym}", val.to_s)
-						if virtuals = self.state_vars[:#{sym}][:affects]
-							virtuals.each{|var|
+						if virtuals = self.var_affects[:#{sym}]
+              virtuals.each{|var|
+                DaemonKit.logger.debug "Doing transform on \#{var}"
 								begin
 									transformation = self.instance_eval &state_vars[var][:transformation]
 									self.send("\#{var}=", transformation)
@@ -509,29 +541,39 @@ b				raise "Must have type field" unless options[:type]
 			end
 		end
 		
-		# This method, when called in a class definition, creates a new virtual variable. A virtual
-		# variable is one that cannot be set directly, but which is composed automatically from one
-		# or more other variables (either virtual or not). The purpose of this is primarily
-		# to provide useful information for the web interface to display. For example,
-		# a projector may report the number of hours a lamp has been in use as well as
-		# the percentage of the lamp's life that is gone. However, the more useful metric
-		# for somebody evaluating when the lamp needs to be replaced is the number of
-		# hours that are left before the lamp dies. We can use simple algebra and a virtual
-		# var to compute this information, as seen in the example. Virtual vars are updated whenever 
-		# the variables they depend on either state vars or other virtual vars) are updated.
-		# @param [Symbol] name The name for the virtual var. Should follow the general
-		# 	naming convention: all lowercase, with multiple words connected\_by\_underscores.
+		# This method, when called in a class definition, creates a new
+		# virtual variable. A virtual variable is one that cannot be set
+		# directly, but which is composed automatically from one or more
+		# other variables (either virtual or not). The purpose of this is
+		# primarily to provide useful information for the web interface to
+		# display. For example, a projector may report the number of hours
+		# a lamp has been in use as well as the percentage of the lamp's
+		# life that is gone. However, the more useful metric for somebody
+		# evaluating when the lamp needs to be replaced is the number of
+		# hours that are left before the lamp dies. We can use simple
+		# algebra and a virtual var to compute this information, as seen
+		# in the example. Virtual vars are updated whenever the variables
+		# they depend on either state vars or other virtual vars) are
+		# updated.
+    # @param [Symbol] name The name for the virtual var. Should follow
+		# 	the general naming convention: all lowercase, with multiple
+		# 	words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the virtual var
-		# @option options [Array<Symbol>] :depends_on [mandatory] An array of the variables' names that
-		# 	this one depends on. Note that these must have been defined already.
-		# @option options [Proc] :transformation [mandatory] A proc with arity 0 which is run in the context
-		# 	of the device instance (which means you have access to instance variables and methods). This proc
-		# 	will be called whenever one of the constituent variables changes, and should return the new value
+		# @option options [Array<Symbol>] :depends_on [mandatory] An array
+		#   of the variables' names that this one depends on. Note that
+		#   these must have been defined already.
+		# @option options [Proc] :transformation [mandatory] A proc with
+		# 	arity 0 which is run in the context of the device instance
+		# 	(which means you have access to instance variables and
+		# 	methods). This proc will be called whenever one of the
+		# 	constituent variables changes, and should return the new value
 		# 	of the virtual variable.
-		# @option options [Integer] :display_order Used by the web interface to decide which
-		# 	variables are visible and in which order they are displayed. For a particular
-		# 	device, the var with the lowest :display_order is ranked highest, followed by
-		# 	the next lowest up to 6. Leave out if the variable should not be shown.
+		# @option options [Integer] :display_order Used by the web
+		# 	interface to decide which variables are visible and in which
+		# 	order they are displayed. For a particular device, the var
+		# 	with the lowest :display_order is ranked highest, followed by
+		# 	the next lowest up to 6. Leave out if the variable should not
+		# 	be shown.
 		# @example
 		# 	virtual_var :lamp_remaining, :type => :string, :depends_on => [:lamp_hours, :percent_lamp_used], :transformation => proc {
 		# 		"#{((lamp_hours/percent_lamp_used - lamp_hours)/(60*60.0)).round(1)} hours"
@@ -541,12 +583,12 @@ b				raise "Must have type field" unless options[:type]
 			raise "must have :transformation field" unless options[:transformation].class == Proc
 			options[:editable] = false
 			self.state_var(name, options)
-			options[:depends_on].each{|var|
-				if @state_vars[var]
-					@state_vars[var][:affects] ||= []
-					@state_vars[var][:affects] << name
-				end
-			}
+      self.class_eval do
+        options[:depends_on].each{|var|
+          @_var_affects[var] ||= []
+          @_var_affects[var] << name
+        }
+      end
 		end
 		
 		# @return [Hash{Symbol => Object}] A map from command name to options
@@ -555,27 +597,36 @@ b				raise "Must have type field" unless options[:type]
 		# @return [Hash{Symbol => Object}] A map from command name to options
 		def commands; self.class.commands; end
 		
-		# This method, when called in a class definition, creates a new command for the device.
-		# Commands are used for things that need to be controlled directly, rather than by
-		# changing an associated state. For example, a camera may have a "zoom in" and "zoom out"
-		# feature but no command for setting the zoom level directly. However, for situation
-		# where the command is changing an obverable state, like with on/off, a state var should
-		# be used instead. In addition to calling `command`, you should create a method with the
-		# same name as the command--this will be called when the command is activated by the user.
-		# Alternatively, you can pass in a proc to :action which will create this method
+		# This method, when called in a class definition, creates a new
+		# command for the device.  Commands are used for things that need
+		# to be controlled directly, rather than by changing an associated
+		# state. For example, a camera may have a "zoom in" and "zoom out"
+		# feature but no command for setting the zoom level
+		# directly. However, for situation where the command is changing
+		# an obverable state, like with on/off, a state var should be used
+		# instead. In addition to calling `command`, you should create a
+		# method with the same name as the command--this will be called
+		# when the command is activated by the user.  Alternatively, you
+		# can pass in a proc to :action which will create this method
 		# automatically.
-		# @param [Symbol] name The name for the device. Should follow the general nameing convention:
-		# 	all lowercase, with multiple words connected\_by\_underscores.
+    # @param [Symbol] name The name for the device. Should follow the
+		# 	general nameing convention: all lowercase, with multiple words
+		# 	connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the command
-		# @option options [Symbol, Array<Symbol>] type The type of the argument. If only one argument,
-		# 	supply it directly; if multiple, supply an array of types. These types are used by the
-		# 	web interface to determine what kind of interface to display. Possible values are :boolean,
-		# 	:string, :percentage, :number, :decimal, and :option
-		# @option options [Array<#to_json>] options If :option is selected for type, the elements in 
-		# 	this array serve as the allowable options.
-		# @option options [Proc] action If a proc is supplied to action, then `command` will automatically
-		# 	create a method with the same name as supplied; this method will be called whenever a user
-		# 	triggers the command, so it should communicate with the device and take the desired action.
+		# @option options [Symbol, Array<Symbol>] type The type of the
+		# 	argument. If only one argument, supply it directly; if
+		# 	multiple, supply an array of types. These types are used by
+		# 	the web interface to determine what kind of interface to
+		# 	display. Possible values are :boolean, :string, :percentage,
+		# 	:number, :decimal, and :option
+		# @option options [Array<#to_json>] options If :option is selected
+		# 	for type, the elements in this array serve as the allowable
+		# 	options.
+		# @option options [Proc] action If a proc is supplied to action,
+		# 	then `command` will automatically create a method with the
+		# 	same name as supplied; this method will be called whenever a
+		# 	user triggers the command, so it should communicate with the
+		# 	device and take the desired action.
 		# @example
 		# 	command :zoom_in, :type => :percentage, :action => proc{|speed|
 		# 		send "zoom +#{speed}"
@@ -594,9 +645,9 @@ b				raise "Must have type field" unless options[:type]
 			"<#{self.class.to_s}:0x#{object_id.to_s(16)}>"
 		end
 		
-		# @return [Hash] A hash which, when converted to_json, is the CouchDB representation
-		# 	of the device. Includes all information neccessary to recreate the device on the
-		# 	next restart.
+		# @return [Hash] A hash which, when converted to_json, is the
+		# 	CouchDB representation of the device. Includes all information
+		# 	neccessary to recreate the device on the next restart.
 		def to_couch
 			DaemonKit.logger.debug "Configuration: #{configuration}"
 			hash = {:state_vars => {}, :config => configuration, :commands => {}, :name => @name}
@@ -668,14 +719,18 @@ b				raise "Must have type field" unless options[:type]
 		end
 		
 		# Registers an error, which involves sending it as an event
-		# @param [Symbol] name A symbol which uniquely identifies this error. Should
-		# 	be underscore-separated and should make sense in the context of an activity feed:
-		# 	for example, :projector_failed_to_turn_on, :printer_out_of_ink, :computer_unreachable
-		# @param [String] description A longer description of the error, for example "Printer
-		# 	PACLab_4200 has only 3% of its black ink remaining."
-		# @param [Float] severity A float between 0 and 1 which indicates the severity of the 
-		# 	error. Normal events are given a severity of 0.1, so should probably be in excess
-		# 	of that if not completely routine.
+		# @param [Symbol] name A symbol which uniquely identifies this
+		# 	error. Should be underscore-separated and should make sense in
+		# 	the context of an activity feed: for example,
+		# 	:projector_failed_to_turn_on, :printer_out_of_ink,
+		# 	:computer_unreachable
+		# @param [String] description A longer description of the error,
+		# 	for example "Printer PACLab_4200 has only 3% of its black ink
+		# 	remaining."
+		# @param [Float] severity A float between 0 and 1 which indicates
+		# 	the severity of the error. Normal events are given a severity
+		# 	of 0.1, so should probably be in excess of that if not
+		# 	completely routine.
 		def register_error name, description, severity = 0.3
 			message = {
 				:error => true,
@@ -735,16 +790,19 @@ b				raise "Must have type field" unless options[:type]
 			end
 		end
 		
-		# @return [EventMachine::Deferrable] A deferrable which is notified when a state var
-		# 	changes. Look at the EventMachine documentation for more information about deferrables,
+		# @return [EventMachine::Deferrable] A deferrable which is
+		# 	notified when a state var changes. Look at the EventMachine
+		# 	documentation for more information about deferrables,
 		def register_for_changes
 			@change_deferrable ||= EM::DefaultDeferrable.new
 			@change_deferrable
 		end
 		
-		# Takes in a block which is specified as the callback for the deferrable returned by
-		# {Device#register_for_changes} automatically whenever a state var changes. Thus, the
-		# code in the block will be run every time a change occurs, rather than just once.
+		# Takes in a block which is specified as the callback for the
+		# deferrable returned by {Device#register_for_changes}
+		# automatically whenever a state var changes. Thus, the code in
+		# the block will be run every time a change occurs, rather than
+		# just once.
 		def auto_register_for_changes(&block)
 			@auto_register ||= []
 			@auto_register << block
@@ -756,8 +814,9 @@ end
 # @private
 class Object
 	# @private
-	# These methods dup all objects inside the hash/array as well as the data structure itself
-	# However, because we don't check for cycles, they will cause an infinite loop if present.
+	# These methods dup all objects inside the hash/array as well as the
+	# data structure itself However, because we don't check for cycles,
+	# they will cause an infinite loop if present.
 	def deep_dup
 		begin
       if self.is_a? Symbol or self.is_a? TrueClass or self.is_a? FalseClass
@@ -789,8 +848,9 @@ class Hash
 		t
 	end
 	# @private
-	# These methods dup all objects inside the hash/array as well as the data structure itself
-	# However, because we don't check for cycles, they will cause an infinite loop if present.
+	# These methods dup all objects inside the hash/array as well as the
+	# data structure itself However, because we don't check for cycles,
+	# they will cause an infinite loop if present.
 	def deep_dup
 		new_hash = {}
 		self.each{|k, v| new_hash[k] = v.deep_dup}
@@ -801,8 +861,9 @@ end
 # @private
 class Array
 	# @private
-	# These methods dup all objects inside the hash/array as well as the data structure itself
-	# However, because we don't check for cycles, they will cause an infinite loop if present.
+	# These methods dup all objects inside the hash/array as well as the
+	# data structure itself However, because we don't check for cycles,
+	# they will cause an infinite loop if present.
 	def deep_dup
 		self.collect{|x| x.deep_dup}
 	end

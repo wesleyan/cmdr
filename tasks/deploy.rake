@@ -1,6 +1,6 @@
 require 'json'
 
-PUBLIC_KEY = false #Are we using public key authentication on all the servers?
+PUBLIC_KEY = true #Are we using public key authentication on all the servers?
 
 WORKING = File.dirname(__FILE__) + '/..'
 
@@ -125,14 +125,14 @@ task :deploy_test, :needs => [:collect_password] do
 				"echo 'Unzipped zip file'",
 				"echo 'Updated roomtrol' | wall",
 				"rvm 1.9.2",
-				"echo 'Switched to rvm'",
-				"echo '#{OPTS[:password]}' | rvmsudo -S bundle install"
+				"echo 'Switched to rvm'"
+#				"echo '#{OPTS[:password]}' | rvmsudo -S bundle install"
 			]
 		  
 			puts ssh.exec!(commands.join("; "))
 			
 			puts "Restarting daemon"
-			puts ssh.exec!("echo '#{OPTS[:password]}' | sudo -S restart roomtrol-daemon")
+#			puts ssh.exec!("echo '#{OPTS[:password]}' | sudo -S restart roomtrol-daemon")
 			
 		end
 		puts "\tInstallation finished on #{controller}"

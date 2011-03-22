@@ -164,6 +164,7 @@ module Wescontrol
       @volume = @room['attributes']['volume']
 
       @devices_by_id = {}
+      @devices_by_resource = {}
       {@projector => "projector",
         @switcher => "switcher",
         @ir_emitter => "ir_emitter",
@@ -172,6 +173,7 @@ module Wescontrol
         puts k
         d = @devices.find {|d| d['attributes']['name'] == k}
         @devices_by_id[d['_id']] = v if d
+        @devices_by_resource[v] = k
       end
 
       @source_fsm = make_state_machine(@sources).new(self)
@@ -199,7 +201,7 @@ module Wescontrol
 
         topic = @mq.topic(EVENT_TOPIC)
         @mq.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
-          puts "Got event: #{json}"
+          DaemonKit.logger.debug "Got event: #{json}"
           handle_event json
         end
 
@@ -228,7 +230,7 @@ module Wescontrol
       def handle_event json
         msg = JSON.parse(json)
         if msg['state_update'] && msg['var'] && msg['now'] && msg['device']
-          resource = @devices_by_id[msg['device']]
+          resource = @devices_by_resource[msg['device']]
           if resource
             send_update resource, msg['var'], msg['was'], msg['now']
             case resource
@@ -281,7 +283,7 @@ module Wescontrol
         begin
           msg = JSON.parse(json)
 
-          puts "Got message: #{msg.inspect}"
+          DaemonKit.logger.debug "Got message: #{msg.inspect}"
 
           deferrable = EM::DefaultDeferrable.new
           deferrable.callback {|resp|
