@@ -132,6 +132,8 @@ module Wescontrol
   #      "new": "off"
   #    }
   class RoomtrolWebsocket
+    attr_reader :projector, :switcher
+    
     # How long to wait for responses from the daemon
     TIMEOUT = 4.0
     # The resources that can be accessed
@@ -176,7 +178,8 @@ module Wescontrol
         @devices_by_resource[v] = k
       end
 
-      @source_fsm = make_state_machine(@sources).new(self)
+      #proj = (@devices.find {|d| d['attributes']['name'] == k})['attributes'][
+      @source_fsm = make_state_machine(self, @sources).new
     end
 
     # Starts the websockets server. This is a blocking call if run
@@ -358,6 +361,7 @@ module Wescontrol
       end
 
       def set_projector_state state, df = EM::DefaultDeferrable
+        DaemonKit.logger.debug "Setting proj input to #{state}"
         daemon_set :input, state, @projector, df
       end
 
@@ -397,44 +401,42 @@ module Wescontrol
       end
 
       def handle_source_set req, df
-        @source_fsm.source = req['value']
+        DaemonKit.logger.debug "setting source: #{req.inspect}"
+        @source_fsm.send "select_#{req['value']}"
         df.succeed({:ack => true})
       end
     end
     
-    def make_state_machine sources
+    def make_state_machine parent, sources, initial
       klass = Class.new
       klass.class_eval do
-        def initialize parent
-          @parent = parent
-          super
-        end
-
-        state_machine :source do
+        state_machine :source, :initial => initial do
           after_transition any => any do |fsm, transition|
-            @parent.send_update :source, nil, transition.from, transition.to 
+            parent.send_update :source, :source, transition.from, transition.to 
           end
           sources.each do |source|
             this_state = source['name'].to_sym
+            event "select_#{this_state}".to_sym do
+              transition all => this_state
+            end
             if p = source['input']['projector']
-              if !@switcher
+              if !source['input']['switcher']
                 event "projector_to_#{p}".to_sym do
                   transition all => this_state
                 end
               end
               after_transition any => this_state do
-                @parent.set_projector_state p
+                DaemonKit.logger.debug "Transitioned to #{this_state}"
+                parent.set_projector_state p
               end
             end
             if s = source['input']['switcher']
-              if @switcher
-                event "switcher_to_#{s}" do
-                  transition all => this_state
-                  @parent.set_projector_state p if p = source['input']['project']
-                end
+              event "switcher_to_#{s}" do
+                transition all => this_state
+                parent.set_projector_state p if p = source['input']['project']
               end
               after_transition any => this_state do
-                @parent.set_switcher_state s
+                parent.set_switcher_state s
               end
             end
           end
