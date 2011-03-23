@@ -167,6 +167,7 @@ module Wescontrol
 
       @devices_by_id = {}
       @devices_by_resource = {}
+      @device_record_by_resource = {}
       {@projector => "projector",
         @switcher => "switcher",
         @ir_emitter => "ir_emitter",
@@ -176,10 +177,20 @@ module Wescontrol
         d = @devices.find {|d| d['attributes']['name'] == k}
         @devices_by_id[d['_id']] = v if d
         @devices_by_resource[v] = k
+        @device_record_by_resource[v] = d
       end
 
-      #proj = (@devices.find {|d| d['attributes']['name'] == k})['attributes'][
-      @source_fsm = make_state_machine(self, @sources).new
+      # get the initial source
+      proj = @device_record_by_resource['projector']
+      switch = @device_record_by_resource['switcher']
+
+      p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
+      s_input = switch['attributes']['state_vars']['input']['state'] rescue nil
+      p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
+      s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
+
+      initial_source = (s_src || p_src || @sources[0]).to_sym
+      @source_fsm = make_state_machine(self, @sources, initial_source).new
     end
 
     # Starts the websockets server. This is a blocking call if run
@@ -341,7 +352,7 @@ module Wescontrol
         defer_device_operation device_req, device, df
       end
 
-      def daemon_set var, value, device, df
+      def daemon_set var, value, device, df = EM::DefaultDeferrable.new
         device_req = {
           :id => UUIDTools::UUID.random_create.to_s,
           :queue => @queue_name,
@@ -360,12 +371,12 @@ module Wescontrol
         defer_device_operation device_req, device, deferrable
       end
 
-      def set_projector_state state, df = EM::DefaultDeferrable
+      def set_projector_state state, df = EM::DefaultDeferrable.new
         DaemonKit.logger.debug "Setting proj input to #{state}"
         daemon_set :input, state, @projector, df
       end
 
-      def set_switcher_state state, df = EM::DefaultDeferrable
+      def set_switcher_state state, df = EM::DefaultDeferrable.new
         daemon_set :input, state, @switcher, df
       end
       
@@ -419,24 +430,24 @@ module Wescontrol
             event "select_#{this_state}".to_sym do
               transition all => this_state
             end
-            if p = source['input']['projector']
+            if @p = source['input']['projector']
               if !source['input']['switcher']
-                event "projector_to_#{p}".to_sym do
+                event "projector_to_#{@p}".to_sym do
                   transition all => this_state
                 end
               end
               after_transition any => this_state do
-                DaemonKit.logger.debug "Transitioned to #{this_state}"
-                parent.set_projector_state p
+                DaemonKit.logger.debug "Transitioned to #{this_state}, and #{@p.inspect}"
+                parent.set_projector_state @p
               end
             end
-            if s = source['input']['switcher']
-              event "switcher_to_#{s}" do
+            if @s = source['input']['switcher']
+              event "switcher_to_#{@s}" do
                 transition all => this_state
-                parent.set_projector_state p if p = source['input']['project']
+                parent.set_projector_state @p if @p
               end
               after_transition any => this_state do
-                parent.set_switcher_state s
+                parent.set_switcher_state @s
               end
             end
           end
