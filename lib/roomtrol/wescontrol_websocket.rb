@@ -272,7 +272,7 @@ module Wescontrol
       def onopen ws
         @sid = @update_channel.subscribe { |msg|
           DaemonKit.logger.debug "State update: #{msg}"
-          ws.send msg
+          ws.send msg.to_json
         }
 
         init_message = {
