@@ -222,7 +222,7 @@ module Wescontrol
         EM::WebSocket.start({
                               :host => "0.0.0.0",
                               :port => 8000,
-                              :debug => true
+                              :debug => false
                               #:secure => true  
                             }) do |ws|
 
@@ -244,7 +244,7 @@ module Wescontrol
       def handle_event json
         msg = JSON.parse(json)
         if msg['state_update'] && msg['var'] && msg['now'] && msg['device']
-          resource = @devices_by_resource[msg['device']]
+          resource = @devices_by_id[msg['device']]
           if resource
             send_update resource, msg['var'], msg['was'], msg['now']
             case resource

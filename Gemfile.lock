@@ -19,6 +19,8 @@ GEM
       eventmachine (>= 0.12.9)
     eventmachine (0.12.10)
     eventmachine_httpserver (0.2.0)
+    ffi (1.0.7)
+      rake (>= 0.8.7)
     git (1.2.5)
     highline (1.6.1)
     hoe (2.6.2)
@@ -28,11 +30,16 @@ GEM
     json_pure (1.4.6)
     macaddr (1.0.0)
     mime-types (1.16)
+    msgpack (0.4.4)
     net-scp (1.0.4)
       net-ssh (>= 1.99.1)
     net-ssh (2.0.23)
     rack (1.2.1)
     rake (0.8.7)
+    rbtrace (0.3.13)
+      ffi (>= 1.0.6)
+      msgpack (>= 0.4.3)
+      trollop (>= 1.16.2)
     rest-client (1.6.1)
       mime-types (>= 1.16)
     rspec (2.1.0)
@@ -52,6 +59,7 @@ GEM
       tilt (~> 1.1)
     state_machine (0.9.4)
     tilt (1.1)
+    trollop (1.16.2)
     uuidtools (2.1.1)
     wol (0.4.0)
     yard (0.6.1)
@@ -75,6 +83,7 @@ DEPENDENCIES
   net-scp
   net-ssh
   rake
+  rbtrace
   rspec
   rubybits
   serialport
