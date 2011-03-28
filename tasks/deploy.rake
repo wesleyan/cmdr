@@ -59,19 +59,6 @@ def deploy servers
 			puts "Installing gems on server"
 			path = "/var/roomtrol-daemon"
 			commands = [
-<<<<<<< HEAD
-				"cd #{path}",
-				"rm -Rf *",
-				"mv /tmp/roomtrol-daemon.zip .",
-				"unzip roomtrol-daemon.zip",
-				"rm roomtrol-daemon.zip",
-				"echo 'Unzipped zip file'",
-				"echo 'Updated roomtrol' | wall",
-				"rvm 1.9.2",
-				"echo 'Switched to rvm'"
-#				"echo '#{OPTS[:password]}' | rvmsudo -S bundle install"
-			]
-=======
                   "cd #{path}",
                   "rm -Rf *",
                   "mv /tmp/roomtrol-daemon.zip .",
@@ -83,16 +70,11 @@ def deploy servers
                   "rvmsudo bundle install",
                   "echo 'Updated roomtrol' | wall",
                  ]
->>>>>>> feature/better_deploy
 		  
 			puts ssh.exec!(commands.join("; "))
 			
 			puts "Restarting daemon"
-<<<<<<< HEAD
-#			puts ssh.exec!("echo '#{OPTS[:password]}' | sudo -S restart roomtrol-daemon")
-=======
 			puts ssh.exec!("sudo restart roomtrol-daemon")
->>>>>>> feature/better_deploy
 			
 		end
 		puts "\tInstallation finished on #{controller}"
