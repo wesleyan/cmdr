@@ -132,12 +132,20 @@ module Wescontrol
   #      "new": "off"
   #    }
   class RoomtrolWebsocket
-    attr_reader :projector, :switcher
+    attr_reader :devices
     
     # How long to wait for responses from the daemon
     TIMEOUT = 4.0
+    # The resource names for devices
+    DEVICES = {
+      "projector"  => ["state", "video_mute"],
+      "volume"     => ["level", "mute"],
+      "ir_emitter" => [],
+      "pc"         => ["state"],
+      "mac"        => []
+    }
     # The resources that can be accessed
-    RESOURCES = ["projector", "volume", "source", "ir_emitter"]
+    RESOURCES = DEVICES.merge({"source" => ["source"]})
     
     def initialize
       @db = CouchRest.database("http://localhost:5984/rooms")
@@ -145,7 +153,7 @@ module Wescontrol
       @room = @db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]['value']
 
-      @devices = @db.get('_design/room').
+      devices = @db.get('_design/room').
         view('devices_for_room', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
 
@@ -160,24 +168,19 @@ module Wescontrol
         map{|x| x['value']}
           
       @room_name = @room['attributes']['name']
-      @projector = @room['attributes']['projector']
-      @switcher = @room['attributes']['switcher']
-      @ir_emitter = @room['attributes']['dvdplayer']
-      @volume = @room['attributes']['volume']
 
+      @devices = {}
+      
+      DEVICES.each do |r, _|
+        @devices[r] = @room['attributes'][r]
+      end
+      
       @devices_by_id = {}
-      @devices_by_resource = {}
       @device_record_by_resource = {}
-      {@projector => "projector",
-        @switcher => "switcher",
-        @ir_emitter => "ir_emitter",
-        @volume => "volume"
-      }.each do |k, v|
-        puts k
-        d = @devices.find {|d| d['attributes']['name'] == k}
-        @devices_by_id[d['_id']] = v if d
-        @devices_by_resource[v] = k
-        @device_record_by_resource[v] = d
+      @devices.each do |k, v|
+        d = devices.find {|d| d['attributes']['name'] == v}
+        @devices_by_id[d['_id']] = k if d
+        @device_record_by_resource[k] = d
       end
 
       # get the initial source
@@ -247,10 +250,10 @@ module Wescontrol
           resource = @devices_by_id[msg['device']]
           if resource
             send_update resource, msg['var'], msg['was'], msg['now']
-            case resource
-            when "projector"
+            case [resource, msg['var']]
+            when ["projector", "input"]
               @source_fsm.send("projector_to_#{msg['now']}") rescue nil
-            when "switcher"
+            when ["switcher", "input"]
               @source_fms.send("switcher_to_#{msg['now']}") rescue nil
             end
           end
@@ -307,8 +310,8 @@ module Wescontrol
           deferrable.timeout TIMEOUT
           
           case msg['type']
-          when "state_get" then state_get msg, deferrable
-          when "state_set" then state_set msg, deferrable
+          when "state_get" then state_action msg, deferrable, :get
+          when "state_set" then state_action msg, deferrable, :set
           when "command" then command msg, deferrable
           else df.deferrable.succeed({:error => "Invalid message type"})
           end
@@ -317,18 +320,12 @@ module Wescontrol
           DaemonKit.logger.debug "Invalid JSON message from #{ws.signature}: #{json}"
         end
       end
-      
-      def state_get req, df
-        state_action req, df, "get"
-      end
-
-      def state_set req, df
-        state_action req, df, "set"
-      end
-      
+            
       def state_action req, df, action
-        if RESOURCES.include? req['resource']
-          self.send "handle_#{req['resource']}_#{action}", req, df
+        if DEVICES.include? req['resource']
+          self.send "handle_device_#{action}", req, df
+        elsif req['resource'] == "source"
+          self.send "handle_source_#{action}", req, df
         else
           df.succeed({:error => "Invalid resource"})
         end
@@ -371,13 +368,9 @@ module Wescontrol
         defer_device_operation device_req, device, deferrable
       end
 
-      def set_projector_state state, df = EM::DefaultDeferrable.new
+      def set_device_state device, state, df = EM::DefaultDeferrable.new
         DaemonKit.logger.debug "Setting proj input to #{state}"
-        daemon_set :input, state, @projector, df
-      end
-
-      def set_switcher_state state, df = EM::DefaultDeferrable.new
-        daemon_set :input, state, @switcher, df
+        daemon_set :input, state, device, df
       end
       
       def defer_device_operation device_req, device, df        
@@ -387,24 +380,12 @@ module Wescontrol
 
       ##################### Client code ####################
 
-      def handle_projector_get req, df
-        daemon_get req['var'], @projector, df
+      def handle_device_get req, df
+        daemon_get req['var'], @devices[req['resource']], df
       end
 
-      def handle_projector_set req, df
-        daemon_set req['var'], req['value'], @projector, df
-      end
-
-      def handle_ir_emitter_get req, df
-        daemon_get req['var'], @ir_emitter, df
-      end
-
-      def handle_volume_get req, df
-        daemon_get req['var'], @volume, df
-      end
-
-      def handle_volume_set req, df
-        daemon_set req['var'], req['value'], @volume, df
+      def handle_device_set req, df
+        daemon_set req['var'], req['value'], @devices[req['resource']], df
       end
       
       def handle_source_get req, df
@@ -438,16 +419,16 @@ module Wescontrol
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "Transitioned to #{this_state}, and #{@p.inspect}"
-                parent.set_projector_state @p
+                parent.set_device_state parent.devices["projector"], @p
               end
             end
             if @s = source['input']['switcher']
               event "switcher_to_#{@s}" do
                 transition all => this_state
-                parent.set_projector_state @p if @p
+                parent.set_device_state parent.devices["projector"], @p
               end
               after_transition any => this_state do
-                parent.set_switcher_state @s
+                parent.set_device_state parent.devices["switcher"], @s
               end
             end
           end
