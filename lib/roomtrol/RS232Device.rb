@@ -259,7 +259,7 @@ module Wescontrol
 			throw "Must supply a proc to :action" unless options[:action].is_a? Proc
 			state_var name, options
 			define_method "set_#{name}".to_sym, proc {|value|
-				message = options[:action].call(value)
+				message = instance_exec(value, &options[:action])
 				deferrable = EM::DefaultDeferrable.new
 				do_message message, deferrable
 				deferrable

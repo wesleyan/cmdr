@@ -138,7 +138,7 @@ module Wescontrol
     TIMEOUT = 4.0
     # The resource names for devices
     DEVICES = {
-      "projector"  => ["state", "video_mute"],
+      "projector"  => ["power", "video_mute", "state", "video_mute"],
       "volume"     => ["level", "mute"],
       "ir_emitter" => [],
       "pc"         => ["state"],
@@ -179,7 +179,10 @@ module Wescontrol
       @device_record_by_resource = {}
       @devices.each do |k, v|
         d = devices.find {|d| d['attributes']['name'] == v}
-        @devices_by_id[d['_id']] = k if d
+        if d
+          @devices_by_id[d['_id']] ||= []
+          @devices_by_id[d['_id']] << k
+        end
         @device_record_by_resource[k] = d
       end
 
@@ -247,7 +250,9 @@ module Wescontrol
       def handle_event json
         msg = JSON.parse(json)
         if msg['state_update'] && msg['var'] && msg['now'] && msg['device']
-          resource = @devices_by_id[msg['device']]
+          resource = (@devices_by_id[msg['device']] || {}).find {|r|
+            RESOURCES[r].include? msg['var']
+          }
           if resource
             send_update resource, msg['var'], msg['was'], msg['now']
             case [resource, msg['var']]
@@ -322,7 +327,7 @@ module Wescontrol
       end
             
       def state_action req, df, action
-        if DEVICES.include? req['resource']
+        if (DEVICES[req['resource']] || []).include?(req['var'])
           self.send "handle_device_#{action}", req, df
         elsif req['resource'] == "source"
           self.send "handle_source_#{action}", req, df
