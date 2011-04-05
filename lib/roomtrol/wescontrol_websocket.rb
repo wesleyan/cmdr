@@ -195,8 +195,10 @@ module Wescontrol
       p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
       s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
 
-      initial_source = (s_src || p_src || @sources[0]).to_sym
-      @source_fsm = make_state_machine(self, @sources, initial_source).new
+      
+      if initial_source = (s_src || p_src || @sources[0])
+        @source_fsm = make_state_machine(self, @sources, initial_source.to_sym).new
+      end
     end
 
     # Starts the websockets server. This is a blocking call if run
@@ -394,12 +396,16 @@ module Wescontrol
       end
       
       def handle_source_get req, df
-        df.succeed({:result => @source_fsm.source})
+        if @source_fsm
+          df.succeed({:result => @source_fsm.source})
+        else
+          df.succeed({:error => "No sources defined"})
+        end
       end
 
       def handle_source_set req, df
         DaemonKit.logger.debug "setting source: #{req.inspect}"
-        @source_fsm.send "select_#{req['value']}"
+        @source_fsm.send "select_#{req['value']}" rescue nil
         df.succeed({:ack => true})
       end
     end
