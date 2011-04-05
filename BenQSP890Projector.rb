@@ -8,17 +8,27 @@
 #}
 #---
 
-class BenQSP890Projector < Projector
+class BenQSP890Projector < Projector  
 	configure do
     message_end(/\n\r|\r\n/)
     message_delay 0.2
 	end
-	
+
+  def read data
+    EM.cancel_timer @_colling_timer if @_cooling_timer
+    @_cooling_timer = nil
+    super data
+  end
+
 	managed_state_var :power, 
 		:type => :boolean,
 		:display_order => 1,
 		:action => proc{|on|
-			"*pow=#{on ? "on" : "off"}#"
+      # The BenQs don't tell us when they're cooling, so we have to cheat
+      if !@_cooling_timer && !on
+        @_cooling_timer = EM.add_timer(5) { puts "Cooling..."; self.cooling = true }
+      end
+      "*pow=#{on ? "on" : "off"}#"
 		}
 	
 	managed_state_var :input, 
