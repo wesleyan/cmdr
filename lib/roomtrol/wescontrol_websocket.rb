@@ -141,7 +141,7 @@ module Wescontrol
       "projector"  => ["power", "video_mute", "state", "video_mute"],
       "volume"     => ["level", "mute"],
       "ir_emitter" => [],
-      "pc"         => ["state"],
+      "computer"   => ["reachable"],
       "mac"        => []
     }
     # The resources that can be accessed
@@ -223,7 +223,6 @@ module Wescontrol
 
         topic = @mq.topic(EVENT_TOPIC)
         @mq.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
-          DaemonKit.logger.debug "Got event: #{json}"
           handle_event json
         end
 
@@ -281,7 +280,6 @@ module Wescontrol
       
       def onopen ws
         @sid = @update_channel.subscribe { |msg|
-          DaemonKit.logger.debug "State update: #{msg}"
           ws.send msg.to_json
         }
 
@@ -306,8 +304,6 @@ module Wescontrol
       def onmessage ws, json
         begin
           msg = JSON.parse(json)
-
-          DaemonKit.logger.debug "Got message: #{msg.inspect}"
 
           deferrable = EM::DefaultDeferrable.new
           deferrable.callback {|resp|
