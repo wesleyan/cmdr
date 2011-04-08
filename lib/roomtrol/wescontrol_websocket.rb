@@ -334,6 +334,27 @@ module Wescontrol
         end
       end
 
+      def command req, df
+        if (DEVICES[req['resource']] || []).include?(req['var'])
+          device_req = {
+            :id => UUIDTools::UUID.random_create.to_s,
+            :queue => @queue_name,
+            :type => :command,
+            :method => req['method'],
+            :args => req['args']
+          }
+          deferrable = EM::DefaultDeferrable.new
+          deferrable.timeout TIMEOUT
+          deferrable.callback {|result|
+            df.succeed({:result => result})
+          }
+          deferrable.errback {|error|
+            df.succeed({:error => error})
+          }
+          defer_device_operation device_req, device, df          
+        end
+      end
+
       def daemon_get var, device, df
         device_req = {
           :id => UUIDTools::UUID.random_create.to_s,
