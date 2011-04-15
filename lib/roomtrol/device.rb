@@ -457,7 +457,7 @@ module Wescontrol
 		def self.state_var name, options
 			sym = name.to_sym
 			self.class_eval do
-b				raise "Must have type field" unless options[:type]
+ 				raise "Must have type field" unless options[:type]
 				@state_vars ||= {}
 				@state_vars[sym] = options
 			end
