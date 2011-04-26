@@ -48,6 +48,8 @@ module Wescontrol
   # - source
   #   - **current** (source name)
   #   - **list** (array of source names)
+  # - computer
+  #   - **reachable**
   #
   # ###state_set
   # Sets the state of a variable
