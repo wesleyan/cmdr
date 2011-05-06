@@ -1,3 +1,6 @@
-class Action
+module Watchman
+  class Action
 
+  end
 end
+

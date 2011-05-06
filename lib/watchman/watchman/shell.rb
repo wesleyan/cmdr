@@ -18,24 +18,18 @@ class Hash
   end
 end
 
-class RemoteWatchman
-  def connect
-    
-  end
-  
-  def method_missing(method, *args)
-  end
-end
-
 class Shell
+  DEFAULTS = {
+    :autocomplete => [],
+    :edit_mode => false,
+    :aliases => [],
+    :assumes_connected => true,
+    :confirm => false,
+    :password => "password",
+  }
+  
   def initialize
-    @DEFAULTS = {
-      :autocomplete => [],
-      :edit_mode => false,
-      :aliases => [],
-      :assumes_connected => true,
-      :make_sure => false
-    }
+    @arities = {}
     repl
   end
 
@@ -43,15 +37,15 @@ class Shell
     methods.find_all {|m| m.starts_with? "command_"}.collect do |match|
       m = match.split('_')[1].gsub '%20' ' '
     end
-    
   end
 
   def self.command(name, *params, &code)
+    @arities[name] = code.arity == -1 ? 0 : code.arity
     define_method "command_#{name}", code
   end
 
   def execute(cmd, *args)
-    send("command_#{cmd}", *args)
+    send "command_#{cmd}", *args
   end
 
   def get_input
@@ -60,10 +54,17 @@ class Shell
     rescue
     end
   end
-  
-  def connect
-    @connected = true
-    @current_server = ''
+
+  def connect_to(serv)
+    @server = serv
+  end
+
+  def disconnect
+    @server = nil
+  end
+
+  def connected?
+    !!@server
   end
 
   def repl
@@ -94,9 +95,9 @@ class Shell
     
     case method
     when :get
-      res = Net:HTTP.get @current_server, what
+      res = Net:HTTP.get(@current_server, what)
     when :post
-      res = Net:HTTP.post @current_server, what
+      res = Net:HTTP.post(@current_server, what)
     end
 
     case args[:return_as]
@@ -159,7 +160,7 @@ class WatchmanShell < Shell
     post '/environment/rules/add/#{rule}', :return_as => :success?
   end
 
-  command :delete_test, :autocomplete => [:tests], :make_sure => true do |test|
+  command :delete_test, :autocomplete => [:tests], :confirm => true do |test|
     post '/tests/delete/#{test}'
   end
 

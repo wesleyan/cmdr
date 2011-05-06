@@ -1,41 +1,44 @@
-class Test
+module Watchmna
+  class Test
   def initialize
-    @finished_steps = []
-  end
-
-  def self.step(name, params)
-    @steps[name] = lambda {
-      @active[name] = Thread.new {
-        if params.keys.include?(:after)
-          @active[params[:after]].join
-        end
-
-        @active[name] = false
-      }
-      @active[name].run
-    }
-  end
-  
-  def self.verify(what)
-  end
-
-  def check(name)
-  end
-
-  def done
-    @active.none? {|x| x.status} 
-  end
-  
-  def perform
-    @steps.each { |_, f| f.call }
-    until done
+      @finished_steps = []
     end
-    @active = []
-    @conditions.all? { |cond| check(cond) }
+
+    def self.step(name, params)
+      @steps[name] = lambda {
+        @active[name] = Thread.new {
+          if params.keys.include?(:after)
+            @active[params[:after]].join
+          end
+
+          @active[name] = false
+        }
+        @active[name].run
+      }
+    end
+
+    def self.verify(what)
+    end
+
+    def check(name)
+    end
+
+    def done
+      @active.none? {|x| x.status} 
+    end
+
+    def perform
+      @steps.each { |_, f| f.call }
+      until done
+      end
+      @active = []
+      @conditions.all? { |cond| check(cond) }
+    end
   end
 end
 
-class SampleTest < Test
+
+class SampleTest < Watchman::Test
   step :open_pc
   step :open_projector, :after => :open_pc
 
