@@ -1,3 +1,4 @@
+require 'highline'
 require 'json'
 
 PUBLIC_KEY = true #Are we using public key authentication on all the servers?
@@ -15,13 +16,15 @@ TEST = servers['test']
 
 OPTS = {}
 
+HIGHLINE = HighLine.new
+
 desc "deploy server code"
 task :deploy do
 	puts "Hey, you're deploying to PRODUCTION!!!! Let me repeat that: PRODUCTION!!!!!!!!"
 	puts "Are you absolutely, positively sure you want to do this?"
-	exit(1) unless ask("Deploy? (yN) ").upcase == "Y"
+	exit(1) unless HIGHLINE.ask("Deploy? (yN) ").upcase == "Y"
 	puts "Ok, but are you really, really sure?"
-	exit(1) unless ask("Deploy to PRODUCTION?  (yN) ").upcase == "Y"
+	exit(1) unless HIGHLINE.ask("Deploy to PRODUCTION?  (yesNO) ").upcase == "YES"
 
   deploy SERVERS
 end
@@ -59,6 +62,7 @@ def deploy servers
 			puts "Installing gems on server"
 			path = "/var/roomtrol-daemon"
 			commands = [
+                  "echo 'starting'",
                   "cd #{path}",
                   "rm -Rf *",
                   "mv /tmp/roomtrol-daemon.zip .",
@@ -67,7 +71,7 @@ def deploy servers
                   "echo 'Unzipped zip file'",
                   "rvm 1.9.2",
                   "echo 'Switched to rvm'",
-                  "rvmsudo bundle install",
+                  "sudo bundle install",
                   "echo 'Updated roomtrol' | wall",
                  ]
 		  

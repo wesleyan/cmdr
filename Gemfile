@@ -27,7 +27,7 @@ gem 'amqp'
 gem 'uuidtools'
 
 #deploy gems
-gem 'highline'
+gem 'highline', "= 1.6.1"
 gem 'net-ssh'
 gem 'net-scp' 
 gem 'git'

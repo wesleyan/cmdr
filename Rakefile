@@ -1,5 +1,6 @@
 require File.expand_path('../config/boot',  __FILE__)
 
+require 'bundler/setup'
 require 'rake'
 require 'daemon_kit/tasks'
 
