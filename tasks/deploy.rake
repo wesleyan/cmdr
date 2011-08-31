@@ -71,7 +71,7 @@ def deploy servers
                   "echo 'Unzipped zip file'",
                   "rvm 1.9.2",
                   "echo 'Switched to rvm'",
-                  "sudo bundle install",
+                  "rvmsudo bundle install",
                   "echo 'Updated roomtrol' | wall",
                  ]
 		  
