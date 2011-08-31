@@ -1,5 +1,6 @@
 require 'highline'
 require 'json'
+require 'slinky'
 
 PUBLIC_KEY = true #Are we using public key authentication on all the servers?
 
@@ -27,6 +28,30 @@ task :deploy do
 	exit(1) unless HIGHLINE.ask("Deploy to PRODUCTION?  (yesNO) ").upcase == "YES"
 
   deploy SERVERS
+end
+
+desc "build touchscreen interface"
+task :build_tp do
+  Slinky::Builder.build(WORKING + "/tp6/src", WORKING + "/tp6/pub")
+end
+
+desc "deploy touchscreen interface", :needs => [:build_tp]
+task :deploy_tp, :require do
+  cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub #{roomtrol}@#{c}:/var/www/tp6 --exclude '.git'"
+  CONTROLLERS.each{|c|
+    puts c
+    PTY.spawn(cmd){|read,write,pid|
+      write.sync = true
+      $expect_verbose = false
+
+      read.expect(/password:/) do
+        write.puts OPTS[:password] + "\n"
+      end
+
+      read.expect(/total size/) do
+      end
+    }
+  }
 end
 
 desc "deploy server code to tests"
