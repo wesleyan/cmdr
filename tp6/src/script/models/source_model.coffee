@@ -1,4 +1,4 @@
-slinky_require('main')
+slinky_require('../main.coffee')
 
 class Source extends Backbone.Model
   select: ->
