@@ -1,4 +1,4 @@
-slinky_require '../../lib/module.coffee'
+slinky_require('../../lib/module.coffee')
 
 ComputerModule = Tp.Module.extend
   initialize: () ->

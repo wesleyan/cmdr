@@ -58,9 +58,7 @@ class Server
       prompt_projector: x.settings?.prompt_projector
       module: x.settings?.module
 
-    Tp.log("Further")
-
-    # get initial states for projector and volume
+    # get initial states for devices
     this.state_get "projector", "state"
     this.state_get "projector", "video_mute"
     this.state_get "volume", "volume"

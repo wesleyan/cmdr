@@ -11,7 +11,7 @@ class Websock
   connecting: no
   should_reconnect: yes
   options:
-    host: "ws://roomtrol-allb204.class:8000/"
+    host: "ws://#{window.location.host}:8000/"
     connect_timeout: 5000
     reconnection_delay: 500
     max_reconnection_attempts: 10

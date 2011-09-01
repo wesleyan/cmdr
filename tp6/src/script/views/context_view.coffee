@@ -1,4 +1,4 @@
-slinky_require '../core.coffee'
+slinky_require('../core.coffee')
 
 Tp.ContextView = Backbone.View.extend
   initialize: () ->

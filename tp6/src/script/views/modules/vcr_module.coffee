@@ -1,4 +1,4 @@
-slinky_require '../../lib/module.coffee'
+slinky_require('../../lib/module.coffee')
 
 VCRModule = Tp.Module.extend
   name: "vcr"

@@ -1,4 +1,4 @@
-slinky_require '../core.coffee'
+slinky_require('../core.coffee')
 
 Tp.ProjectorPaneView = Backbone.View.extend
   initialize: () ->
@@ -47,14 +47,14 @@ Tp.ProjectorPaneView = Backbone.View.extend
     console.log("Projector now " + state)
     text = if (["on", "muted", "warming"].indexOf(state) != -1) then "off" else "on"
     $('.power-button .label').html("turn " + text)
-    $('.status-image').attr 'src', '/images/projector/' + state + '.png'
+    $('.status-image').attr 'src', 'images/projector/' + state + '.png'
     $('.source-image').css 'visibility', if text == "off" then "visible" else "hidden"
     $('.screen-image-overlay').css 'opacity', if text == "off" then 0 else 0.4
 
   sourceChanged: () ->
     state = Tp.room.get('source')
-    console.log("/images/sources/" + state.get('icon'))
-    $('.source-image').attr 'src', "/images/sources/" + state.get('icon')
+    console.log("images/sources/" + state.get('icon'))
+    $('.source-image').attr 'src', "images/sources/" + state.get('icon')
 
     $('.source-image').load ->
       W = this.naturalWidth

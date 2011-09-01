@@ -1,5 +1,3 @@
-slinky_require "testfile.js"
-
 window.Tp =
   debugging: on
 

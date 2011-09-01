@@ -1,4 +1,4 @@
-slinky_require '../core.coffee'
+slinky_require('../core.coffee')
 
 Tp.ActionListView = Backbone.View.extend
   initialize: () ->

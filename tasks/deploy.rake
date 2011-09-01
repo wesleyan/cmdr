@@ -1,6 +1,8 @@
 require 'highline'
 require 'json'
 require 'slinky'
+require 'pty'
+require 'expect'
 
 PUBLIC_KEY = true #Are we using public key authentication on all the servers?
 
@@ -32,21 +34,24 @@ end
 
 desc "build touchscreen interface"
 task :build_tp do
-  Slinky::Builder.build(WORKING + "/tp6/src", WORKING + "/tp6/pub")
+  `cd #{WORKING}/tp6/src && slinky build -o #{WORKING}/tp6/pub`
+  `sed -i '' -e 's/\\/scripts.js/scripts.js/; s/\\/styles.css/styles.css/' #{WORKING}/tp6/pub/index.html`
+  # Slinky::Builder.build(WORKING + "/tp6/src", WORKING + "/tp6/pub")
 end
 
-desc "deploy touchscreen interface", :needs => [:build_tp]
-task :deploy_tp, :require do
-  cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub #{roomtrol}@#{c}:/var/www/tp6 --exclude '.git'"
+desc "deploy touchscreen interface"
+task :deploy_tp, [] => [:build_tp] do
   CONTROLLERS.each{|c|
+    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ roomtrol@#{c}:/var/www/tp6 --exclude '.git'"
+
     puts c
     PTY.spawn(cmd){|read,write,pid|
       write.sync = true
       $expect_verbose = false
 
-      read.expect(/password:/) do
-        write.puts OPTS[:password] + "\n"
-      end
+      # read.expect(/password:/) do
+      #   write.puts OPTS[:password] + "\n"
+      # end
 
       read.expect(/total size/) do
       end

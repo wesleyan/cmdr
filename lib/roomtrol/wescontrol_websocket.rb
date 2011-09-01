@@ -188,24 +188,25 @@ module Wescontrol
         @device_record_by_resource[k] = d
       end
 
+    end
+
+    # Starts the websockets server. This is a blocking call if run
+    # outside of an EventMachine reactor.
+    def run
       # get the initial source
       proj = @device_record_by_resource['projector']
       switch = @device_record_by_resource['switcher']
 
       p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
       s_input = switch['attributes']['state_vars']['input']['state'] rescue nil
+
       p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
       s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
 
-      
-      if initial_source = (s_src || p_src || @sources[0])
-        @source_fsm = make_state_machine(self, @sources, initial_source.to_sym).new
+      if initial_source = (s_src || p_src || @sources[0]['name'])
+        @source_fsm = make_state_machine("asdf", @sources, initial_source.to_sym).new
       end
-    end
 
-    # Starts the websockets server. This is a blocking call if run
-    # outside of an EventMachine reactor.
-    def run
       AMQP.start(:host => "localhost") do
         @mq = MQ.new
         @update_channel = EM::Channel.new
@@ -294,7 +295,7 @@ module Wescontrol
             {
               :id => source['_id'],
               :name => source['name'],
-              :icon => source['icon']
+              :icon => source['icon'] || (source['name'] + '.png')
             }
           },
           'actions' => @actions
@@ -427,44 +428,46 @@ module Wescontrol
         @source_fsm.send "select_#{req['value']}" rescue nil
         df.succeed({:ack => true})
       end
-    end
-    
-    def make_state_machine parent, sources, initial
-      klass = Class.new
-      klass.class_eval do
-        state_machine :source, :initial => initial do
-          after_transition any => any do |fsm, transition|
-            parent.send_update :source, :source, transition.from, transition.to 
-          end
-          sources.each do |source|
-            this_state = source['name'].to_sym
-            event "select_#{this_state}".to_sym do
-              transition all => this_state
+
+      def make_state_machine parent, sources, initial
+        klass = Class.new
+        klass.class_eval do
+          state_machine :source, :initial => initial do
+            after_transition any => any do |fsm, transition|
+              parent.send_update :source, :source, transition.from, transition.to 
             end
-            if @p = source['input']['projector']
-              if !source['input']['switcher']
-                event "projector_to_#{@p}".to_sym do
-                  transition all => this_state
+            sources.each do |source|
+              this_state = source['name'].to_sym
+              event "select_#{this_state}".to_sym do
+                transition all => this_state
+              end
+              if @p = source['input']['projector']
+                if !source['input']['switcher']
+                  event "projector_to_#{@p}".to_sym do
+                    transition all => this_state
+                  end
+                end
+                after_transition any => this_state do
+                  DaemonKit.logger.debug "Transitioned to #{this_state}, and #{@p.inspect}"
+                  parent.set_device_state parent.devices["projector"], @p
                 end
               end
-              after_transition any => this_state do
-                DaemonKit.logger.debug "Transitioned to #{this_state}, and #{@p.inspect}"
-                parent.set_device_state parent.devices["projector"], @p
-              end
-            end
-            if @s = source['input']['switcher']
-              event "switcher_to_#{@s}" do
-                transition all => this_state
-                parent.set_device_state parent.devices["projector"], @p
-              end
-              after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], @s
+              if @s = source['input']['switcher']
+                event "switcher_to_#{@s}" do
+                  transition all => this_state
+                  puts parent.methods.sort.inspect
+                  puts parent.class
+                  parent.set_device_state parent.devices["projector"], @p
+                end
+                after_transition any => this_state do
+                  parent.set_device_state parent.devices["switcher"], @s
+                end
               end
             end
           end
         end
+        klass
       end
-      klass
     end
   end
 end

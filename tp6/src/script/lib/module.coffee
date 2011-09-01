@@ -1,4 +1,4 @@
-slinky_require '../core.coffee'
+slinky_require('../core.coffee')
 
 Tp.Module = Backbone.View.extend
   initialize: () ->
