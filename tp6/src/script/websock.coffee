@@ -15,6 +15,7 @@ class Websock
     connect_timeout: 5000
     reconnection_delay: 500
     max_reconnection_attempts: 10
+    max_delay: 60
 
   websock_connect: ->
     @ws = new WebSocket(@options.host)
@@ -71,6 +72,8 @@ class Websock
           reset()
         else
           @reconnection_delay *= 2
+          max = @options.max_delay
+          @reconnection_delay = max if @reconnection_delay > max
           @connect()
           @trigger("reconnecting", [@reconnection_delay, @reconnection_attempts])
           Tp.log("Reconnection delay: %d s", @reconnection_delay/1000)
