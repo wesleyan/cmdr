@@ -10,12 +10,14 @@ class Websock
   connected: no
   connecting: no
   should_reconnect: yes
+  ever_connected: no
   options:
     host: "ws://#{window.location.host}:8000/"
-    connect_timeout: 5000
+    #host: "ws://roomtrol-allb204.class:8000/"
+    connect_timeout: 1000
     reconnection_delay: 500
     max_reconnection_attempts: 10
-    max_delay: 60
+    max_delay: 15*1000
 
   websock_connect: ->
     @ws = new WebSocket(@options.host)
@@ -24,6 +26,7 @@ class Websock
       Tp.log "Connected to WS"
       this.trigger("connected")
       @connected = yes
+      @ever_connected = yes
 
     @ws.onmessage = (event) =>
       this.trigger("message", event.data)
@@ -43,10 +46,11 @@ class Websock
       @websock_connect()
       @connect_timeout_timer = setTimeout (=>
         if !@connected
+          Tp.log("Could not connect")
           @disconnect
           this.trigger("connection_failed")
-          Tp.log("Could not connect")
-      ), @connect_timeout
+          this.trigger("disconnected")
+      ), @options.connect_timeout
 
   reconnect: ->
     Tp.log("Reconnecting")
@@ -73,7 +77,7 @@ class Websock
         else
           @reconnection_delay *= 2
           max = @options.max_delay
-          @reconnection_delay = max if @reconnection_delay > max
+          @reconnection_delay = max if @reconnection_delay > max or @reconnection_delay < 0
           @connect()
           @trigger("reconnecting", [@reconnection_delay, @reconnection_attempts])
           Tp.log("Reconnection delay: %d s", @reconnection_delay/1000)
@@ -88,11 +92,10 @@ class Websock
     if @ws then @ws.close()
 
   disconnected: ->
-    @was_connected = @connected
+    @was_connected = @connected || !@ever_connected
     @connected = no
     @connecting = no
-    if @was_connected
-      if @should_reconnect and !@reconnecting then @reconnect()
+    if @should_reconnect and !@reconnecting then @reconnect()
 
 _.extend(Websock.prototype, Backbone.Events)
 Tp.Websock = Websock

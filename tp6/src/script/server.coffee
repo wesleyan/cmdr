@@ -22,7 +22,6 @@ class Server
         seconds = Math.round((reconnection_time - Date.now()) / 1000)
         $('#lost-connection .reconnection-counter').html(seconds + " seconds")), 500)
 
-
     this.bind 'state_set', (msg) =>
       msg['type'] = 'state_set'
       this.send_message(msg)
