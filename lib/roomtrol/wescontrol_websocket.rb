@@ -258,11 +258,12 @@ module Wescontrol
     
     def handle_event json
       msg = JSON.parse(json)
-      if msg['state_update'] && msg['var'] && msg['now'] && msg['device']
+      DaemonKit.logger.debug(msg.inspect)
+      if msg['state_update'] && msg['var'] && !msg['now'].nil? && msg['device']
         resource = (@devices_by_id[msg['device']] || {}).find {|r|
           RESOURCES[r].include? msg['var']
         }
-        if resource
+        unless resource.nil?
           send_update resource, msg['var'], msg['was'], msg['now']
           case [resource, msg['var']]
           when ["projector", "input"]
@@ -275,6 +276,7 @@ module Wescontrol
     end
 
     def send_update resource, var, old, new
+      DaemonKit.logger.debug([resource, var, old, new].inspect)
       update_msg = {
         'id' => UUIDTools::UUID.random_create.to_s,
         'type' => 'state_changed',
