@@ -15,20 +15,28 @@ require 'socket'
 class IREmitter < Wescontrol::Device
 	
 	configure do
-		remote :type => :string
+		remote1 :type => :string
+    remote2 :type => :string
+    remote3 :type => :string
+    remote4 :type => :string
 	end
 
-	command :pulse_command, :action => proc {|button|
-		_command = "send_once #{@remote} #{button}"
+	command :pulse_command, :action => proc {|remote, button|
+    remote_name = @remotes[remote.to_i] rescue nil
+    next "No remote set for #{remote}" unless remote_name
+
+    _set_cmd = "set_transmitters #{remote.to_i}"
+		_command = "send_once #{remote_name} #{button}"
 		@_commands[_command] = nil
 		begin
+      @socket.write(_set_cmd + "\n")
 			@socket.write(_command + "\n")
 		rescue
 			begin
 				@socket = UNIXSocket.open(@port)
-				@socket.write(_command + "\n")
+				@socket.write_nonblock(_command + "\n")
 			rescue
-				next "Failed to communicate with IR emitter"
+				next "Failed to communicate with IR emitter: #{$!}"
 			end
 		end
 
@@ -46,9 +54,12 @@ class IREmitter < Wescontrol::Device
 		DaemonKit.logger.info "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"
 		super(name, options)
 		@_commands = {}
-		@remote = options[:remote]
-		throw "No remote specified" unless @remote
-		#@port = options[:port]
+		@remotes = [options[:remote1],
+                options[:remote2],
+                options[:remote3],
+                options[:remote4]]
+
+		# @port = options[:port]
 		@port = "/var/run/lirc/lircd" unless @port
 		begin
 			@socket = UNIXSocket.open(@port)
