@@ -65,6 +65,9 @@ class Server
     this.state_get "source", "source"
     this.state_get "computer", "reachable"
 
+    # Prevent dragging of images. Wait a little while for stuff to load
+    $('img').mousedown (event) -> event.preventDefault()
+
   send_message: (msg) ->
     msg['id'] = this.createUUID()
     @websock.send(JSON.stringify(msg))

@@ -8,3 +8,12 @@ doc/
 *.gem
 servers.json
 .gitpusshuten/**/*
+tp6/pub
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*

@@ -16,7 +16,6 @@ class Websock
     #host: "ws://roomtrol-allb204.class:8000/"
     connect_timeout: 1000
     reconnection_delay: 500
-    max_reconnection_attempts: 10
     max_delay: 15*1000
 
   websock_connect: ->
@@ -70,18 +69,13 @@ class Websock
       if !@connected
         if @connecting && @reconnecting
           return @reconnection_timer = setTimeout(maybe_reconnect, 1000)
-        if @reconnection_attempts++ >= @options.max_reconnection_attempts
-          Tp.log("Reconnection failed")
-          @trigger("reconnect_failed")
-          reset()
-        else
-          @reconnection_delay *= 2
-          max = @options.max_delay
-          @reconnection_delay = max if @reconnection_delay > max or @reconnection_delay < 0
-          @connect()
-          @trigger("reconnecting", [@reconnection_delay, @reconnection_attempts])
-          Tp.log("Reconnection delay: %d s", @reconnection_delay/1000)
-          @reconnection_timer = setTimeout(maybe_reconnect, @reconnection_delay)
+        @reconnection_delay *= 2
+        max = @options.max_delay
+        @reconnection_delay = max if @reconnection_delay > max or @reconnection_delay < 0
+        @connect()
+        @trigger("reconnecting", [@reconnection_delay, @reconnection_attempts])
+        Tp.log("Reconnection delay: %d s", @reconnection_delay/1000)
+        @reconnection_timer = setTimeout(maybe_reconnect, @reconnection_delay)
       else
         reset()
     @reconnection_timer = setTimeout(maybe_reconnect, @reconnection_delay)
