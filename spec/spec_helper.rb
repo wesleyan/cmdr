@@ -1,18 +1,17 @@
-$eventmachine_library = :pure_ruby
 require 'eventmachine'
 
 TEST_DB = "http://localhost:5984/rooms_test"
 DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 
 begin
-	require 'spec'
+	require 'rspec'
 	require 'mq'
 	require_relative '../lib/roomtrol/device.rb'
 	require_relative '../lib/roomtrol/constants.rb'
 rescue LoadError
 	require 'rubygems'
 	gem 'rspec'
-	require 'spec'
+	require 'rspec'
 end
 
 #require File.dirname(__FILE__) + '/../config/environment'
@@ -53,7 +52,7 @@ class Wescontrol::Device
 	alias_method :initialize, :new_initialize
 end
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
 	config.before(:each) {
 		# Clear the test DB
 		CouchRest.database!(TEST_DB).delete!

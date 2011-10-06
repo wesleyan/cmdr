@@ -1,5 +1,3 @@
-$eventmachine_library = :pure_ruby
-
 # Be sure to restart your daemon when you modify this file
 
 # Uncomment below to force your daemon into production mode
@@ -26,11 +24,13 @@ DaemonKit::Initializer.run do |config|
 	
 	if File.writable?("/var/log") #are we root?
 		config.log_path = "/var/log/roomtrol.log"
+    config.pid_file = "/var/log/roomtrol.pid"
 	else
 		unless File.directory?(File.expand_path "~/log")
 			require 'fileutils'
 			FileUtils.mkdir(File.expand_path "~/log")
 		end
 		config.log_path = File.expand_path "~/log/roomtrol.log"
+    config.pid_file = File.expand_path "~/log/roomtrol.pid"
 	end
 end

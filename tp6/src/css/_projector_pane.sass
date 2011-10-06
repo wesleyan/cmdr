@@ -1,0 +1,89 @@
+@import mixins.sass
+.projector-module
+  +fill-height(150px)
+  +gradient(#d1d3d4, #9d9fa2, 0, 1)
+
+  border-right: #888 solid 1px
+  z-index: 1000
+  
+  img.status-image
+    +center-x(106px, inherit)
+    top: 7px
+
+  img.source-image
+    position: absolute
+    visibility: hidden
+    z-index: -10
+
+  img.screen-image
+    +center-x(110px, inherit)
+    top: 135px
+    position: absolute
+
+  .screen-image-overlay
+    background-color: black
+    position: absolute
+    top: 140px
+    opacity: 0
+    +center-x(104px, 70px)
+
+  .controls
+    top: 160px
+    bottom: 0
+    left: 0
+    right: 0
+    position: absolute
+
+    .label
+      position: absolute
+      +text-inset
+      font-family: "Myriad Pro"
+      font-weight: 600
+      text-align: center
+      &.header
+        font-size: 24px
+        color: #565656
+        left: 0
+        right: 0
+
+    .button
+      .label
+        +fill-parent
+        line-height: 50px
+        font-size: 24px
+        color: #333
+      +button
+      left: 9px
+      right: 9px
+      position: absolute
+      height: 50px
+
+    .projector-label
+      top: 0px
+    
+    .power-button
+      top: 30px
+    
+    .blank-button
+      top: 90px
+
+    .audio-label
+      top: 150px
+
+    .volume-plus.button, .volume-minus.button
+      top: 175px
+      width: 62px
+      .label
+        font-weight: 900
+        font-size: 32px
+
+    .volume-plus.button
+      right: 9px
+      left: auto
+    
+    .volume-minus.button .label
+      font-size: 48px
+
+    .mute-button
+      top: 235px
+    
