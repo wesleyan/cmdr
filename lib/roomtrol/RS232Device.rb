@@ -4,39 +4,48 @@ require 'strscan'
 require 'rubybits'
 
 module Wescontrol
-	# RS232Device is a subclass of {Wescontrol::Device} that makes the job of controlling
-	# devices that communicate over RS232 serial ports easier. At its most basic level, it
-	# will handle communication through a serial port (using the
-	# [ruby-serialport](http://ruby-serialport.rubyforge.org/) library) for you, providing
-	# {#send_string} and {#read}, which respectively send and receive 
-	# strings to and from the device. However, most devices should be able to take advantage
-	# of the various "managed" features, which can greatly simplify the task of writing drivers
-	# for RS232 devices. In fact, using this class it is possible to write drivers without any
-	# real code at all (besides some string handling).
+	# RS232Device is a subclass of {Wescontrol::Device} that makes the
+	# job of controlling devices that communicate over RS232 serial
+	# ports easier. At its most basic level, it will handle
+	# communication through a serial port (using the
+	# [ruby-serialport](http://ruby-serialport.rubyforge.org/) library)
+	# for you, providing {#send_string} and {#read}, which respectively
+	# send and receive strings to and from the device. However, most
+	# devices should be able to take advantage of the various "managed"
+	# features, which can greatly simplify the task of writing drivers
+	# for RS232 devices. In fact, using this class it is possible to
+	# write drivers without any real code at all (besides some string
+	# handling).
 	# 
-	# There are several abstractions provided which can take over a part of device handling.
-	# Perhaps the most widely applicable is the {RS232Device::requests requests} abstraction.
-	# Many devices will not send messages to notify a state change and must be constantly
-	# polled to maintain correct state in the Roomtrol system (i.e., if a projector is turned
-	# off manually, you must request its power state in order to display that fact on the
-	# touchscreen). You can use `request` to do such polling automatically. You can provide
-	# as many requests as you'd like, and each can have an associated priority which informs
-	# how often is should be sent. Look at the {RS232Device::requests} documentation for more
-	# information.
+	# There are several abstractions provided which can take over a part
+	# of device handling.  Perhaps the most widely applicable is the
+	# {RS232Device::requests requests} abstraction.  Many devices will
+	# not send messages to notify a state change and must be constantly
+	# polled to maintain correct state in the Roomtrol system (i.e., if
+	# a projector is turned off manually, you must request its power
+	# state in order to display that fact on the touchscreen). You can
+	# use `request` to do such polling automatically. You can provide as
+	# many requests as you'd like, and each can have an associated
+	# priority which informs how often is should be sent. Look at the
+	# {RS232Device::requests} documentation for more information.
 	# 
-	# The next abstraction is {RS232Device::responses responses}. Responses provide automatic
-	# handling of incoming data from the device. Each response has a "matcher," which can be
-	# a string, regular expression or a function. When a message comes over the wire from the
-	# device, it is matched against all of the responses. If one matches, the message is passed
-	# to the handler function provided, which will generally update one or more state_vars based
-	# on the information provided.
+	# The next abstraction is {RS232Device::responses
+	# responses}. Responses provide automatic handling of incoming data
+	# from the device. Each response has a "matcher," which can be a
+	# string, regular expression or a function. When a message comes
+	# over the wire from the device, it is matched against all of the
+	# responses. If one matches, the message is passed to the handler
+	# function provided, which will generally update one or more
+	# state_vars based on the information provided.
 	# 
-	# The final abstraction is {RS232Device::managed_state_var}. A managed state var is like a 
-	# normal {Device::state_var} except that the set_ method is created automatically based on
-	# a string function provided to :action.
+	# The final abstraction is {RS232Device::managed_state_var}. A
+	# managed state var is like a normal {Device::state_var} except that
+	# the set_ method is created automatically based on a string
+	# function provided to :action.
 	# 
-	# Using these three abstractions, you can write device drivers using very little code. For
-	# example, here's a subset of the ExtronVideoSwitcher driver (the full source can be found
+	# Using these three abstractions, you can write device drivers using
+	# very little code. For example, here's a subset of the
+	# ExtronVideoSwitcher driver (the full source can be found
 	# [here](https://github.com/mwylde/roomtrol-devices/blob/master/ExtronVideoSwitcher.rb)).
 	# 
 	# 	configure do
@@ -71,7 +80,8 @@ module Wescontrol
 	# These abstractions are designed around devices that have the following message lifecycle:
 	# 
 	# 1. A message is sent from the controller to the device
-	# 2. The device processes the event and sends back a response, either an acknowledge or a full response.
+	# 2. The device processes the event and sends back a response,
+  #    either an acknowledge or a full response.
 	# 3. The device is now ready for a new message, starting the cycle over.
 	# 
 	# In particular, since many devices can only handle one message at a
@@ -97,19 +107,26 @@ module Wescontrol
   #   the user set it if the device supports variable baud rates 
 	# + *data_bits*: the number of data bits used by the device (usually 7 or 8)
 	# + *stop_bits*: the number of stop bits used by the device (either 1 or 2)
-	# + *parity*: the kind of parity checking used; can be 0, 1 or 2 which are NONE, EVEN and ODD respectively
-	# + *message_end*: the character(s) which demarcate the end of a message; for ASCII-based protocols usually
-	# 	a newline ("\n") or a carriage return and newline ("\r\n"). You must set this if you want message
-	# 	interpretation to work correctly. Alternatively, you can supply a proc which takes one argument (a string)
-	# 	and which returns true if the string represents a valid message or false otherwise. This is useful for
-	# 	binary protocols where a message is demarcated by a valid checksum rather than a specific symbol.
-  # + *message_timeout*: the number of seconds to wait before sending the next message after a message fails to
-  #   elicit a response
-  # + *message_delay*: The number of seconds to wait before sending the next message after a message has
-  #   successfully gotten a response. Some devices can't take a constant barrage of message, so a delay is
-  #   necessary
+	# + *parity*: the kind of parity checking used; can be 0, 1 or 2
+  #    which are NONE, EVEN and ODD respectively
+	# + *message_end*: the character(s) which demarcate the end of a
+  #   message; for ASCII-based protocols usually a newline ("\n") or a
+  #   carriage return and newline ("\r\n"). You must set this if you
+  #   want message interpretation to work correctly. Alternatively,
+  #   you can supply a proc which takes one argument (a string) and
+  #   which returns true if the string represents a valid message or
+  #   false otherwise. This is useful for binary protocols where a
+  #   message is demarcated by a valid checksum rather than a specific
+  #   symbol.
+  # + *message_timeout*: the number of seconds to wait before sending
+  #   the next message after a message fails to elicit a response
+  # + *message_delay*: The number of seconds to wait before sending
+  #   the next message after a message has successfully gotten a
+  #   response. Some devices can't take a constant barrage of message,
+  #   so a delay is necessary
 	class RS232Device < Device
-		# The SerialPort object over which data is sent and received from the device
+		# The SerialPort object over which data is sent and received from
+		# the device
 		attr_accessor :serialport
 
 		configure do
@@ -149,7 +166,10 @@ module Wescontrol
 		# @param [String] string The string to send
 		def send_string(string)
       EM.defer do
-        @_serialport.write string if @_serialport
+        begin
+          @_serialport.write string if @_serialport
+        rescue
+        end
       end
 		end
 
@@ -239,7 +259,7 @@ module Wescontrol
 			throw "Must supply a proc to :action" unless options[:action].is_a? Proc
 			state_var name, options
 			define_method "set_#{name}".to_sym, proc {|value|
-				message = options[:action].call(value)
+				message = instance_exec(value, &options[:action])
 				deferrable = EM::DefaultDeferrable.new
 				do_message message, deferrable
 				deferrable

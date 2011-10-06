@@ -1,0 +1,48 @@
+@import mixins
+#action-pane    
+  .action-module
+    position: absolute
+    left: 150px
+    top: 0
+    bottom: 0
+    width: 290px
+    background: #CECECE
+    +box-shadow(0 0 10px 10px #B5B5B5 inset)
+
+    ul.action-list
+      list-style: none
+    li.action-list-item
+      border-bottom: 2px solid #B5B5B6
+      +text-inset
+      height: 100%
+      color: #565656
+      font-size: 36px
+      line-height: 48px
+      font-family: "Myriad Pro"
+      position: relative
+      height: 65px
+      
+      &:active
+        background: #999
+      
+      &.selected
+        text-shadow: 0px -1px 0px #000
+        +box-shadow(#330 0 0 4px inset)
+        background: #666
+        color: #D9D9D9
+        
+    img
+      position: absolute
+      max-width: 70px
+      max-height: 55px
+      left: 20px
+      top: 50%
+      margin-top: -22.5px
+      
+    .action-label
+      position: absolute
+      width: 180px
+      height: 40px
+      top: 50%
+      margin-top: -20px
+      left: 105px

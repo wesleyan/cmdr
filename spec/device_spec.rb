@@ -5,6 +5,13 @@ require 'eventmachine'
 require 'mq'
 require 'couchrest'
 
+class Module
+  def redefine_const(name, value)
+    __send__(:remove_const, name) if const_defined?(name)
+    const_set(name, value)
+  end
+end
+
 RSpec::Runner.configure do |config|
 	#For some reason in Ruby 1.9.2 class definition constants leak between tests, causing errors
 	config.before(:each) {
@@ -584,15 +591,9 @@ describe "handling requests from amqp" do
 	end
 	describe "Event handling" do
 		it "should send events when device state vars change" do
-			AMQP.start(:host => '127.0.0.1') do
-				amq = MQ.new
-				amq.queue(Wescontrol::EVENT_QUEUE).purge
-				EM::add_periodic_timer(0.5) do
-					AMQP.stop do
-						EM.stop
-					end
-				end
-			end
+      old_topic = Wescontrol::EVENT_TOPIC
+      Wescontrol.redefine_const(:EVENT_TOPIC, "roomtrol:test:event_topic_#{rand(100000)}")
+
 			class DeviceSubclass < Wescontrol::Device
 				state_var :text, :type => :string
 			end
@@ -612,8 +613,7 @@ describe "handling requests from amqp" do
 						EM.stop
 					end
 				end
-				amq = MQ.new
-				amq.queue(Wescontrol::EVENT_QUEUE).subscribe{|json|
+				MQ.new.queue("roomtrol:test:watch_#{rand(100000)}").bind(MQ.new.topic(Wescontrol::EVENT_TOPIC), :key => "*").subscribe{|json|
 					msg = JSON.parse(json)
 					Time.at(msg.delete('time')).hour.should == Time.now.hour
 					msg.should == {
@@ -635,6 +635,8 @@ describe "handling requests from amqp" do
 				}
 			end
 			@recv.should == 0
+
+      Wescontrol.redefine_cost(:EVENT_TOPIC, old_topic)
 		end
 	end
 end

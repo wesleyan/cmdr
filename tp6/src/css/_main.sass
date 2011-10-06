@@ -1,0 +1,76 @@
+@import mixins.sass
+@-webkit-keyframes 'pulse'
+  from
+    opacity: 0
+  40%
+    opacity: 0.6
+  60%
+    opacity: 0.6
+  to
+    opacity: 0
+
+@-moz-keyframes 'pulse'
+  from
+    opacity: 0
+  40%
+    opacity: 0.6
+  60%
+    opacity: 0.6
+  to
+    opacity: 0
+
+.overflow
+  overflow: visible
+
+div, img, p
+  +user-select(none)
+  cursor: url("../images/blank.png"), none !important
+
+#top-bar
+  background-color: black
+  overflow: visible
+  +fill-width(30px)
+  
+  .label
+    color: #E6E7E8
+    font-family: "Myriad Pro"
+    -webkit-user-select: none
+    font-size: 19px
+    top: 5px
+    position: absolute
+
+    &#room-label
+      left: 20px
+      width: 200px
+
+    &#time-label
+      line-height: 22px
+      text-align: center
+      right: 20px
+      width: 100px
+      
+#main-view
+  +fill-parent
+  top: 30px
+
+#lost-connection
+  +fill-parent
+  background-color: rgba(0,0,0,0.9)
+  z-index: 100000
+  color: white
+  text-align: center
+  font-family: "Myriad Pro"
+  .title
+    margin-top: 40px
+    font-size: 60px
+  .text
+    margin-top: 60px
+    line-height: 40px
+    font-size: 28px
+    width: 85%
+    margin-left: auto
+    margin-right: auto
+  .reconnection-attempt, .reconnecting
+    font-size: 22px
+    margin-top: 50px
+  

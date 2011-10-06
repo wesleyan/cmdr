@@ -11,6 +11,7 @@ gem 'daemon-kit'
 gem 'yard'
 gem 'bluecloth'
 gem 'rspec'
+gem 'rbtrace'
 
 gem 'macaddr'
 gem 'json'
@@ -26,7 +27,12 @@ gem 'amqp'
 gem 'uuidtools'
 
 #deploy gems
-gem 'highline'
+gem 'highline', "= 1.6.1"
 gem 'net-ssh'
 gem 'net-scp' 
 gem 'git'
+gem 'slinky', :git => "git://github.com/mwylde/slinky.git"
+
+# Web socket gems
+gem 'em-websocket'
+gem 'state_machine'
