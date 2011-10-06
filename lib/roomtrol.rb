@@ -54,7 +54,7 @@ module Wescontrol
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				EventMonitor.run
-        RoomtrolWebsocket.new.run
+        RoomtrolWebsocket.new.run rescue nil
 				@devices.each{|device|
 					Thread.new do
 						begin

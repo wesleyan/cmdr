@@ -92,13 +92,12 @@ module Wescontrol
 			db = CouchRest.database!(db_uri)
 			
 			number = 0
-			serial_ports = `ls /dev/serial/by-id`.split("\n").collect{|port|
+			serial_ports = `ls /dev/serial/by-path`.split("\n").collect do |port|
 				{
-					"name" => "port#{number}",
-					"value" => port
+					"name" => "port#{number+=1}",
+					"value" => "/dev/serial/by-path#{port}"
 				}
-				number += 1
-			}
+			end
 			
 			unless `ls /dev | grep lircd` == ""
 				serial_ports << {"name" => "IR Port", "value" => "/dev/lircd"}
