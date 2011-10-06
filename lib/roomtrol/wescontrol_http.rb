@@ -6,7 +6,7 @@ require 'uuidtools'
 
 module Wescontrol 
 	class WescontrolHTTP < EventMachine::Connection
-		TIMEOUT = 2.0
+		TIMEOUT = 4.0
 		include EventMachine::HttpServer
 		
 		@@kind_verifier = {
@@ -22,11 +22,11 @@ module Wescontrol
 		}
 		
 		def initialize
-			DaemonKit.logger.info("Starting WescontrolHTTP")
-			@queue = "roomtrol:http:#{self.object_id}"
-			@deferred_responses = {}
 			@amq = MQ.new
-			@amq.queue(@queue).subscribe{|json|
+			@queue_name = "roomtrol:http:#{self.object_id}"
+			@queue = @amq.queue(@queue_name)
+			@deferred_responses = {}
+			@queue.subscribe{|json|
 				msg = JSON.parse(json)
 				DaemonKit.logger.debug("Received HTTP response: #{msg}")
 				if @deferred_responses[msg["id"]]
@@ -34,6 +34,10 @@ module Wescontrol
 				end
 			}
 		end
+		
+		def unbind
+			@queue.unsubscribe
+	    end
 		
 		def process_http_request
 			resp = EventMachine::DelegatedHttpResponse.new( self )
@@ -87,12 +91,14 @@ module Wescontrol
 				resp.send_response
 			}
 			deferrable.errback {|error|
+				DaemonKit.logger.debug("Errback called with #{error}")
 				resp.status = 500
 				resp.content = {:error => :timed_out}.to_json + "\n"
 				resp.send_response
 				@deferred_responses.delete(deferrable)
 			}
 			@deferred_responses[device_req[:id]] = deferrable
+			DaemonKit.logger.debug("Sending #{device}: #{device_req}")
 			@amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
 		end
 		
@@ -102,7 +108,7 @@ module Wescontrol
 			DaemonKit.logger.debug("Running get on #{path}")
 			device_req = {
 				:id => UUIDTools::UUID.random_create.to_s,
-				:queue => @queue,
+				:queue => @queue_name,
 				:type => :state_get,
 				:var => path[2]
 			}
@@ -114,22 +120,24 @@ module Wescontrol
 		#and returns something like this: `{"result" => true}`
 		def post path, resp
 			begin
-				data = JSON.parse(@http_post_content)
+				data = @http_post_content ? JSON.parse(@http_post_content) : {}
+				DaemonKit.logger.debug("Received POST: #{data}")
 				device_req = {
 					:id => UUIDTools::UUID.random_create.to_s,
-					:queue => @queue
+					:queue => @queue_name
 				}
-				if data['value']
+				if data['value'] != nil #we want to allow false values, but not nil values
 					device_req[:type] = :state_set
 					device_req[:var] = path[2]
 					device_req[:value] = data['value']
 				else
 					device_req[:type] = :command
 					device_req[:method] = path[2]
-					device_req[:args] = data['args']
+					device_req[:args] = data['args'] if data['args']
 				end
 				defer_device_operation resp, device_req, path[1]
-			rescue JSON::ParserError
+			rescue JSON::ParserError, TypeError
+				DaemonKit.logger.debug("JSON Parser error")
 				resp.status = 400
 				content = {"error" => "bad_json"}
 				resp.send_response

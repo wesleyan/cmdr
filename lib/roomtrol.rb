@@ -13,6 +13,7 @@ require 'roomtrol/devices/Projector'
 require 'roomtrol/devices/VideoSwitcher'
 require 'roomtrol/devices/Computer'
 require 'roomtrol/MAC.rb'
+require 'roomtrol/video-recorder'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
@@ -33,7 +34,7 @@ module Wescontrol
 				begin
 					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
 				rescue
-					DaemonKit.logger.error "Failed to create device: #{$!}"
+					DaemonKit.logger.error "Failed to create device #{hash['value']}: #{$!}"
 				end
 			}.compact
 		end
@@ -43,22 +44,21 @@ module Wescontrol
 		end
 		
 		def start
-			#puts @devices.inspect
 			#start each device
-			@devices.each{|device|
-				Thread.new {
-					begin
-						device.run
-					rescue
-						DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
-						retry
-					end
-				}
-			}
-			WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
+			WescontrolHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				EventMonitor.run
+				@devices.each{|device|
+					Thread.new do
+						begin
+							device.run
+						rescue
+							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+							retry
+						end
+					end
+				}
 			}
 		end
 	end

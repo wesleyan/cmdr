@@ -1,0 +1,68 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    amqp (0.6.7)
+      eventmachine (>= 0.12.4)
+    bit-struct (0.13.6)
+    bluecloth (2.0.9)
+    chronic (0.2.3)
+      hoe (>= 1.2.1)
+    couchrest (1.0.1)
+      json (>= 1.4.6)
+      mime-types (>= 1.15)
+      rest-client (>= 1.5.1)
+    daemon-kit (0.1.8.1)
+      eventmachine (>= 0.12.10)
+    eventmachine (0.12.10)
+    eventmachine_httpserver (0.2.0)
+    git (1.2.5)
+    highline (1.6.1)
+    hoe (2.6.2)
+      rake (>= 0.8.7)
+      rubyforge (>= 2.0.4)
+    json (1.4.6)
+    json_pure (1.4.6)
+    macaddr (1.0.0)
+    mime-types (1.16)
+    net-scp (1.0.4)
+      net-ssh (>= 1.99.1)
+    net-ssh (2.0.23)
+    rack (1.2.1)
+    rake (0.8.7)
+    rest-client (1.6.1)
+      mime-types (>= 1.16)
+    rubyforge (2.0.4)
+      json_pure (>= 1.1.7)
+    serialport (1.0.4)
+    sinatra (1.1.0)
+      rack (~> 1.1)
+      tilt (~> 1.1)
+    tilt (1.1)
+    uuidtools (2.1.1)
+    wol (0.4.0)
+    yard (0.6.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  amqp
+  bit-struct
+  bluecloth
+  chronic
+  couchrest
+  daemon-kit
+  eventmachine
+  eventmachine_httpserver
+  git
+  highline
+  json
+  macaddr
+  net-scp
+  net-ssh
+  rake
+  serialport
+  sinatra
+  uuidtools
+  wol
+  yard
