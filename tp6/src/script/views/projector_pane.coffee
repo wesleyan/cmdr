@@ -6,14 +6,6 @@ Tp.ProjectorPaneView = Backbone.View.extend
       $.template "projector-pane-template", template
       this.render()
 
-      # events
-      $('.power-button').click(@powerButtonClicked)
-      $('.blank-button').click(@blankButtonClicked)
-
-      $('.volume-minus').click(@volumeDownClicked)
-      $('.volume-plus').click(@volumeUpClicked)
-      $('.mute-button').click(@muteButtonClicked)
-
     _.bindAll this, 'projectorChanged'
 
     Tp.server.bind "loaded", @projectorChanged
@@ -34,13 +26,25 @@ Tp.ProjectorPaneView = Backbone.View.extend
       mute_button_label: "loading..."
     }).appendTo "#projector-pane"
 
-    $(".projector-module").noisy(
-      'intensity' : 1,
-      'size' : 200,
-      'opacity' : 0.08,
-      'fallback' : '',
-      'monochrome' : true
-    )
+    # $(".projector-module").noisy(
+    #   'intensity' : 1,
+    #   'size' : 200,
+    #   'opacity' : 0.08,
+    #   'fallback' : '',
+    #   'monochrome' : true
+    # )
+
+    # events
+    #Tp.start = ["setting up handlers", $('.power-button')]
+    console.log("Setting up handlers")
+    $('.power-button').click(@powerButtonClicked)
+    $('.blank-button').click(@blankButtonClicked)
+
+    $('.volume-minus').click(@volumeDownClicked)
+    $('.volume-plus').click(@volumeUpClicked)
+    $('.mute-button').click(@muteButtonClicked)
+
+
 
   projectorChanged: () ->
     state = Tp.devices.projector.get('state')
