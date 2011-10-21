@@ -15,7 +15,7 @@ class BenQSP890Projector < Projector
 	end
 
   def read data
-    EM.cancel_timer @_colling_timer if @_cooling_timer
+    EM.cancel_timer @_cooling_timer if @_cooling_timer
     @_cooling_timer = nil
     super data
   end
