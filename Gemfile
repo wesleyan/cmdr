@@ -11,7 +11,6 @@ gem 'daemon-kit'
 gem 'yard'
 gem 'bluecloth'
 gem 'rspec'
-gem 'rbtrace'
 
 gem 'macaddr'
 gem 'json'

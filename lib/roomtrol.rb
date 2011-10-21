@@ -2,8 +2,6 @@ libdir = File.dirname(__FILE__)
 $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 
 require 'rubygems'
-require 'rbtrace'
-
 require 'couchrest'
 require 'time'
 require 'roomtrol/constants'

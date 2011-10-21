@@ -13,4 +13,9 @@ end
 
 # Sample loop to show process
 puts "Starting WescontrolHTTP on 0.0.0.0:1412"
-Wescontrol::WescontrolRoom.new.start
+
+begin
+  Wescontrol::WescontrolRoom.new.start
+rescue => e
+  DaemonKit.logger.exception e
+end

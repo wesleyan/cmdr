@@ -95,7 +95,7 @@ module Wescontrol
 			serial_ports = `ls /dev/serial/by-path`.split("\n").collect do |port|
 				{
 					"name" => "port#{number+=1}",
-					"value" => "/dev/serial/by-path#{port}"
+					"value" => "/dev/serial/by-path/#{port}"
 				}
 			end
 			
