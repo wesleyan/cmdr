@@ -141,11 +141,13 @@ module Wescontrol
 		end
 		
 		# Creates a new RS232Device instance
-		# @param [String, Symbol] name The name of the device, which is stored in the database
-		# 	and used to communicate with it over AMQP
-		# @param [Hash{String, Symbol => Object}] hash A hash of configuration definitions, from
-		# 	the name of the config var to its value
-		# @param [String] db_uri The URI of the CouchDB database where updates should be saved
+		# @param [String, Symbol] name The name of the device, which is
+    #   stored in the database and used to communicate with it over AMQP
+		# @param [Hash{String, Symbol => Object}] hash A hash of
+    #   configuration definitions, from the name of the config var
+    #   to its value
+		# @param [String] db_uri The URI of the CouchDB database where
+    #   updates should be saved
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
       Thread.abort_on_exception = true
@@ -202,9 +204,11 @@ module Wescontrol
     end
 
 		
-		# Run is a blocking call that starts the device. While run is running, the device will
-		# watch for AMQP events as well as whatever communication channels the device uses and
-		# react appropriately to events. It will also send requests if any have been specified.
+		# Run is a blocking call that starts the device. While run is
+		# running, the device will watch for AMQP events as well as
+		# whatever communication channels the device uses and react
+		# appropriately to events. It will also send requests if any have
+		# been specified.
 		def run
 			EM::run {
 				begin
