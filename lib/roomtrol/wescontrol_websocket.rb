@@ -43,7 +43,7 @@ module Wescontrol
   #   - **state** (on/off/warming/cooling)
   #   - **video_mute** (true/false)
   # - volume
-  #   - **level** (0-1.0)
+  #   - **volume** (0-1.0)
   #   - **mute** (true/false)
   # - source
   #   - **current** (source name)
@@ -80,7 +80,7 @@ module Wescontrol
   #   - **power** (true/false)
   #   - **mute** (true/false)
   # - volume
-  #   - **level** (0-1.0)
+  #   - **volume** (0-1.0)
   #   - **mute** (true/false)
   # - source
   #   - **current** (string name of a source)
@@ -141,7 +141,7 @@ module Wescontrol
     # The resource names for devices
     DEVICES = {
       "projector"  => ["power", "video_mute", "state", "video_mute"],
-      "volume"     => ["level", "mute"],
+      "volume"     => ["volume", "mute"],
       "switcher"   => ["input"],
       "ir_emitter" => [],
       "computer"   => ["reachable"],

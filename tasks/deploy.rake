@@ -98,14 +98,16 @@ def deploy servers
                   "mv /tmp/roomtrol-daemon.zip .",
                   "unzip -q roomtrol-daemon.zip",
                   "rm roomtrol-daemon.zip",
-                  "echo 'Unzipped zip file'",
-                  "rvm 1.9.2",
-                  "echo 'Switched to rvm'",
-                  "/usr/local/rvm/bin/rvmsudo bundle install",
-                  "echo 'Updated roomtrol' | wall",
-                 ]
+                  "echo 'Unzipped zip file'"]
 		  
 			puts ssh.exec!(commands.join("; "))
+
+      env = ['PATH="/usr/local/rvm/bin:/usr/local/rvm/gems/ruby-1.9.2-p290/bin:/usr/local/rvm/gems/ruby-1.9.2-p290@global/bin:/usr/local/rvm/rubies/ruby-1.9.2-p290/bin:$PATH"',
+             'GEM_HOME="/usr/local/rvm/gems/ruby-1.9.2-p290"',
+             'GEM_PATH="/usr/local/rvm/gems/ruby-1.9.2-p290:/usr/local/rvm/gems/ruby-1.9.2-p290@global"',
+             'BUNDLE_GEMFILE="/var/roomtrol-daemon/Gemfile"']
+      
+      puts ssh.exec!("#{env.join(" ")} rvmsudo bundle install")
 			
 			puts "Restarting daemon"
 			puts ssh.exec!("sudo restart roomtrol-daemon")
