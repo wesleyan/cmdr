@@ -30,7 +30,7 @@ gem 'highline', "= 1.6.1"
 gem 'net-ssh'
 gem 'net-scp' 
 gem 'git'
-gem 'slinky', :git => "git://github.com/mwylde/slinky.git"
+gem 'slinky' #, :git => "git://github.com/mwylde/slinky.git"
 
 # Web socket gems
 gem 'em-websocket'

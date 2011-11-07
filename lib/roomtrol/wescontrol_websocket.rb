@@ -252,7 +252,15 @@ module Wescontrol
       s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
 
       if initial_source = (s_src || p_src || @sources[0]['name'])
+        DaemonKit.logger.debug("Initial source: #{initial_source}")
+        # For some reason, when we define events in make_state_machine
+        # the events also get fired. This is highly undesireable. This
+        # is just a hack that ignores the commands to switch until the
+        # thing is defined.
+        @dont_switch = true
         @source_fsm = make_state_machine(self, @sources, initial_source.to_sym).new
+        @dont_switch = false
+        @source_fsm.send("select_#{initial_source}")
       end
     end
     
@@ -264,6 +272,7 @@ module Wescontrol
           RESOURCES[r].include? msg['var']
         }
         unless resource.nil?
+          DaemonKit.logger.debug("Setting FSM: #{resource}, #{msg['var']}")
           send_update resource, msg['var'], msg['was'], msg['now']
           case [resource, msg['var']]
           when ["projector", "input"]
@@ -403,8 +412,10 @@ module Wescontrol
     end
 
     def set_device_state device, state, df = EM::DefaultDeferrable.new
-      DaemonKit.logger.debug "Setting #{device} input to #{state}"
-      daemon_set :input, state, device, df
+      unless @dont_switch
+        DaemonKit.logger.debug "Setting #{device} input to #{state}"
+        daemon_set :input, state, device, df
+      end
     end
     
     def defer_device_operation device_req, device, df        
@@ -441,11 +452,18 @@ module Wescontrol
       klass.class_eval do
         state_machine :source, :initial => initial do
           after_transition any => any do |fsm, transition|
+            DaemonKit.logger.debug "transitions from #{transition.from} to #{transition.to}"
             parent.send_update :source, :source, transition.from, transition.to 
           end
           sources.each do |source|
             this_state = source['name'].to_sym
             event "select_#{this_state}".to_sym do
+              # begin
+              #   1/0
+              # rescue => e
+              #   DaemonKit.logger.debug e.backtrace.join("\n")
+              # end
+
               transition all => this_state
             end
             p = source['input']['projector']
