@@ -260,7 +260,10 @@ module Wescontrol
         @dont_switch = true
         @source_fsm = make_state_machine(self, @sources, initial_source.to_sym).new
         @dont_switch = false
-        @source_fsm.send("select_#{initial_source}")
+        # TODO: Reconsider this line. Commenting it out fixes an issue
+        # where the projector flashes when the daemon starts, but
+        # maybe isn't ideal? I'm not really sure.
+        # @source_fsm.send("select_#{initial_source}")
       end
     end
     
