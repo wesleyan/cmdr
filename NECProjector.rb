@@ -98,7 +98,7 @@ class NECProjector < Projector
       error_codes = {0 => "Not supported", 1 => "Parameter error", 2 => "Operation mode error", 
         3 => "Gain-related error", 4 => "Logo transfer error"}
       if frame['data'] && frame['data'][0]
-        DaemonKit.logger.error "#{frame['id2'].to_s(16)}: The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
+        #DaemonKit.logger.error "#{frame['id2'].to_s(16)}: The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
         return "The response was not acknowledged: #{error_codes[frame['data'][0]]}: #{frame['data'][1]}"
       end
     end
