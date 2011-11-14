@@ -70,7 +70,6 @@ class EpsonProjector < Projector
 	#	match :mute,       /MUTE=(.+)/, proc{|m| self.mute = (m[1] == "OFF")}
 		match :video_mute, /MUTE=(.+)/, proc{|m| self.video_mute = (m[1] == "ON")}
 		match :input,      /SOURCE=(.+)/, proc{|m| self.input = m[1]}
-		tt
 	end
 	
 	requests do

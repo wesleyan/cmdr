@@ -2,9 +2,9 @@
 #{
 #	"name": "SocketProjector",
 #	"depends_on": "SocketDevice",
-#	"description": "Generic socket projector class.",
-#	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu",
+#	"description": "Generic socket projector class - used to control a projector over a TCP socket connection",
+#	"author": "Jonathan Lyons",
+#	"email": "jclyons@wesleyan.edu",
 #	"abstract": true,
 #	"type": "Projector"
 #}
