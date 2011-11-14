@@ -1,3 +1,3 @@
 [submodule "lib/roomtrol/devices"]
 	path = lib/roomtrol/devices
-	url = git@github.com:imsdev/roomtrol-devices.git
+	url = git@github.com:Aqueous/roomtrol-devices.git

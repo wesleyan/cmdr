@@ -1,142 +1,22 @@
-require 'serialport'
+require 'roomtrol/socketclient'
 require 'strscan'
-#require 'roomtrol/em-serialport'
 require 'rubybits'
 require 'socket'
+
 module Wescontrol
-	# RS232Device is a subclass of {Wescontrol::Device} that makes the
-	# job of controlling devices that communicate over RS232 serial
-	# ports easier. At its most basic level, it will handle
-	# communication through a serial port (using the
-	# [ruby-serialport](http://ruby-serialport.rubyforge.org/) library)
-	# for you, providing {#send_string} and {#read}, which respectively
-	# send and receive strings to and from the device. However, most
-	# devices should be able to take advantage of the various "managed"
-	# features, which can greatly simplify the task of writing drivers
-	# for RS232 devices. In fact, using this class it is possible to
-	# write drivers without any real code at all (besides some string
-	# handling).
-	# 
-	# There are several abstractions provided which can take over a part
-	# of device handling.  Perhaps the most widely applicable is the
-	# {RS232Device::requests requests} abstraction.  Many devices will
-	# not send messages to notify a state change and must be constantly
-	# polled to maintain correct state in the Roomtrol system (i.e., if
-	# a projector is turned off manually, you must request its power
-	# state in order to display that fact on the touchscreen). You can
-	# use `request` to do such polling automatically. You can provide as
-	# many requests as you'd like, and each can have an associated
-	# priority which informs how often is should be sent. Look at the
-	# {RS232Device::requests} documentation for more information.
-	# 
-	# The next abstraction is {RS232Device::responses
-	# responses}. Responses provide automatic handling of incoming data
-	# from the device. Each response has a "matcher," which can be a
-	# string, regular expression or a function. When a message comes
-	# over the wire from the device, it is matched against all of the
-	# responses. If one matches, the message is passed to the handler
-	# function provided, which will generally update one or more
-	# state_vars based on the information provided.
-	# 
-	# The final abstraction is {RS232Device::managed_state_var}. A
-	# managed state var is like a normal {Device::state_var} except that
-	# the set_ method is created automatically based on a string
-	# function provided to :action.
-	# 
-	# Using these three abstractions, you can write device drivers using
-	# very little code. For example, here's a subset of the
-	# ExtronVideoSwitcher driver (the full source can be found
-	# [here](https://github.com/mwylde/roomtrol-devices/blob/master/ExtronVideoSwitcher.rb)).
-	# 
-	# 	configure do
-	# 		baud        9600
-	# 		message_end "\r\n"
-	# 	end
-	# 
-	# 	managed_state_var :input, 
-	# 		:type => :option, 
-	# 		:display_order => 1, 
-	# 		:options => ("1".."6").to_a,
-	# 		:action => proc{|input|
-	# 			"#{input}!\r\n"
-	# 		}
-	# 
-	# 	responses do
-	# 		match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i.to_s}
-	# 		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
-	# 		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
-	# 		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
-	# 			self.input = m[1].to_i if m[1].to_i > 0
-	# 			self.clipping = (m[2] == "1")
-	# 		}
-	# 	end
-	# 
-	# 	requests do
-	# 		send :input, "I\r\n", 0.5
-	# 		send :volume, "V\r\n", 0.5
-	# 		send :mute, "Z\r\n", 0.5
-	# 	end
-	# 
-	# These abstractions are designed around devices that have the following message lifecycle:
-	# 
-	# 1. A message is sent from the controller to the device
-	# 2. The device processes the event and sends back a response,
-  #    either an acknowledge or a full response.
-	# 3. The device is now ready for a new message, starting the cycle over.
-	# 
-	# In particular, since many devices can only handle one message at a
-	# time, RS232Device waits until a response is received or
-	# message_timeout seconds have passed before sending the next
-	# message in the queue. Devices with more complex message handling
-	# (for example, those with multiple message queues) may not work
-	# optimally with this strategy. In those cases, writing the message
-	# handling system yourself may be preferable. It is also very
-	# important that devices are synchronous; i.e., they always send
-	# responses in the order that requests or commands are received. If
-	# this assumption does not hold, users may get incorrect responses.
-	# 
-	# ##Configuration
-	# RS232Devices have addition configuration parameters, which can be
-  # placed in the normal {Device::configure} block.
-	# 
-	# + *port*: the serial port the device is connected to. You
-  #   shouldn't set this directly, because it should be modifiable by
-  #   the user
-	# + *baud*: the baud rate at which communication occurs. You can
-  #   either set this, if the device uses a fixed baud rate, or let
-  #   the user set it if the device supports variable baud rates 
-	# + *data_bits*: the number of data bits used by the device (usually 7 or 8)
-	# + *stop_bits*: the number of stop bits used by the device (either 1 or 2)
-	# + *parity*: the kind of parity checking used; can be 0, 1 or 2
-  #    which are NONE, EVEN and ODD respectively
-	# + *message_end*: the character(s) which demarcate the end of a
-  #   message; for ASCII-based protocols usually a newline ("\n") or a
-  #   carriage return and newline ("\r\n"). You must set this if you
-  #   want message interpretation to work correctly. Alternatively,
-  #   you can supply a proc which takes one argument (a string) and
-  #   which returns true if the string represents a valid message or
-  #   false otherwise. This is useful for binary protocols where a
-  #   message is demarcated by a valid checksum rather than a specific
-  #   symbol.
-  # + *message_timeout*: the number of seconds to wait before sending
-  #   the next message after a message fails to elicit a response
-  # + *message_delay*: The number of seconds to wait before sending
-  #   the next message after a message has successfully gotten a
-  #   response. Some devices can't take a constant barrage of message,
-  #   so a delay is necessary
+
 	class SocketDevice < Device
 
 
       # The SerialPort object over which data is sent and received from
-  		# the device
+  		# an RS232 device
 		attr_accessor :serialport
-
+		# The socket client over which data is sent and received from a TCP/IP device 
+    attr_accessor :socketclient
+    
 		configure do
-			port :type => :port
-			baud :type => :integer, :default => 9600
-			data_bits 8
-			stop_bits 1
-			parity 0
+	     # uri in the form (Example) pjlink://129.133.125.197:4352
+		  uri :type => :uri
 			message_end "\r\n"
 			message_timeout 0.2
       message_delay 0
@@ -153,13 +33,13 @@ module Wescontrol
 		# @param [String] dqueue The AMQP queue that the device watches for messages
 		def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
       Thread.abort_on_exception = true
-      
+        
 			options = options.symbolize_keys
 			super(name, options, db_uri, dqueue)
-			throw "Must supply serial port parameter" unless configuration[:port]
-      DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
+			throw "Must supply URI parameter" unless configuration[:uri]
+      DaemonKit.logger.info "Creating socket device #{name} on #{configuration[:uri]}"
       
-//      @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
+
 			@_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
@@ -215,9 +95,10 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
+          @_conn = EventMachine::SocketClient.connect(configuration[:uri])
 					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
-					 conn = EventMachine::SocketClient.connect("129.133.125.197:4352")
+		
 					 
 					 
 					end

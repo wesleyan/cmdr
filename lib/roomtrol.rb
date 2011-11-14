@@ -6,10 +6,12 @@ require 'couchrest'
 require 'time'
 require 'roomtrol/constants'
 require 'roomtrol/device'
+require 'roomtrol/SocketDevice'
 require 'roomtrol/event_monitor'
 require 'roomtrol/wescontrol_http'
 require 'roomtrol/RS232Device'
 require 'roomtrol/devices/Projector'
+require 'roomtrol/devices/SocketProjector'
 require 'roomtrol/devices/VideoSwitcher'
 require 'roomtrol/devices/Computer'
 require 'roomtrol/MAC.rb'
@@ -21,10 +23,12 @@ require 'roomtrol/wescontrol_websocket'
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
 		require device
-	rescue
+	rescue => e
 		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
-	rescue LoadError
+		DaemonKit.logger.error e.backtrace
+	rescue LoadError => error
 		DaemonKit.logger.error "Failed to load #{device}: syntax error"
+		DaemonKit.logger.error e.backtrace
 	end
 }
 

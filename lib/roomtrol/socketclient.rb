@@ -6,7 +6,7 @@ module EventMachine
 
     def self.connect uri
       p_uri = URI.parse(uri)
-      conn = EM.connect(p_uri.host, p_uri.port || 80, self) do |c|
+      conn = EventMachine::connect(p_uri.host, p_uri.port || 80, self) do |c|
         c.url = uri
       end
     end
@@ -27,8 +27,7 @@ module EventMachine
     end
 
     def send_msg s
-      frame = LibWebSocket::Frame.new(s)
-      send_data frame.to_s
+  
     end
 
     def unbind
