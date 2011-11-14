@@ -8,9 +8,6 @@ module Wescontrol
 	class SocketDevice < Device
 
 
-      # The SerialPort object over which data is sent and received from
-  		# an RS232 device
-		attr_accessor :serialport
 		# The socket client over which data is sent and received from a TCP/IP device 
     attr_accessor :socketclient
     
@@ -61,28 +58,28 @@ module Wescontrol
     # data is received. Note that you should only call this method once.
     # @param [Proc] cb A callback that should handle serial data
     def serial_reader &cb
-      deferrable = EM::DefaultDeferrable.new
-      deferrable.callback &cb
-      Thread.new do
-        loop do
-          begin
-            data = @_serialport.sysread(4096)
-          rescue Errno::EAGAIN, Errno::EWOULDBLOCK, EOFError
-            sleep(0.05)
-          rescue Errno::ECONNRESET, Errno::ECONNREFUSED
-            DaemonKit.logger.error("Connection refused")
-            break
-          end
-
-          if data
-            deferrable.succeed(data)
-          else
-            deferrable.fail
-          end
-          deferrable = EM::DefaultDeferrable.new
-          deferrable.callback &cb
-        end
-      end
+      # deferrable = EM::DefaultDeferrable.new
+      # deferrable.callback &cb
+      # Thread.new do
+      #   loop do
+      #     begin
+      #       data = @_serialport.sysread(4096)
+      #     rescue Errno::EAGAIN, Errno::EWOULDBLOCK, EOFError
+      #       sleep(0.05)
+      #     rescue Errno::ECONNRESET, Errno::ECONNREFUSED
+      #       DaemonKit.logger.error("Connection refused")
+      #       break
+      #     end
+      # 
+      #     if data
+      #       deferrable.succeed(data)
+      #     else
+      #       deferrable.fail
+      #     end
+      #     deferrable = EM::DefaultDeferrable.new
+      #     deferrable.callback &cb
+      #   end
+      # end
     end
 
 		
@@ -102,7 +99,7 @@ module Wescontrol
 					 
 					 
 					end
-          serial_reader {|data| read data}
+          # serial_reader {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
