@@ -1,6 +1,6 @@
 #---
 #{
-#	"name": "EpsonProject",
+#	"name": "EpsonProjector",
 #	"depends_on": "Projector",
 #	"description": "Controls Epson PowerLite Pro G5750WU",
 #	"author": "Micah Wylde",
