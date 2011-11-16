@@ -214,7 +214,7 @@ class NECProjector < Projector
         8.times{|t|
           if data[i] & 2 ** t != 0
             @errors << ERROR_STATUS[i][t]
-            error(ERROR_STATUS[i][t])
+            # error(ERROR_STATUS[i][t])
             DaemonKit.logger.error "Projector Error: #{ERROR_STATUS[i][t]}"
           end
         }
