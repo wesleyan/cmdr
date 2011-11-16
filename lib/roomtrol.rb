@@ -49,6 +49,9 @@ module Wescontrol
 		def start
 			#start each device
 			WescontrolHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
+      names_by_id = {}
+      @devices.each{|d| names_by_id[d._id] = d.name}
+      WescontrolHTTP.instance_variable_set(:@device_ids, names_by_id)
 			EventMachine::run {
 				EventMachine::start_server "0.0.0.0", 1412, WescontrolHTTP
 				EventMonitor.run

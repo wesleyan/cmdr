@@ -60,10 +60,11 @@ module Wescontrol
       resp.content = {:id => @room['id']}.to_json() + "\n"
       resp.send_response
     end
-        
+
     def devices resp
       @devices ||= self.class.instance_variable_get(:@devices)
-      
+      @device_ids ||= self.class.instance_variable_get(:@device_ids)
+
       if !@path[1]
         resp.status = 200
         resp.content = {:devices => @devices}.to_json + "\n" 
@@ -72,7 +73,7 @@ module Wescontrol
         resp.status = 400
         resp.content = {:error => :must_provide_target}.to_json + "\n"
         resp.send_response
-      elsif @devices.include? @path[1]
+      elsif @devices.include?(@path[1]) || @device_ids[@path[1]]
         case @http_request_method
         when "GET"
           get @path, resp
@@ -103,7 +104,8 @@ module Wescontrol
         @deferred_responses.delete(deferrable)
       }
       @deferred_responses[device_req[:id]] = deferrable
-      @amq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
+      queue = @devices.include?(device) ? device : @device_ids[device]
+      @amq.queue("roomtrol:dqueue:#{queue}").publish(device_req.to_json)
     end
     
     #A get request looks like this: GET /devices/Extron/power
@@ -129,7 +131,7 @@ module Wescontrol
           :id => UUIDTools::UUID.random_create.to_s,
           :queue => @queue_name
         }
-        if data['value'] != nil #we want to allow false values, but not nil values
+        if !data['value'].nil? #we want to allow false values, but not nil values
           device_req[:type] = :state_set
           device_req[:var] = path[2]
           device_req[:value] = data['value']
