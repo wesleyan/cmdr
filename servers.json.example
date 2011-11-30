@@ -1,0 +1,13 @@
+{
+	"servers": [
+		"ozymandias.class.wesleyan.edu"
+	],
+	"controllers": [
+    "roomtrol-dev1.class.wesleyan.edu"
+		//"roomtrol-allb004.class.wesleyan.edu"
+	],
+	"test": [
+    "roomtrol-dev1.class"
+	]
+}
+
