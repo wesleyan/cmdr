@@ -1,4 +1,4 @@
-require 'mq'
+require 'amqp'
 require 'couchrest'
 module Wescontrol
 	# This class is responsible for watching the event queue, buffering the events and
@@ -12,10 +12,12 @@ module Wescontrol
 		# A blocking method which starts event monitoring inside an EventMachine.
 		def self.run
 			buffer = {}
-			AMQP.start(:host => '127.0.0.1'){
+      EM.run {
 				db = CouchRest.database("http://localhost:5984/rooms")
-        topic = MQ.new.topic(EVENT_TOPIC)
-				MQ.new.queue("roomtrol:event-monitor").bind(topic, :key => "*").subscribe do |json|
+        connection = AMQP.connect(:host => "127.0.0.1")
+        channel    = AMQP::Channel.new(connection)
+        topic = channel.topic(EVENT_TOPIC)
+				channel.queue("roomtrol:event-monitor").bind(topic, :key => "*").subscribe do |json|
 					begin
 						msg = JSON.parse(json)
 						msg[:event] = true

@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'em-websocket'
 require 'json'
-require 'mq'
+require 'amqp'
 require 'couchrest'
 require 'state_machine'
 module Wescontrol
@@ -194,12 +194,14 @@ module Wescontrol
     # outside of an EventMachine reactor.
     def run
       AMQP.start(:host => "localhost") {
-        @mq = MQ.new
+        connection = AMQP.connect(:host => "127.0.0.1")
+        @channel    = AMQP::Channel.new(connection)
+
         @update_channel = EM::Channel.new
         @deferred_responses = {}
 
         @queue_name = "roomtrol:websocket:#{self.object_id}"
-        @queue = @mq.queue(@queue_name)
+        @queue = @channel.queue(@queue_name)
         
         # watch for responses from devices
         @queue.subscribe{|json|
@@ -210,8 +212,8 @@ module Wescontrol
           end
         }
 
-        topic = @mq.topic(EVENT_TOPIC)
-        @mq.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
+        topic = @channel.topic(EVENT_TOPIC)
+        @channel.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
           handle_event json
         end
 
@@ -423,7 +425,7 @@ module Wescontrol
     
     def defer_device_operation device_req, device, df        
       @deferred_responses[device_req[:id]] = df
-      @mq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
+      @channel.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
     end
 
     ##################### Client code ####################

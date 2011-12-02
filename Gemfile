@@ -17,7 +17,7 @@ gem 'json'
 gem 'serialport'
 gem 'rubybits'
 gem 'couchrest'
-gem 'eventmachine'
+gem 'eventmachine', "1.0.0.beta.4"
 gem 'eventmachine_httpserver'
 gem 'chronic'
 gem 'wol'

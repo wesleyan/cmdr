@@ -1,6 +1,6 @@
 # $eventmachine_library = :pure_ruby
 require 'couchrest'
-require 'mq'
+require 'amqp'
 require 'json'
 
 module Wescontrol
@@ -246,36 +246,36 @@ module Wescontrol
 			@db = CouchRest.database(db_uri)
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
 		end
-		
+
 		# Run is a blocking call that starts the device. While run is
 		# running, the device will watch for AMQP events as well as
 		# whatever communication channels the device uses and react
 		# appropriately to events.
 		def run
-			AMQP.start(:host => '127.0.0.1'){
+			EM.run do
 				self.amqp_setup
-				@amq_responder = MQ.new
+        connection = AMQP.connect(:host => "127.0.0.1")
+        @channel    = AMQP::Channel.new(connection)
 				handle_feedback = proc {|feedback, req, resp, job|
 					if feedback.is_a? EM::Deferrable
 						feedback.callback do |fb|
 							resp["result"] = fb
-							@amq_responder.queue(req["queue"]).publish(resp.to_json)
+							@channel.queue(req["queue"]).publish(resp.to_json)
 						end
 						feedback.errback do |error|
 							resp["error"] = error
-							@amq_responder.queue(req["queue"]).publish(resp.to_json)
+							@channel.queue(req["queue"]).publish(resp.to_json)
 						end
 					elsif feedback == nil
-						@amq_responder.queue(req["queue"]).publish(resp.to_json)
+						@channel.queue(req["queue"]).publish(resp.to_json)
 					else
 						resp["result"] = feedback
-						@amq_responder.queue(req["queue"]).publish(resp.to_json)
+						@channel.queue(req["queue"]).publish(resp.to_json)
 					end
 				}
-				
-				amq = MQ.new
+        
 				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
-				amq.queue(@dqueue).subscribe{ |msg|
+				@channel.queue(@dqueue).subscribe{ |msg|
 					begin
 						req = JSON.parse(msg)
 						resp = {:id => req["id"]}
@@ -290,7 +290,7 @@ module Wescontrol
 						handle_feedback.call(nil, req, resp)
 					end
 				}
-			}
+			end
 		end
 		
 		# Subclasses can override this method to add addition AMQP setup,
@@ -751,7 +751,7 @@ module Wescontrol
 			message[:update] = true
 			message[:severity] ||= 0.1
 			message[:time] ||= Time.now.to_i
-			MQ.new.topic(EVENT_TOPIC).publish(
+			@channel.topic(EVENT_TOPIC).publish(
 				message.to_json,
         :key => "device.#{@name}"
 			) if @amq_responder

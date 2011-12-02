@@ -22,9 +22,10 @@ module Wescontrol
     }
     
     def initialize
-      @amq = MQ.new
+      connection = AMQP.connect(:host => "127.0.0.1")
+      @channel    = AMQP::Channel.new(connection)
       @queue_name = "roomtrol:http:#{self.object_id}"
-      @queue = @amq.queue(@queue_name)
+      @queue = @channel.queue(@queue_name)
       @deferred_responses = {}
       @queue.subscribe{|json|
         msg = JSON.parse(json)

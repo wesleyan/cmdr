@@ -6,8 +6,14 @@ GEM
       open4
     Platform (0.4.0)
     addressable (2.2.6)
-    amqp (0.6.7)
-      eventmachine (>= 0.12.4)
+    amq-client (0.8.6)
+      amq-protocol (>= 0.8.4)
+      eventmachine
+    amq-protocol (0.8.4)
+    amqp (0.8.3)
+      amq-client (~> 0.8.6)
+      amq-protocol (~> 0.8.4)
+      eventmachine
     bluecloth (2.0.9)
     chronic (0.2.3)
       hoe (>= 1.2.1)
@@ -27,7 +33,7 @@ GEM
     em-websocket (0.3.5)
       addressable (>= 2.1.1)
       eventmachine (>= 0.12.9)
-    eventmachine (0.12.10)
+    eventmachine (1.0.0.beta.4)
     eventmachine_httpserver (0.2.1)
     execjs (1.2.9)
       multi_json (~> 1.0)
@@ -95,7 +101,7 @@ DEPENDENCIES
   couchrest
   daemon-kit
   em-websocket
-  eventmachine
+  eventmachine (= 1.0.0.beta.4)
   eventmachine_httpserver
   git
   highline (= 1.6.1)
