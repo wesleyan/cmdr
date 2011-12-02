@@ -21,10 +21,12 @@ require 'roomtrol/wescontrol_websocket'
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
 		require device
-	rescue
+	rescue => e
 		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
-	rescue LoadError
+		DaemonKit.logger.error e.backtrace
+	rescue LoadError => error
 		DaemonKit.logger.error "Failed to load #{device}: syntax error"
+		DaemonKit.logger.error e.backtrace
 	end
 }
 
