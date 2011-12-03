@@ -179,8 +179,6 @@ module Wescontrol
     # data is received. Note that you should only call this method once.
     # @param [Proc] cb A callback that should handle serial data
     def serial_reader &cb
-      deferrable = EM::DefaultDeferrable.new
-      deferrable.callback &cb
       Thread.new do
         loop do
           begin
@@ -193,16 +191,13 @@ module Wescontrol
           end
 
           if data
-            deferrable.succeed(data)
-          else
-            deferrable.fail
+            EM.next_tick {
+              cb.call(data)
+            }
           end
-          deferrable = EM::DefaultDeferrable.new
-          deferrable.callback &cb
         end
       end
     end
-
 		
 		# Run is a blocking call that starts the device. While run is
 		# running, the device will watch for AMQP events as well as
@@ -213,10 +208,11 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-					EM::add_periodic_timer configuration[:message_timeout] do
+					@_ready_to_send_timer = EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
 					end
           serial_reader {|data| read data}
+    #      DaemonKit.logger.info("#{self.name}._commands EM:run add_periodic_timer #{@_ready_to_send_timer}")
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -275,6 +271,7 @@ module Wescontrol
 		# @param [String] message The message to add
 		# @param [EM::Deferrable] deferrable The deferrable associated with the message
 		def do_message(message, deferrable = nil)
+#		  DaemonKit.logger.info("#{self.name} do_message: Current thread: #{Thread.current}")
 			@_send_queue ||= []
 			@_send_queue.unshift [message, deferrable]
 		end
@@ -564,7 +561,9 @@ module Wescontrol
 			end
 			if @_ready_to_send && !@_waiting
         @_waiting = true
-        EM::add_timer(configuration[:message_delay]) do
+ #       DaemonKit.logger.info("#{self.name} add_timer: Current thread: #{Thread.current}")
+        @_request_timer = EM::add_timer(configuration[:message_delay]) do
+ #         DaemonKit.logger.info("#{self.name} run_timer: Current thread: #{Thread.current}")
 				  if @_send_queue.size == 0
 					  request = choose_request
 					  do_message request if request
@@ -572,6 +571,7 @@ module Wescontrol
 				  send_from_queue
           @_waiting = false
         end
+  #      DaemonKit.logger.info("#{self.name} added_timer #{@_request_timer}")
 			end
 		end
 
@@ -582,9 +582,11 @@ module Wescontrol
 		# @private
 		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
+#		  DaemonKit.logger.info("#{self.name} send_from_queue: Current thread: #{Thread.current}")
 			if message = @_send_queue.pop
         @_last_sent_time = Time.now
         @_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
+
         @_message_handler.timeout(configuration[:message_timeout])
         send_string message[0]
 			end
