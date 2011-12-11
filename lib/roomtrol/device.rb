@@ -751,10 +751,12 @@ module Wescontrol
 			message[:update] = true
 			message[:severity] ||= 0.1
 			message[:time] ||= Time.now.to_i
-			MQ.new.topic(EVENT_TOPIC).publish(
+	    amq = MQ.new
+			amq.topic(EVENT_TOPIC).publish(
 				message.to_json,
         :key => "device.#{@name}"
 			) if @amq_responder
+		  amq.close
 		end
 		
 		# Saves the current state of the device to CouchDB and sends updates on the update queue
