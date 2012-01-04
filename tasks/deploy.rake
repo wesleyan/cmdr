@@ -42,20 +42,9 @@ end
 desc "deploy touchscreen interface"
 task :deploy_tp, [] => [:build_tp] do
   CONTROLLERS.each{|c|
-    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ roomtrol@#{c}:/var/www/tp6 --exclude '.git'"
+    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ roomtrol@#{c}:/var/www/tp6 --exclude '.git' 2>&1"
+    system(cmd)
 
-    puts c
-    PTY.spawn(cmd){|read,write,pid|
-      write.sync = true
-      $expect_verbose = false
-
-      # read.expect(/password:/) do
-      #   write.puts OPTS[:password] + "\n"
-      # end
-
-      read.expect(/total size/) do
-      end
-    }
   }
 end
 
