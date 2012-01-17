@@ -91,13 +91,17 @@ def deploy servers
 		  
 			puts ssh.exec!(commands.join("; "))
 
-      env = ['PATH="/usr/local/rvm/bin:/usr/local/rvm/gems/ruby-1.9.2-p290/bin:/usr/local/rvm/gems/ruby-1.9.2-p290@global/bin:/usr/local/rvm/rubies/ruby-1.9.2-p290/bin:$PATH"',
+      env = ['PATH="/usr/local/rvm/gems/ruby-1.9.2-p290/bin:/usr/local/rvm/gems/ruby-1.9.2-p290@global/bin:/usr/local/rvm/rubies/ruby-1.9.2-p290/bin:/usr/local/rvm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"',
+        
              'GEM_HOME="/usr/local/rvm/gems/ruby-1.9.2-p290"',
              'GEM_PATH="/usr/local/rvm/gems/ruby-1.9.2-p290:/usr/local/rvm/gems/ruby-1.9.2-p290@global"',
-             'BUNDLE_GEMFILE="/var/roomtrol-daemon/Gemfile"']
+             'BUNDLE_GEMFILE="/var/roomtrol-daemon/Gemfile"',
+             'TERM=xterm',
+             'RUBY_VERSION=ruby-1.9.2-p290'
+            ]
       
+
       puts ssh.exec!("#{env.join(" ")} rvmsudo bundle install")
-			
 			puts "Restarting daemon"
 			puts ssh.exec!("sudo restart roomtrol-daemon")
 			
