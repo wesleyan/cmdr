@@ -3,10 +3,11 @@
 		"ozymandias.class.wesleyan.edu"
 	],
 	"controllers": [
-    "roomtrol-sc509a.class.wesleyan.edu"
+    "roomtrol-dev1.class.wesleyan.edu"
 		//"roomtrol-allb004.class.wesleyan.edu"
 	],
 	"test": [
-    "roomtrol-dev5.class"
+    "roomtrol-dev1.class"
 	]
 }
+
