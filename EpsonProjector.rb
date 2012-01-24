@@ -18,9 +18,8 @@ class EpsonProjector < Projector
     data_bits 8
     stop_bits 1
     parity 0
-    message_end "\r"
-    message_delay 0.2
-
+    message_end "\r:"
+    message_timeout 2.0
   end
 
   def read data
@@ -32,7 +31,11 @@ class EpsonProjector < Projector
 	managed_state_var :power, 
 		:type => :boolean,
 		:display_order => 1,
-		:action => proc{|on|
+    :action => proc{|on|
+      if !@_cooling_timer && !on
+        @_cooling_timer = EM.add_timer(5) { puts "Cooling..."; self.cooling = true }
+      end
+
       "PWR #{on ? "ON" : "OFF"}\r\r"
 		}
 	
