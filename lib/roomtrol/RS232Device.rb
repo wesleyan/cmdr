@@ -124,6 +124,11 @@ module Wescontrol
   #   the next message after a message has successfully gotten a
   #   response. Some devices can't take a constant barrage of message,
   #   so a delay is necessary
+  # + *wait_until_ack*: if true, specifies that no messages should be
+  #   sent until an ack has been received, rather than the default
+  #   behavior which is to send the next when any message has been
+  #   received. However, if message_timeout seconds have passed since
+  #   the last response the next message will be sent regardless.
 	class RS232Device < Device
 		# The SerialPort object over which data is sent and received from
 		# the device
@@ -138,6 +143,7 @@ module Wescontrol
 			message_end "\r\n"
 			message_timeout 0.2
       message_delay 0
+      wait_until_ack false
 		end
 		
 		# Creates a new RS232Device instance
@@ -458,13 +464,13 @@ module Wescontrol
 				iter += 1
 			}
 		end
-		
+
 		# @private
 		# @return The vector of requests created by a {RS232Device::requests} block
 		def request_scheduler
 			self.class.instance_variable_get(:@_request_scheduler)
 		end
-		
+
 		# @private Reads in each block of data from EM::Serialport, and
 		# processes it by splitting it into discrete messages by means of
 		# message_end, then matching each message against the responses
@@ -509,6 +515,7 @@ module Wescontrol
 					elsif m[2].is_a? Proc
 						instance_exec(arg, &m[2])
 					end
+          !configuration[:wait_until_ack] || (m[0] == :ack || m[0] == :nack)
 				end
 			}
 			message_received = false
@@ -523,10 +530,10 @@ module Wescontrol
             start = 0
 						(start+1).upto(@_buffer.size){|_end|
 							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
-								handle_message.call(@_buffer[start.._end])
+								ready = handle_message.call(@_buffer[start.._end])
 								@_buffer = @_buffer[(_end+1)..-1]
 								loop_message_received = true
-								message_received |= loop_message_received
+                message_received |= loop_message_received if ready
 								break
 							end
 						}
@@ -537,8 +544,8 @@ module Wescontrol
         regex = /.*?#{me}/
 				while msg = s.scan(regex) do
 					msg.gsub!(me, "")
-					handle_message.call(msg)
-					message_received = true
+					ready = handle_message.call(msg)
+					message_received = ready
 				end
 				@_buffer = s.rest
 			end
@@ -547,7 +554,7 @@ module Wescontrol
 				self.ready_to_send = true
 			end
 		end
-		
+
 		# @private
     # When set to true, sends the next thing in the send queue or the
 		# next request if send_queue is empty. When set to false, will set
@@ -561,9 +568,7 @@ module Wescontrol
 			end
 			if @_ready_to_send && !@_waiting
         @_waiting = true
- #       DaemonKit.logger.info("#{self.name} add_timer: Current thread: #{Thread.current}")
         @_request_timer = EM::add_timer(configuration[:message_delay]) do
- #         DaemonKit.logger.info("#{self.name} run_timer: Current thread: #{Thread.current}")
 				  if @_send_queue.size == 0
 					  request = choose_request
 					  do_message request if request
@@ -571,18 +576,16 @@ module Wescontrol
 				  send_from_queue
           @_waiting = false
         end
-  #      DaemonKit.logger.info("#{self.name} added_timer #{@_request_timer}")
 			end
 		end
 
 		# @private
 		# @return [Boolean] whether or not the device is ready for new messages
 		def ready_to_send; @_ready_to_send; end
-		
+
 		# @private
 		# Sends the next message in the send queue and sets ready\_to\_send to false.
 		def send_from_queue
-#		  DaemonKit.logger.info("#{self.name} send_from_queue: Current thread: #{Thread.current}")
 			if message = @_send_queue.pop
         @_last_sent_time = Time.now
         @_message_handler = message[1] ? message[1] : EM::DefaultDeferrable.new
@@ -591,7 +594,7 @@ module Wescontrol
         send_string message[0]
 			end
 		end
-		
+
 		# @private
 		# Chooses the next request to send by iterating circularly through the request vector
 		def choose_request
