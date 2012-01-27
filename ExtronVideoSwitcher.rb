@@ -50,6 +50,16 @@ class ExtronVideoSwitcher < VideoSwitcher
 			self.input = m[1].to_i if m[1].to_i > 0
 			self.clipping = (m[2] == "1")
 		}
+    match :input, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
+      x1, x2 = [m[10].to_i, m[11].to_i]
+      if x1 < 3
+        i = (x1-1)*2 + (x2-1) % 2 + 1
+      else
+        i = (x1-3)*3 + (x2-1) % 3 + 5
+      end
+      #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
+      self.input = i
+    }
 	end
 	
 	requests do
