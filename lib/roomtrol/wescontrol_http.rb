@@ -37,6 +37,7 @@ module Wescontrol
     end
     
     def unbind
+      @amq.close
       @queue.unsubscribe
     end
     
