@@ -201,7 +201,7 @@ module Wescontrol
         @deferred_responses = {}
 
         @queue_name = "roomtrol:websocket:#{self.object_id}"
-        @queue = @channel.queue(@queue_name)
+        @queue = @channel.queue(@queue_name, :durable => false)
         
         # watch for responses from devices
         @queue.subscribe{|json|
@@ -213,7 +213,8 @@ module Wescontrol
         }
 
         topic = @channel.topic(EVENT_TOPIC)
-        @channel.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
+        @channel.queue("roomtrol:websocket:#{self.object_id}:response",
+                       :durable => false).bind(topic, :key => "device.*").subscribe do |json|
           handle_event json
         end
 

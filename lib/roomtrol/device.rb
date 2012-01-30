@@ -275,7 +275,7 @@ module Wescontrol
 				}
         
 				DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
-				@channel.queue(@dqueue).subscribe{ |msg|
+				@channel.queue(@dqueue, :durable => false).subscribe{ |msg|
 					begin
 						req = JSON.parse(msg)
 						resp = {:id => req["id"]}
