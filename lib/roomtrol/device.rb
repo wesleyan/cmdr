@@ -757,8 +757,7 @@ module Wescontrol
 			@channel.topic(EVENT_TOPIC).publish(
 				message.to_json,
         :key => "device.#{@name}"
-			) if @amq_responder
-		  amq.close
+			) if @channel
 		end
 		
 		# Saves the current state of the device to CouchDB and sends updates on the update queue

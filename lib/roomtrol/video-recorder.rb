@@ -1,4 +1,4 @@
-require 'mq'
+require 'amqp'
 require 'fileutils'
 
 module RoomtrolVideo

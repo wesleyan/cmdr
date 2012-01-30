@@ -23,10 +23,10 @@ Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 		require device
 	rescue => e
 		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
-		DaemonKit.logger.error e.backtrace
+		#DaemonKit.logger.error e.backtrace
 	rescue LoadError => error
 		DaemonKit.logger.error "Failed to load #{device}: syntax error"
-		DaemonKit.logger.error e.backtrace
+		#DaemonKit.logger.error e.backtrace
 	end
 }
 
