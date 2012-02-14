@@ -22,8 +22,10 @@ gem 'eventmachine_httpserver'
 gem 'chronic'
 gem 'wol'
 gem 'sinatra'
-gem 'amqp'
 gem 'uuidtools'
+
+gem 'ffi'
+gem 'em-zeromq'
 
 #deploy gems
 gem 'highline', "= 1.6.1"
