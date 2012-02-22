@@ -1,9 +1,5 @@
-# $eventmachine_library = :pure_ruby
 require 'couchrest'
-require 'em-zeromq'
 require 'json'
-require 'zmqclient'
-require 'digest/md5'
 
 module Wescontrol
   # Device provides a DSL for describing devices of all
@@ -233,30 +229,27 @@ module Wescontrol
 
     # Creates a new Device instance
     #
-    # @param [String, Symbol] name The name of the device, which is
-    #   stored in the database 
     # @param [Hash{String, Symbol => Object}] hash A hash of
     #   configuration definitions, from the name of the config var to
     #   its value 
     # @param [String] db_uri The URI of the CouchDB database where
     #   updates should be saved
-    def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms")
+    def initialize(hash = {}, db_uri = "http://localhost:5984/rooms")
       hash_s = hash.symbolize_keys
-      @name = name
       hash.each{|var, value|
         configuration[var.to_sym] = value
       } if configuration
       #TODO: The database uri should not be hard-coded
       @db = CouchRest.database(db_uri)
-      # The path used for ipc. Currently defaults to md5 of id
-      @dpath = Digest::MD5.hexdigest(@_id)
     end
 
     # Run is a blocking call that starts the device. While run is
-    # running, the device will watch for AMQP events as well as
+    # running, the device will watch for 0MQ events as well as
     # whatever communication channels the device uses and react
     # appropriately to events.
-    def run
+    #
+    # @param [String] path The path to bind our 0MQ socket to
+    def run path
       ctx = EM::ZeroMQ::Context.new(1)
       EM.run {
         handle_feedback = proc {|feedback, req, resp, job|
@@ -277,7 +270,7 @@ module Wescontrol
           end
         }
 
-        DaemonKit.logger.info("Waiting for messages on roomtrol:dqueue:#{@name}")
+        DaemonKit.logger.info("Waiting for messages on #{path}")
         subscriber = ZMQClient.new
         subscriber.subscribe{ |msg|
           begin
@@ -297,7 +290,7 @@ module Wescontrol
           end
         }
 
-        ctx.bind(ZMQ::PULL, "ipc:///tmp/#{dpath}", subscriber)
+        ctx.bind(ZMQ::PULL, path, subscriber)
       }
     end
 
@@ -653,7 +646,7 @@ module Wescontrol
     #   neccessary to recreate the device on the next restart.
     def to_couch
       DaemonKit.logger.debug "Configuration: #{configuration}"
-      hash = {:state_vars => {}, :config => configuration, :commands => {}, :name => @name}
+      hash = {:state_vars => {}, :config => configuration, :commands => {}}
       
       #if configuration
       # puts "Config vars: #{config_vars.inspect}"
@@ -688,7 +681,7 @@ module Wescontrol
           config[var] = value
         end
       } if hash['attributes']['config']
-      device = self.new(hash['attributes']['name'], config)
+      device = self.new(config)
       device._id = hash['_id']
       device._rev = hash['_rev']
       device.belongs_to = hash['belongs_to']
@@ -757,7 +750,7 @@ module Wescontrol
       amq = MQ.new
       amq.topic(EVENT_TOPIC).publish(
         message.to_json,
-        :key => "device.#{@name}"
+        :key => "device.#{@_id}"
       ) if @amq_responder
       amq.close
     end

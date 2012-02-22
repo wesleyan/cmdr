@@ -1,14 +1,13 @@
 require 'rubygems'
 require 'evma_httpserver'
 require 'json'
-require 'amqp'
 require 'uuidtools'
 
 module Wescontrol 
   class WescontrolHTTP < EventMachine::Connection
     TIMEOUT = 4.0
     include EventMachine::HttpServer
-    
+
     @@kind_verifier = {
       :boolean =>   proc {|a, options| a.is_a?(TrueClass) || a.is_a?(FalseClass)},
       :number =>    proc {|a, options| a.is_a? Numeric},
@@ -20,7 +19,7 @@ module Wescontrol
       #TODO: Actually implement support for setting times
       :time =>    proc {|a, options| begin; Time.at(a); rescue; nil; end}
     }
-    
+
     def initialize
       @amq = MQ.new
       @queue_name = "roomtrol:http:#{self.object_id}"
@@ -34,17 +33,17 @@ module Wescontrol
       }
       @room = Room.find_by_mac(MAC.addr)
     end
-    
+
     def unbind
       @amq.close
       @queue.unsubscribe
     end
-    
+
     def process_http_request
       resp = EventMachine::DelegatedHttpResponse.new( self )
       resp.headers['content-type'] = "application/json"
       @path = @http_request_uri.split('/').collect{|a| a == "" ? nil : a}.compact
-      
+
       if @path[0] == 'devices'
         devices resp
       elsif @path[0] == 'room'
@@ -63,8 +62,7 @@ module Wescontrol
     end
 
     def devices resp
-      @devices ||= self.class.instance_variable_get(:@devices)
-      @device_ids ||= self.class.instance_variable_get(:@device_ids)
+      @devices ||= self.class.instance_variable_get(:@device_paths)
 
       if !@path[1]
         resp.status = 200
@@ -87,7 +85,7 @@ module Wescontrol
         resp.send_response
       end
     end
-    
+
     def defer_device_operation resp, device_req, device
       deferrable = EM::DefaultDeferrable.new
       deferrable.timeout TIMEOUT
@@ -108,7 +106,7 @@ module Wescontrol
       queue = @devices.include?(device) ? device : @device_ids[device]
       @amq.queue("roomtrol:dqueue:#{queue}").publish(device_req.to_json)
     end
-    
+
     #A get request looks like this: GET /devices/Extron/power
     #and returns something like this: `{"result" => false}`
     def get path, resp
@@ -121,7 +119,7 @@ module Wescontrol
       }
       defer_device_operation resp, device_req, path[1]
     end
-  
+
     #A post request looks like this: `POST /devices/Extron/power -d {'value' => true}`
     #or like this: `POST /devices/Extron/zoom -d {'args' => [2.0]}`
     #and returns something like this: `{"result" => true}`
