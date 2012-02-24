@@ -286,7 +286,7 @@ module Wescontrol
                     DaemonKit.logger.error "Didn't match: #{req["type"]}"
                     nil
                   end
-            
+
                 rescue
                   resp[:error] = $!
                   handle_feedback.call(nil, req, resp)
@@ -312,31 +312,31 @@ module Wescontrol
 
       subclass.instance_variable_set(:@_configuration, @_configuration)
       subclass.instance_variable_set(:@_var_affects, @_var_affects)
-      
+
       self.instance_variable_get(:@command_vars).each{|name, options|
         subclass.class_eval do
           command(name, options.deep_dup)
         end
       } if self.instance_variable_get(:@command_vars)
     end
-    
+
     # @return [Hash{Symbol => Object}] A map from config var name to value
     def self.configuration
       @_configuration
     end
-    
+
     # @return [Hash{Symbol => Object}] A map from config var name to value
     def configuration
       self.class.instance_variable_get(:@_configuration)
     end
-    
+
     # @return [Hash{Symbol => Hash}] A map from config var name to a hash containing
     #   information about the config var, as passed in to config when the var was
     #   created.
     def config_vars
       self.class.instance_variable_get(:@config_vars)
     end
-    
+
     # @private
     # A simple class which has no methods defined and therefore is good
     # for parsing configuration. Basically, by having this class eval
@@ -359,7 +359,7 @@ module Wescontrol
         end
       end
     end
-    
+
     # Starts a configuration block, wherein you can define config
     # vars. Inside of the block should be lines describing the
     # configuration of the device. There are two kinds of config
@@ -381,7 +381,7 @@ module Wescontrol
     # numbers. Other possibilities are :password, :string, :decimal,
     # :boolean and :percentage. If you supply a type that is not
     # defined in the system, a simple text box will be used.
-    # 
+    #
     # You can add whatever configuration variables you need, though
     # they should be named using lowercase letters
     # connected\_by\_underscores. Configuration information is
@@ -406,7 +406,7 @@ module Wescontrol
       @_configuration = @_configuration.merge ch.configuration
       @config_vars = @config_vars.merge ch.config_vars
     end
-    
+
     # @return [Hash{Symbol => Hash}] A map from state var name to a
     #   hash containing information about the state var, as passed in
     #   to state_var when the var was created.
@@ -416,7 +416,7 @@ module Wescontrol
     # name to the list of virtual variables which depend on that state
     # var's value.
     def self.var_affects; @_var_affects; end
-    
+
     # This method, when called in a class definition, defines a new
     # state variable for the device class. State vars are--as their
     # name suggests--variables that track the state of something about
@@ -488,7 +488,7 @@ module Wescontrol
         @state_vars[sym] = options
         @_var_affects ||= {}
       end
-      
+
       self.instance_eval do
         all_state_vars = @state_vars
         define_method("state_vars") do
@@ -499,7 +499,7 @@ module Wescontrol
           all_var_affects
         end
       end
-      
+
       self.class_eval %{
         def #{sym}= val
           if @#{sym} != val
@@ -520,7 +520,7 @@ module Wescontrol
             if @change_deferrable
               @change_deferrable.set_deferred_status :succeeded, "#{sym}", val
               @change_deferrable = nil
-              
+
               if @auto_register
                 @auto_register.each{|block|
                   register_for_changes.callback(&block)
@@ -535,12 +535,12 @@ module Wescontrol
           @#{sym}
         end
       }
-      
+
       if options[:action].class == Proc
         define_method "set_#{name}".to_sym, &options[:action]
       end
     end
-    
+
     # This method, when called in a class definition, creates a new
     # virtual variable. A virtual variable is one that cannot be set
     # directly, but which is composed automatically from one or more
@@ -590,13 +590,13 @@ module Wescontrol
         }
       end
     end
-    
+
     # @return [Hash{Symbol => Object}] A map from command name to options
     def self.commands; @command_vars; end
-    
+
     # @return [Hash{Symbol => Object}] A map from command name to options
     def commands; self.class.commands; end
-    
+
     # This method, when called in a class definition, creates a new
     # command for the device.  Commands are used for things that need
     # to be controlled directly, rather than by changing an associated
@@ -638,27 +638,27 @@ module Wescontrol
       @command_vars ||= {}
       @command_vars[name] = options
     end
-    
+
     # Returns a string representation of the device
     # @return [String] A string representation of the device
     def inspect
       "<#{self.class.to_s}:0x#{object_id.to_s(16)}>"
     end
-    
+
     # @return [Hash] A hash which, when converted to_json, is the
     #   CouchDB representation of the device. Includes all information
     #   neccessary to recreate the device on the next restart.
     def to_couch
       DaemonKit.logger.debug "Configuration: #{configuration}"
       hash = {:state_vars => {}, :config => configuration, :commands => {}}
-      
+
       #if configuration
       # puts "Config vars: #{config_vars.inspect}"
       # config_vars.each{|var, options|
       #   hash[:config][var] = configuration[var]
       # }
       #end
-      
+
       self.class.state_vars.each{|var, options|
         if options[:type] == :time
           options[:state] = eval("@#{var}.to_i")
@@ -673,7 +673,7 @@ module Wescontrol
 
       return hash
     end
-    
+
     # @param [Hash] hash A hash (probably created by {Device#to_couch}) which contains
     #   the information neccessary to recreate a device
     # @return [Device] A new Device instance created with all of the information
@@ -710,14 +710,14 @@ module Wescontrol
       }
       return device
     end
-    
+
     # @param [String] id The id of a CouchDB document for the device
     # @return [Device] A device instance created by downloading the specified CouchDB
     #   document and running {Device::from_couch} on it.
     def self.from_doc(id)
       from_couch(CouchRest.database(@database).get(id))
     end
-    
+
     # Registers an error, which involves sending it as an event
     # @param [Symbol] name A symbol which uniquely identifies this
     #   error. Should be underscore-separated and should make sense in
@@ -740,7 +740,7 @@ module Wescontrol
       }
       register_event message
     end
-    
+
     # Sends an event to the event message queue
     # @param [Hash{Symbol, String => #to_json}] message The message to push onto 
     #   the event queue; can include a :severity key, which prioritizes the message
@@ -758,7 +758,7 @@ module Wescontrol
       ) if @amq_responder
       amq.close
     end
-    
+
     # Saves the current state of the device to CouchDB and sends updates on the update queue
     # if changed is passed in
     # @param [Symbol] changed The variable whose changing prompted this save
@@ -791,7 +791,7 @@ module Wescontrol
         register_event update
       end
     end
-    
+
     # @return [EventMachine::Deferrable] A deferrable which is
     #   notified when a state var changes. Look at the EventMachine
     #   documentation for more information about deferrables,
@@ -799,7 +799,7 @@ module Wescontrol
       @change_deferrable ||= EM::DefaultDeferrable.new
       @change_deferrable
     end
-    
+
     # Takes in a block which is specified as the callback for the
     # deferrable returned by {Device#register_for_changes}
     # automatically whenever a state var changes. Thus, the code in
