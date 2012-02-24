@@ -281,7 +281,9 @@ module Wescontrol
 						resp = {:id => req["id"]}
 						case req["type"]
 						when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
-						when "state_set" then handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
+						when "state_set"
+              DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]}")
+              handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
 						when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
 						else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
 						end
