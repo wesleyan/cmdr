@@ -256,41 +256,49 @@ module Wescontrol
           if feedback.is_a? EM::Deferrable
             feedback.callback do |fb|
               resp["result"] = fb
-              @amq_responder.queue(req["queue"]).publish(resp.to_json)
+              resp
             end
             feedback.errback do |error|
               resp["error"] = error
-              @amq_responder.queue(req["queue"]).publish(resp.to_json)
+              resp
             end
           elsif feedback == nil
-            @amq_responder.queue(req["queue"]).publish(resp.to_json)
+            resp
           else
             resp["result"] = feedback
-            @amq_responder.queue(req["queue"]).publish(resp.to_json)
+            resp
           end
         }
 
         DaemonKit.logger.info("Waiting for messages on #{path}")
         subscriber = ZMQClient.new
-        subscriber.subscribe{ |msg|
-          begin
-            req = JSON.parse(msg)
-            resp = {:id => req["id"]}
-            case req["type"]
-            when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
-            when "state_set"
-              DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]}")
-              handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
-            when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
-            else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
-            end
-          rescue
-            resp[:error] = $!
-            handle_feedback.call(nil, req, resp)
-          end
+        subscriber.subscribe_multi{|socket, messages|
+          msg = begin
+                  req = JSON.parse(messages.pop)
+                  resp = {:id => req["id"]}
+                  case req["type"]
+                  when "command"
+                    handle_feedback.call(self.send(req["method"], *req["args"]),
+                                         req, resp)
+                  when "state_set"
+                    DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]}")
+                    handle_feedback.call(self.send("set_#{req["var"]}", req["value"]),
+                                         req, resp)
+                  when "state_get"
+                    handle_feedback.call(self.send(req["var"]), req, resp)
+                  else
+                    DaemonKit.logger.error "Didn't match: #{req["type"]}"
+                    nil
+                  end
+            
+                rescue
+                  resp[:error] = $!
+                  handle_feedback.call(nil, req, resp)
+                end
+          args = messages + [msg.to_json]
+          socket.send_msg(*args)
         }
-
-        ctx.bind(ZMQ::PULL, path, subscriber)
+        ctx.bind(ZMQ::ROUTER, path, subscriber)
       }
     end
 

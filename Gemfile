@@ -25,7 +25,7 @@ gem 'sinatra'
 gem 'uuidtools'
 
 gem 'ffi'
-gem 'em-zeromq'
+gem 'em-zeromq', "~> 0.2.3"
 
 #deploy gems
 gem 'highline', "= 1.6.1"
