@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'em-websocket'
 require 'json'
-require 'mq'
 require 'couchrest'
 require 'state_machine'
 module Wescontrol
@@ -135,7 +134,7 @@ module Wescontrol
   #    }
   class RoomtrolWebsocket
     attr_reader :devices
-    
+
     # How long to wait for responses from the daemon
     TIMEOUT = 4.0
     # The resource names for devices
@@ -149,7 +148,7 @@ module Wescontrol
     }
     # The resources that can be accessed
     RESOURCES = DEVICES.merge({"source" => ["source"]})
-    
+
     def initialize
       @db = CouchRest.database("http://localhost:5984/rooms")
 
@@ -165,19 +164,19 @@ module Wescontrol
       @sources = @db.get('_design/wescontrol_web').
         view('sources', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
-        
+
       @actions = @db.get('_design/wescontrol_web').
         view('actions', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
-          
+
       @room_name = @room['attributes']['name']
 
       @devices = {}
-      
+
       DEVICES.each do |r, _|
         @devices[r] = @room['attributes'][r]
       end
-      
+
       @devices_by_id = {}
       @device_record_by_resource = {}
       @devices.each do |k, v|
@@ -200,7 +199,7 @@ module Wescontrol
 
         @queue_name = "roomtrol:websocket:#{self.object_id}"
         @queue = @mq.queue(@queue_name)
-        
+
         # watch for responses from devices
         @queue.subscribe{|json|
           msg = JSON.parse(json)
@@ -225,9 +224,9 @@ module Wescontrol
                             }) do |ws|
 
           ws.onopen { onopen ws }
-          
+
           ws.onmessage {|json| onmessage ws, json}
-          
+
           ws.onclose do
             @update_channel.unsubscribe(@sid) if @sid
             DaemonKit.logger.debug "Connection on #{ws.signature} closed"
@@ -266,7 +265,7 @@ module Wescontrol
         # @source_fsm.send("select_#{initial_source}")
       end
     end
-    
+
     def handle_event json
       msg = JSON.parse(json)
       DaemonKit.logger.debug(msg.inspect)
@@ -297,9 +296,9 @@ module Wescontrol
         'old' => old,
         'new' => new
       }
-      @update_channel.push(update_msg)        
+      @update_channel.push(update_msg)
     end
-    
+
     def onopen ws
       @sid = @update_channel.subscribe { |msg|
         ws.send msg.to_json
@@ -333,19 +332,19 @@ module Wescontrol
           ws.send resp.to_json
         }
         deferrable.timeout TIMEOUT
-        
+
         case msg['type']
         when "state_get" then state_action msg, deferrable, :get
         when "state_set" then state_action msg, deferrable, :set
         when "command" then command msg, deferrable
         else df.deferrable.succeed({:error => "Invalid message type"})
         end
-        
+
       rescue JSON::ParserError, TypeError
         DaemonKit.logger.debug "Invalid JSON message from #{ws.signature}: #{json}"
       end
     end
-    
+
     def state_action req, df, action
       if (DEVICES[req['resource']] || []).include?(req['var'])
         self.send "handle_device_#{action}", req, df
@@ -373,7 +372,7 @@ module Wescontrol
         deferrable.errback {|error|
           df.succeed({:error => error})
         }
-        defer_device_operation device_req, device, df          
+        defer_device_operation device_req, device, df
       end
     end
 
@@ -420,8 +419,8 @@ module Wescontrol
         daemon_set :input, state, device, df
       end
     end
-    
-    def defer_device_operation device_req, device, df        
+
+    def defer_device_operation device_req, device, df
       @deferred_responses[device_req[:id]] = df
       @mq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
     end
@@ -435,7 +434,7 @@ module Wescontrol
     def handle_device_set req, df
       daemon_set req['var'], req['value'], @devices[req['resource']], df
     end
-    
+
     def handle_source_get req, df
       if @source_fsm
         df.succeed({:result => @source_fsm.source})
@@ -456,7 +455,7 @@ module Wescontrol
         state_machine :source, :initial => initial do
           after_transition any => any do |fsm, transition|
             DaemonKit.logger.debug "transitions from #{transition.from} to #{transition.to}"
-            parent.send_update :source, :source, transition.from, transition.to 
+            parent.send_update :source, :source, transition.from, transition.to
           end
           sources.each do |source|
             this_state = source['name'].to_sym

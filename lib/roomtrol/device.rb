@@ -256,18 +256,14 @@ module Wescontrol
           if feedback.is_a? EM::Deferrable
             feedback.callback do |fb|
               resp["result"] = fb
-              resp
             end
             feedback.errback do |error|
               resp["error"] = error
-              resp
             end
-          elsif feedback == nil
-            resp
-          else
+          elsif !feedback.nil?
             resp["result"] = feedback
-            resp
           end
+          resp
         }
 
         DaemonKit.logger.info("Waiting for messages on #{path}")
