@@ -190,10 +190,12 @@ module Wescontrol
     end
 
     # Starts the websockets server. This is a blocking call if run
-    # outside of an EventMachine reactor.
-    def run
-      AMQP.start(:host => "localhost") {
-        @mq = MQ.new
+    # outside of an EventMachine reactor. If the eventmachine block
+    # has already been started, you *MUST* pass in a 0mq context.
+    # Otherwise strange things could happen.
+    def run ctx = nil
+      ctx ||= EM::ZeroMQ::Context.new(1)
+      EM.run {
         @update_channel = EM::Channel.new
         @deferred_responses = {}
 
@@ -455,7 +457,7 @@ module Wescontrol
         state_machine :source, :initial => initial do
           after_transition any => any do |fsm, transition|
             DaemonKit.logger.debug "transitions from #{transition.from} to #{transition.to}"
-            parent.send_update :source, :source, transition.from, transition.to
+            parent.send_update :source, :source, transition.from, transition.to 
           end
           sources.each do |source|
             this_state = source['name'].to_sym
