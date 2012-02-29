@@ -231,7 +231,7 @@ module Wescontrol
     #
     # @param [Hash{String, Symbol => Object}] hash A hash of
     #   configuration definitions, from the name of the config var to
-    #   its value 
+    #   its value
     # @param [String] db_uri The URI of the CouchDB database where
     #   updates should be saved
     def initialize(hash = {}, db_uri = "http://localhost:5984/rooms")
@@ -251,6 +251,7 @@ module Wescontrol
     # @param [String] path The path to bind our 0MQ socket to
     def run path
       ctx = EM::ZeroMQ::Context.new(1)
+
       EM.run {
         handle_feedback = proc {|feedback, req, resp, job|
           if feedback.is_a? EM::Deferrable
@@ -295,6 +296,8 @@ module Wescontrol
           socket.send_msg(*args)
         }
         ctx.bind(ZMQ::ROUTER, path, subscriber)
+
+        @event_socket = ctx.connect(ZMQ::PUSH, PUB_PATH)
       }
     end
 
@@ -751,12 +754,7 @@ module Wescontrol
       message[:update] = true
       message[:severity] ||= 0.1
       message[:time] ||= Time.now.to_i
-      amq = MQ.new
-      amq.topic(EVENT_TOPIC).publish(
-        message.to_json,
-        :key => "device.#{@_id}"
-      ) if @amq_responder
-      amq.close
+      @event_socket.send_msg(EVENT_TOPIC, message.to_json) if @event_socket
     end
 
     # Saves the current state of the device to CouchDB and sends updates on the update queue

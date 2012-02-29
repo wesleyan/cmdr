@@ -199,10 +199,11 @@ module Wescontrol
         @update_channel = EM::Channel.new
         @deferred_responses = {}
 
-        @queue_name = "roomtrol:websocket:#{self.object_id}"
-        @queue = @mq.queue(@queue_name)
-
         # watch for responses from devices
+        self.class.instance_variable_get(:@device_paths).each{|id, path|
+          @device_sockets[id] = ctx.connect(ZMQ::REQ, path)
+        }
+        
         @queue.subscribe{|json|
           msg = JSON.parse(json)
           puts "Got response: #{msg}"
@@ -211,12 +212,14 @@ module Wescontrol
           end
         }
 
-        topic = @mq.topic(EVENT_TOPIC)
-        @mq.queue("roomtrol:websocket:#{self.object_id}:response").bind(topic, :key => "device.*").subscribe do |json|
-          handle_event json
-        end
+        client = ZMQClient.new
 
-        setup
+        client.subscribe_multi{|socket, messages|
+          handle_event messages[1]
+        }
+
+        socket = ctx.connect(ZMQ::SUB, SUB_PORT, client)
+        socket.setsockopt(ZMQ::SUBSCRIBE, EVENT_TOPIC)
 
         EM::WebSocket.start({
                               :host => "0.0.0.0",
@@ -424,7 +427,7 @@ module Wescontrol
 
     def defer_device_operation device_req, device, df
       @deferred_responses[device_req[:id]] = df
-      @mq.queue("roomtrol:dqueue:#{device}").publish(device_req.to_json)
+      socket = ).publish(device_req.to_json)
     end
 
     ##################### Client code ####################
