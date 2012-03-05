@@ -1,7 +1,8 @@
-require 'roomtrol/socketclient'
+#require 'roomtrol/socketclient'
 require 'strscan'
 require 'rubybits'
 require 'socket'
+require 'eventmachine'
 
 module Wescontrol
 
@@ -12,14 +13,14 @@ module Wescontrol
     attr_accessor :socketclient
     
 		configure do
-	     # uri in the form (Example) pjlink://129.133.125.197:4352
+	    # uri in the form (Example) pjlink://129.133.125.197:4352
 		  uri :type => :uri
 			message_end "\r\n"
 			message_timeout 0.2
       message_delay 0
 		end
 		
-		# Creates a new RS232Device instance
+		# Creates a new SocketDevice instance
 		# @param [String, Symbol] name The name of the device, which is
     #   stored in the database and used to communicate with it over AMQP
 		# @param [Hash{String, Symbol => Object}] hash A hash of
@@ -36,28 +37,32 @@ module Wescontrol
 			throw "Must supply URI parameter" unless configuration[:uri]
       DaemonKit.logger.info "Creating socket device #{name} on #{configuration[:uri]}"
       
-
-			@_send_queue = []
+      @_send_queue = []
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
       @_waiting = false
 		end
 
-		# Sends a string to the serial device
+		# Sends a string to the socketclient device
 		# @param [String] string The string to send
 		def send_string(string)
       EM.defer do
         begin
-          @_serialport.write string if @_serialport
+          #@_conn.send_data string if @_conn
+          send_data string
         rescue
         end
       end
 		end
+    
+    def receive_data data
+      read data
+    end
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
     # @param [Proc] cb A callback that should handle serial data
-    def serial_reader &cb
+    #def serial_reader &cb
       # deferrable = EM::DefaultDeferrable.new
       # deferrable.callback &cb
       # Thread.new do
@@ -80,9 +85,8 @@ module Wescontrol
       #     deferrable.callback &cb
       #   end
       # end
-    end
+    #end
 
-		
 		# Run is a blocking call that starts the device. While run is
 		# running, the device will watch for AMQP events as well as
 		# whatever communication channels the device uses and react
@@ -92,11 +96,14 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-          @_conn = EventMachine::SocketClient.connect(configuration[:uri])
+          #@_conn = EventMachine::SocketClient.connect(configuration[:uri])
+          p_uri = URI.parse configuration[:uri]
+          EventMachine::connect p_uri.host, p_uri.port || 80, self) do |c|
+            c.url = uri
+          end
 					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
 		
-					 
 					 
 					end
           # serial_reader {|data| read data}
@@ -359,15 +366,15 @@ module Wescontrol
 		# ignored. Also sets ready_to_send, which causes the next request
 		# or command to be sent.
 		def read data
-			@_buffer ||= ""
+			#@_buffer ||= ""
 			@_responses ||= {}
       # if the buffer has gotten really big, it's probably because we
       # failed to read a message at some point and junk data at the
       # beginning is preventing us from reading any others. In such a
       # case we just want to start fresh with this data.
-      @_buffer = "" if @_buffer.size > 50
-			@_buffer << data
-			s = StringScanner.new(@_buffer)
+      #@_buffer = "" if @_buffer.size > 50
+			#@_buffer << data
+			#s = StringScanner.new(@_buffer)
 			handle_message = proc {|msg|
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
@@ -403,19 +410,19 @@ module Wescontrol
 					handle_message.call(msg.match(configuration[:message_format])[1])
 				end
       elsif configuration[:message_end].is_a? Proc
-				loop do
-					loop_message_received = false
+				#loop do
+					#loop_message_received = false
 					# @_buffer.size.times{|start|
-            start = 0
-						(start+1).upto(@_buffer.size){|_end|
-							if instance_exec(@_buffer[start.._end], &configuration[:message_end])
-								handle_message.call(@_buffer[start.._end])
-								@_buffer = @_buffer[(_end+1)..-1]
-								loop_message_received = true
-								message_received |= loop_message_received
-								break
-							end
-						}
+            #start = 0
+						#(start+1).upto(@_buffer.size){|_end|
+					  #	if instance_exec(@_buffer[start.._end], &configuration[:message_end])
+						#		handle_message.call(@_buffer[start.._end])
+						#		@_buffer = @_buffer[(_end+1)..-1]
+						#		loop_message_received = true
+						#		message_received |= loop_message_received
+						#		break
+					#		end
+					#	}
 					# }
 					break unless loop_message_received
 				end
@@ -426,7 +433,7 @@ module Wescontrol
 					handle_message.call(msg)
 					message_received = true
 				end
-				@_buffer = s.rest
+				#@_buffer = s.rest
 			end
 			#if we got the message end signal, we're safe to send the next thing
 			if message_received

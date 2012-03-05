@@ -23,12 +23,12 @@ module EventMachine
     def disconnect &cb; @disconnect = cb; end
 
     def receive_data data
-
+    
     end
 
-    def send_msg s
-  
-    end
+    #def send_msg s
+    #
+    #end
 
     def unbind
       super
