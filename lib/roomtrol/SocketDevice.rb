@@ -1,4 +1,4 @@
-#require 'roomtrol/socketclient'
+require 'roomtrol/socketclient'
 require 'strscan'
 require 'rubybits'
 require 'socket'
@@ -49,15 +49,17 @@ module Wescontrol
       EM.defer do
         begin
           #@_conn.send_data string if @_conn
-          send_data string
+          puts "Sending data: #{string}"
+          @_conn.send_data string
         rescue
         end
       end
 		end
     
-    def receive_data data
-      read data
-    end
+    #def receive_data data
+    #  puts "Received response: #{data}"
+    #  read data
+    #end
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
@@ -98,15 +100,17 @@ module Wescontrol
 					ready_to_send = true
           #@_conn = EventMachine::SocketClient.connect(configuration[:uri])
           p_uri = URI.parse configuration[:uri]
-          EventMachine::connect p_uri.host, p_uri.port || 80, self) do |c|
-            c.url = uri
-          end
+          #EventMachine::connect(p_uri.host, p_uri.port || 80, self) do |c|
+          #  c.url = uri
+          #end
+          @_conn = EventMachine::SocketClient.connect(configuration[:uri])
 					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
 		
 					 
 					end
           # serial_reader {|data| read data}
+          @_conn.stream {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to open serial: #{$!}"
 				end
@@ -375,6 +379,7 @@ module Wescontrol
       #@_buffer = "" if @_buffer.size > 50
 			#@_buffer << data
 			#s = StringScanner.new(@_buffer)
+      s = StringScanner.new(data)
 			handle_message = proc {|msg|
 				m = matchers.find{|matcher|
 					case matcher[1].class.to_s
@@ -402,6 +407,7 @@ module Wescontrol
 					elsif m[2].is_a? Proc
 						instance_exec(arg, &m[2])
 					end
+          !configuration[:wait_until_ack] || (m[0] == :ack || m[0] == :nack)
 				end
 			}
 			message_received = false
@@ -410,20 +416,25 @@ module Wescontrol
 					handle_message.call(msg.match(configuration[:message_format])[1])
 				end
       elsif configuration[:message_end].is_a? Proc
-				#loop do
-					#loop_message_received = false
-					# @_buffer.size.times{|start|
-            #start = 0
-						#(start+1).upto(@_buffer.size){|_end|
-					  #	if instance_exec(@_buffer[start.._end], &configuration[:message_end])
-						#		handle_message.call(@_buffer[start.._end])
-						#		@_buffer = @_buffer[(_end+1)..-1]
-						#		loop_message_received = true
-						#		message_received |= loop_message_received
-						#		break
+				loop do
+					loop_message_received = false
+					 #@_buffer.size.times{|start|
+           # start = 0
+					 #	(start+1).upto(data.size){|_end|
+					 # 	if instance_exec(data[start.._end], &configuration[:message_end])
+					 #	handle_message.call(data[start.._end])
+					 #			data = data[(_end+1)..-1]
+				   #			loop_message_received = true
+				   #			message_received |= loop_message_received
+				   #			break
 					#		end
 					#	}
-					# }
+				  #}
+          if instance_exec(data, &configuration[:mesaage_end])
+            handle_message.call(data)
+            loop_message_received = true
+            message_received |= loop_message_received
+          end
 					break unless loop_message_received
 				end
 			elsif me = configuration[:message_end]

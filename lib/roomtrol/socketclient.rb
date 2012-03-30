@@ -12,7 +12,6 @@ module EventMachine
     end
 
     def post_init
-
     end
 
     def connection_completed
@@ -23,14 +22,20 @@ module EventMachine
     def disconnect &cb; @disconnect = cb; end
 
     def receive_data data
-    
+      puts "Received data: #{data}"
+      @stream.call data if @stream
     end
 
     #def send_msg s
     #
     #end
+    
+    def send data
+      puts "Sending command: #{data}"
+    end
 
     def unbind
+      reconnect(ip, port || 80, self)
       super
       @disconnect.call if @disconnect
     end
