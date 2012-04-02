@@ -6,6 +6,8 @@ module EventMachine
 
     def self.connect uri
       p_uri = URI.parse(uri)
+      @@ip = p_uri.host
+      @@port = p_uri.port
       conn = EventMachine::connect(p_uri.host, p_uri.port || 80, self) do |c|
         c.url = uri
       end
@@ -22,7 +24,6 @@ module EventMachine
     def disconnect &cb; @disconnect = cb; end
 
     def receive_data data
-      puts "Received data: #{data}"
       @stream.call data if @stream
     end
 
@@ -31,11 +32,10 @@ module EventMachine
     #end
     
     def send data
-      puts "Sending command: #{data}"
     end
 
     def unbind
-      reconnect(ip, port || 80, self)
+      reconnect(@@ip, @@port || 80)
       super
       @disconnect.call if @disconnect
     end

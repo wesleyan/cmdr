@@ -49,18 +49,12 @@ module Wescontrol
       EM.defer do
         begin
           #@_conn.send_data string if @_conn
-          puts "Sending data: #{string}"
           @_conn.send_data string
         rescue
         end
       end
 		end
     
-    #def receive_data data
-    #  puts "Received response: #{data}"
-    #  read data
-    #end
-
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
     # @param [Proc] cb A callback that should handle serial data
