@@ -15,7 +15,7 @@ module Wescontrol
 		configure do
 	    # uri in the form (Example) pjlink://129.133.125.197:4352
 		  uri :type => :uri
-			message_end "\r\n"
+			message_end "\r"
 			message_timeout 0.2
       message_delay 0
 		end

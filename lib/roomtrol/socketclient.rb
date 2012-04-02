@@ -14,6 +14,9 @@ module EventMachine
     end
 
     def post_init
+      @_ip = @@ip
+      @_port = @@port
+      puts "ip:#{@_ip}:#{@_port}"
     end
 
     def connection_completed
@@ -35,7 +38,7 @@ module EventMachine
     end
 
     def unbind
-      reconnect(@@ip, @@port || 80)
+      reconnect(@_ip, @_port || 80)
       super
       @disconnect.call if @disconnect
     end
