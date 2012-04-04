@@ -16,7 +16,6 @@ module EventMachine
     def post_init
       @_ip = @@ip
       @_port = @@port
-      puts "ip:#{@_ip}:#{@_port}"
     end
 
     def connection_completed

@@ -48,8 +48,8 @@ module Wescontrol
 		def send_string(string)
       EM.defer do
         begin
-          #@_conn.send_data string if @_conn
-          @_conn.send_data string
+          @_conn.send_data string if @_conn
+          #@_conn.send_data string
         rescue
         end
       end
