@@ -100,13 +100,11 @@ module Wescontrol
           @_conn = EventMachine::SocketClient.connect(configuration[:uri])
 					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
-		
-					 
 					end
           # serial_reader {|data| read data}
           @_conn.stream {|data| read data}
 				rescue
-					DaemonKit.logger.error "Failed to open serial: #{$!}"
+					DaemonKit.logger.error "Failed to connect: #{$!}"
 				end
 				super
 			}
