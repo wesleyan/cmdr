@@ -243,18 +243,18 @@ module Wescontrol
     def setup
       # get the initial source
       proj = @device_record_by_resource['projector']
-      switch_v = @device_record_by_resource['switcher_v']
-      switch_a = @device_record_by_resource['switcher_a']
+      vid = @device_record_by_resource['video']
+      aud = @device_record_by_resource['audio']
 
       p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
       v_input = switch_v['attributes']['state_vars']['input']['state'] rescue nil
-      a_input = switch_a['attributes']['state_vars']['input']['state'] rescue nul
+      a_input = switch_a['attributes']['state_vars']['input']['state'] rescue nil
 
       p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
-      v_src = (@sources.find {|s| s['input']['switcher_v'] == v_input})['name'] rescue nil
-      a_src = (@sources.find {|s| s['input']['switcher_a'] == a_input})['name'] rescue nil
+      v_src = (@sources.find {|s| s['input']['video'] == v_input})['name'] rescue nil
+      a_src = (@sources.find {|s| s['input']['audio'] == a_input})['name'] rescue nil
 
-      if initial_source = (v_src || a_src || p_src || @sources[0]['name'])
+      if initial_source = (v_src || p_src || a_src || @sources[0]['name'])
         DaemonKit.logger.debug("Initial source: #{initial_source}")
         # For some reason, when we define events in make_state_machine
         # the events also get fired. This is highly undesireable. This
@@ -283,10 +283,10 @@ module Wescontrol
           case [resource, msg['var']]
           when ["projector", "input"]
             @source_fsm.send("projector_to_#{msg['now']}") rescue nil
-          when ["switcher_v", "input"]
-            @source_fsm.send("switcher_to_#{msg['now']}") rescue nil
-          when ["switcher_a", "input"]
-            @source_fsm.send("switcher_to_#{msg['now']}") rescue nil
+          when ["video", "input"]
+            @source_fsm.send("video_to_#{msg['now']}") rescue nil
+          when ["audio", "input"]
+            @source_fsm.send("audio_to_#{msg['now']}") rescue nil
           end
         end
       end
@@ -419,10 +419,10 @@ module Wescontrol
       defer_device_operation device_req, device, deferrable
     end
 
-    def set_device_state device, state, df = EM::DefaultDeferrable.new
+    def set_device_state device, state, input = :input, df = EM::DefaultDeferrable.new
       unless @dont_switch
         DaemonKit.logger.debug "Setting #{device} input to #{state}"
-        daemon_set :input, state, device, df
+        daemon_set input, state, device, df
       end
     end
     
@@ -475,10 +475,10 @@ module Wescontrol
               transition all => this_state
             end
             p = source['input']['projector']
-            v = source['input']['switcher_v']
-            a = source['input']['switcher_a']
+            v = source['input']['video']
+            a = source['input']['audio']
             if p
-              if !source['input']['switcher_v']
+              if !source['input']['video']
                 event "projector_to_#{p}".to_sym do
                   transition all => this_state
                 end
@@ -489,23 +489,22 @@ module Wescontrol
               end
             end
             if v
-              event "switcher_to_#{v}" do
+              event "video_to_#{v}" do
                 transition all => this_state
                 parent.set_device_state parent.devices["projector"], p
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher_v"], v
-                parent.set_device_state parent.devices["switcher_a"], a
+                parent.set_device_state parent.devices["switcher"], v, :video
               end
             end
-            #if a
-            #  event "switcher_to_#{a}" do
-            #    transition all => this_state
-            #  end
-            #  after_transition any => this_state do
-            #    parent.set_device_state parent.devices["switcher_a"], a
-            #  end
-            #end
+            if a
+              event "switcher_to_#{a}" do
+                transition all => this_state
+              end
+              after_transition any => this_state do
+                parent.set_device_state parent.devices["switcher"], a, :audio
+              end
+            end
           end
         end
       end
