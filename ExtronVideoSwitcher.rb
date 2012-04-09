@@ -28,7 +28,7 @@ class ExtronVideoSwitcher < VideoSwitcher
     :options => ("1".."6").to_a,
     :response => :channel,
     :action => proc{|input|
-      "#{input}&"
+      "#{input}!"
     }
   managed_state_var :audio,
     :type => :option,
@@ -75,7 +75,7 @@ class ExtronVideoSwitcher < VideoSwitcher
       else
         i = (x1-3)*3 + (x2-1) % 3 + 5
       end
-      #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
+     #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
       self.audio = i
     } 
     match :video /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
@@ -86,6 +86,8 @@ class ExtronVideoSwitcher < VideoSwitcher
           self.video = v
         end
       end
+      a1, a2 = [m[10].to_i, m[11].to_i]
+      self.audio = (a1 < 3 ? ((a1-1)*2 + (a2-1) % 2 + 1) : ((a1-3)*3 + (a2-1) % 3 + 5))
     }
     end
 	
