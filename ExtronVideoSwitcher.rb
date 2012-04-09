@@ -13,7 +13,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 		baud        9600
 		message_end "\r\n"
 	end
-	
+
 	#managed_state_var :input, 
 	#	:type => :option, 
 	#	:display_order => 1, 
@@ -68,7 +68,7 @@ class ExtronVideoSwitcher < VideoSwitcher
       self.audio = m[2].to_i if m[2].to_i > 0
 			self.clipping = (m[3] == "1")
 		}
-    match :input, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
+    match :audio, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
       x1, x2 = [m[10].to_i, m[11].to_i]
       if x1 < 3
         i = (x1-1)*2 + (x2-1) % 2 + 1
@@ -76,9 +76,18 @@ class ExtronVideoSwitcher < VideoSwitcher
         i = (x1-3)*3 + (x2-1) % 3 + 5
       end
       #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
-      self.input = i
+      self.audio = i
+    } 
+    match :video /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
+      for i in (1..4)
+        v1, v2 = [m[2*i].to_i, m[2*i+1].to_i]
+        if v2 != 0
+          v = (v1 < 3 ? ((v1-1)*2 + (v2-1) % 2 + 1) : ((v1-3)*3 + (v2-1) % 3 + 5))
+          self.video = v
+        end
+      end
     }
-	end
+    end
 	
 	requests do
 		#send :input, "I", 0.5
