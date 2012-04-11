@@ -29,11 +29,16 @@ class PJLinkProjector < SocketProjector
     @_cooling_timer = nil
     if data.start_with? "PJLINK 1"
       @_digest = Digest::MD5.hexdigest "#{data.chop[9..-1]}#{@_password}"
+    elsif data == "%1POWR=1"
+      # stop timer
     end
     super data 
   end
 
   def send_string(string)
+    if string == "%1POWR 1"
+      # Start timer
+    end
     string = @_digest+string if @_digest
     super string
   end
