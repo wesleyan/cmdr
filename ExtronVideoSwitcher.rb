@@ -78,14 +78,15 @@ class ExtronVideoSwitcher < VideoSwitcher
      #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
       self.audio = i
     } 
-    match :video /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
+    match :video, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
       for i in (1..4)
-        v1, v2 = [m[2*i].to_i, m[2*i+1].to_i]
-        if v2 != 0
-          v = (v1 < 3 ? ((v1-1)*2 + (v2-1) % 2 + 1) : ((v1-3)*3 + (v2-1) % 3 + 5))
-          self.video = v
+        if m[2*i+1] != 0
+          v1, v2 = [m[2*i].to_i, m[2*i+1].to_i]
+          break
         end
       end
+      self.video = (v1 < 3 ? ((v1-1)*2 + (v2-1) % 2 + 1) : ((v1-3)*3 + (v2-1) % 3 + 5)) if (v1 && v2)
+
       a1, a2 = [m[10].to_i, m[11].to_i]
       self.audio = (a1 < 3 ? ((a1-1)*2 + (a2-1) % 2 + 1) : ((a1-3)*3 + (a2-1) % 3 + 5))
     }
