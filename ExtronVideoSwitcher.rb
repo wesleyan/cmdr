@@ -59,7 +59,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 	state_var :clipping, :type => 'boolean', :display_order => 5, :editable => false
 	
 	responses do
-		match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i.to_s}
+		match :channel,  /Chn(\d)/, proc{|m| self.video = m[1].to_i.to_s}
 		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
 		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
 		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
@@ -70,13 +70,8 @@ class ExtronVideoSwitcher < VideoSwitcher
 		}
     match :audio, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
       x1, x2 = [m[10].to_i, m[11].to_i]
-      if x1 < 3
-        i = (x1-1)*2 + (x2-1) % 2 + 1
-      else
-        i = (x1-3)*3 + (x2-1) % 3 + 5
-      end
      #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
-      self.audio = i
+      self.audio = "#{x1}*#{x2}"
     } 
     match :video, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
       for i in (1..4)
@@ -86,9 +81,6 @@ class ExtronVideoSwitcher < VideoSwitcher
         end
       end
       self.video = (v1 < 3 ? ((v1-1)*2 + (v2-1) % 2 + 1) : ((v1-3)*3 + (v2-1) % 3 + 5)) if (v1 && v2)
-
-      a1, a2 = [m[10].to_i, m[11].to_i]
-      self.audio = (a1 < 3 ? ((a1-1)*2 + (a2-1) % 2 + 1) : ((a1-3)*3 + (a2-1) % 3 + 5))
     }
     end
 	
