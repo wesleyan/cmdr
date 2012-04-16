@@ -19,6 +19,7 @@ class PJLinkProjector < SocketProjector
   def initialize(name, options)
     options = options.symbolize_keys
     @_password = options[:password]
+    @_options = options
     super(name, options)
   end
 
@@ -26,19 +27,22 @@ class PJLinkProjector < SocketProjector
   #def receive_data data
   def read data
     EM.cancel_timer @_cooling_timer if @_cooling_timer
+    EventMachine.cancel_timer @_timer if @_timer
     @_cooling_timer = nil
+    self.operational = true unless self.operational
     if data.start_with? "PJLINK 1"
       @_digest = Digest::MD5.hexdigest "#{data.chop[9..-1]}#{@_password}"
-    elsif data == "%1POWR=1"
-      # stop timer
+    end
+    @_timer = EventMachine.add_timer(10) do
+      DaemonKit.logger.error("Lost communication with projector")
+      #@_operational = false
+      self.operational = false
+      EventMachine.cancel_timer @_timer
     end
     super data 
   end
 
   def send_string(string)
-    if string == "%1POWR 1"
-      # Start timer
-    end
     string = @_digest+string if @_digest
     super string
   end
@@ -71,14 +75,10 @@ class PJLinkProjector < SocketProjector
 		:action => proc{|on|
 			"%1AVMT #{on ? "31" : "30"}\r"
 		}
-		
-  #managed_state_var :operational,
-  #  :type => :boolean,
-  #  :action => proc{
 
 	responses do
 		#ack ":"
-		error :general_error, "ERR", "Received an error"
+		error :general_error, "ERR4", "Received an error"
 		match :power,  /%1POWR=(.+)/, proc{|m|
 	 		DaemonKit.logger.info "Received power value #{m[1]}"
 			  self.power = (m[1] == "1")
