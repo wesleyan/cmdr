@@ -37,6 +37,7 @@ module EventMachine
     end
 
     def unbind
+      DaemonKit.logger.info("Reconnecting at #{@_ip}:#{@_port}")
       reconnect(@_ip, @_port || 80)
       super
       @disconnect.call if @disconnect

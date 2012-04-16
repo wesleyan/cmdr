@@ -176,6 +176,10 @@ module Wescontrol
       EM.defer do
         begin
           @_serialport.write string if @_serialport
+          @_response_timer = EventMachine::Timer.new(120) do
+            DaemonKit.logger.error("Device has failed")
+            configuration[:operational] = false
+          end
         rescue
         end
       end
@@ -552,6 +556,7 @@ module Wescontrol
 			#if we got the message end signal, we're safe to send the next thing
 			if message_received
 				self.ready_to_send = true
+        @_response_timer.cancel if @_response_timer
 			end
 		end
 

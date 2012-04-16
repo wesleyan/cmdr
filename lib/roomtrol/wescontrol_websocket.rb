@@ -498,7 +498,7 @@ module Wescontrol
               end
             end
             if a
-              event "switcher_to_#{a}" do
+              event "audio_to_#{a}" do
                 transition all => this_state
               end
               after_transition any => this_state do

@@ -15,6 +15,7 @@ module Wescontrol
 		configure do
 	    # uri in the form (Example) pjlink://129.133.125.197:4352
 		  uri :type => :uri
+      operational :type => :boolean
 			message_end "\r"
 			message_timeout 0.2
       message_delay 0
@@ -49,7 +50,6 @@ module Wescontrol
       EM.defer do
         begin
           @_conn.send_data string if @_conn
-          #@_conn.send_data string
         rescue
         end
       end
