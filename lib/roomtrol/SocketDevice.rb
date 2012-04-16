@@ -362,6 +362,13 @@ module Wescontrol
 		# ignored. Also sets ready_to_send, which causes the next request
 		# or command to be sent.
 		def read data
+      EventMachine.cancel_timer @_timer if @_timer
+      self.operational = true unless self.operational
+      @_timer = EventMachine.add_timer(10) do
+        DaemonKit.logger.error("Lost communication with #{@name}")
+        self.operational = false
+        EventMachine.cancel_timer @_timer
+      end
 			#@_buffer ||= ""
 			@_responses ||= {}
       # if the buffer has gotten really big, it's probably because we
