@@ -19,25 +19,15 @@ class PJLinkProjector < SocketProjector
   def initialize(name, options)
     options = options.symbolize_keys
     @_password = options[:password]
-    @_options = options
     super(name, options)
   end
 
   # Generates the auth key for pjlink
-  #def receive_data data
   def read data
     EM.cancel_timer @_cooling_timer if @_cooling_timer
-    EventMachine.cancel_timer @_timer if @_timer
     @_cooling_timer = nil
-    self.operational = true unless self.operational
     if data.start_with? "PJLINK 1"
       @_digest = Digest::MD5.hexdigest "#{data.chop[9..-1]}#{@_password}"
-    end
-    @_timer = EventMachine.add_timer(10) do
-      DaemonKit.logger.error("Lost communication with projector")
-      #@_operational = false
-      self.operational = false
-      EventMachine.cancel_timer @_timer
     end
     super data 
   end

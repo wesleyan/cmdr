@@ -30,6 +30,7 @@ class Projector < Wescontrol::RS232Device
 	state_var :lamp_hours,  :type => :number, :editable => false
 	state_var :filter_hours,:type => :number, :editable => false
 	state_var :percent_lamp_used, :type => :percentage, :editable => false
+  state_var :operational, :type => :boolean
 	#state_var :turned_on,  :type => :time', :editable => false
 	#state_var :turned_off,	:type => :time', :editable => false
 	
