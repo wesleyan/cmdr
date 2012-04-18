@@ -2,6 +2,7 @@ require 'serialport'
 require 'strscan'
 #require 'roomtrol/em-serialport'
 require 'rubybits'
+require 'xmlrpc/client'
 
 module Wescontrol
 	# RS232Device is a subclass of {Wescontrol::Device} that makes the
@@ -163,6 +164,7 @@ module Wescontrol
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
 
+      @_hostname = puts `hostname` + " .class"
       @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
 			@_send_queue = []
 			@_ready_to_send = true
@@ -180,6 +182,11 @@ module Wescontrol
         end
       end
 		end
+
+    def send_event event
+      serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+      serv.call('sendEvent', event)
+    end
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
@@ -484,6 +491,11 @@ module Wescontrol
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
+        evt = {"device" => "#{@hostname}", 
+               "component" => "#{@name}", 
+               "summary" => "Communication lost", 
+               "severity" => 5}
+        send_event evt
         EventMachine.cancel_timer @_timer
       end
 			@_buffer ||= ""
