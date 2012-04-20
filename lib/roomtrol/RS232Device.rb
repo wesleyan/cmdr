@@ -164,7 +164,6 @@ module Wescontrol
 			throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
 
-      @_hostname = puts `hostname` + " .class"
       @_serialport = SerialPort.new(configuration[:port], configuration[:baud])
 			@_send_queue = []
 			@_ready_to_send = true
@@ -487,15 +486,19 @@ module Wescontrol
 		# or command to be sent.
 		def read data
       EventMachine.cancel_timer @_timer if @_timer
-      self.operational = true unless self.operational
+      unless self.operational
+        self.operational = true
+        @_event["severity"] = 0 if @_event
+        send_event @_event
+      end
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
-        evt = {"device" => "#{@hostname}", 
-               "component" => "#{@name}", 
-               "summary" => "Communication lost", 
-               "severity" => 5}
-        send_event evt
+        @_event = {"device" => "#{}", 
+                   "component" => "#{@name}", 
+                   "summary" => "Communication lost with #{@name}", 
+                   "severity" => 5}
+        send_event @_event
         EventMachine.cancel_timer @_timer
       end
 			@_buffer ||= ""

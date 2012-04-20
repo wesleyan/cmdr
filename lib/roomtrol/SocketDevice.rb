@@ -55,6 +55,11 @@ module Wescontrol
       end
 		end
     
+    def send_event event
+      serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+      serv.call('sendEvent', event)
+    end
+
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
     # @param [Proc] cb A callback that should handle serial data
@@ -363,10 +368,19 @@ module Wescontrol
 		# or command to be sent.
 		def read data
       EventMachine.cancel_timer @_timer if @_timer
-      self.operational = true unless self.operational
+      unless self.operational
+        self.operational = true
+        @_event["severity"] = 0
+        send_event @_event
+      end
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
+        @_event = {"device" => "#{@hostname}", 
+                   "component" => "#{@name}", 
+                   "summary" => "Communication lost", 
+                   "severity" => 5}
+        send_event @_event
         EventMachine.cancel_timer @_timer
       end
 			#@_buffer ||= ""
