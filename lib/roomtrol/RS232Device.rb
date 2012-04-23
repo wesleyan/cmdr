@@ -185,7 +185,7 @@ module Wescontrol
 		end
 
     def send_event event
-      DaemonKit.logger.error("Received error: #{event}")
+      DaemonKit.logger.info("Received error: #{event}")
       serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
       serv.call('sendEvent', event)
     end

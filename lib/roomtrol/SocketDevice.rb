@@ -42,6 +42,7 @@ module Wescontrol
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
       @_waiting = false
+      @_hostname = "roomtrol-#{configuration[:room]}.class"
 		end
 
 		# Sends a string to the socketclient device
@@ -56,6 +57,7 @@ module Wescontrol
 		end
     
     def send_event event
+      DaemonKit.logger.info("Received error: #{event}")
       serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
       serv.call('sendEvent', event)
     end
@@ -370,20 +372,21 @@ module Wescontrol
       EventMachine.cancel_timer @_timer if @_timer
       unless self.operational
         self.operational = true
-        @_event["severity"] = 0
+        @_event["severity"] = 0 if @_event
         send_event @_event
       end
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
-        @_event = {"device" => "#{@hostname}", 
+        @_event = {"device" => "#{@_hostname}", 
                    "component" => "#{@name}", 
-                   "summary" => "Communication lost", 
+                   "summary" => "Communication lost with #{@name}", 
+                   "eventClass" => "/Status/Device",
                    "severity" => 5}
         send_event @_event
         EventMachine.cancel_timer @_timer
-      end
-			#@_buffer ||= ""
+      end			
+      #@_buffer ||= ""
 			@_responses ||= {}
       # if the buffer has gotten really big, it's probably because we
       # failed to read a message at some point and junk data at the
