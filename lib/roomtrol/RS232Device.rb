@@ -3,6 +3,7 @@ require 'strscan'
 #require 'roomtrol/em-serialport'
 require 'rubybits'
 require 'xmlrpc/client'
+require 'couchrest'
 
 module Wescontrol
 	# RS232Device is a subclass of {Wescontrol::Device} that makes the
@@ -169,6 +170,7 @@ module Wescontrol
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
       @_waiting = false
+      @_hostname = "roomtrol-#{configuration[:room]}.class"
 		end
 
 		# Sends a string to the serial device
@@ -183,6 +185,7 @@ module Wescontrol
 		end
 
     def send_event event
+      DaemonKit.logger.error("Received error: #{event}")
       serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
       serv.call('sendEvent', event)
     end
@@ -494,9 +497,10 @@ module Wescontrol
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
-        @_event = {"device" => "#{}", 
+        @_event = {"device" => "#{@_hostname}", 
                    "component" => "#{@name}", 
                    "summary" => "Communication lost with #{@name}", 
+                   "eventClass" => "/Status/Device",
                    "severity" => 5}
         send_event @_event
         EventMachine.cancel_timer @_timer
