@@ -170,7 +170,6 @@ module Wescontrol
 			@_ready_to_send = true
 			@_last_sent_time = Time.at(0)
       @_waiting = false
-      @_hostname = "roomtrol-#{configuration[:room]}.class"
 		end
 
 		# Sends a string to the serial device
@@ -497,7 +496,7 @@ module Wescontrol
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
-        @_event = {"device" => "#{@_hostname}", 
+        @_event = {"device" => "#{@hostname}", 
                    "component" => "#{@name}", 
                    "summary" => "Communication lost with #{@name}", 
                    "eventClass" => "/Status/Device",
