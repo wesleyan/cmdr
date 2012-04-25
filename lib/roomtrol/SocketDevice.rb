@@ -55,10 +55,17 @@ module Wescontrol
       end
 		end
     
-    def send_event event
-      DaemonKit.logger.info("Received error: #{event}")
-      serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
-      serv.call('sendEvent', event)
+    def send_event severity 
+      @_event = {"device" => "#{@hostname}", 
+                 "component" => "#{@name}", 
+                 "summary" => "Communication lost with #{@name}", 
+                 "eventClass" => "/Status/Device",
+                 "severity" => severity}
+      EM.defer do
+        DaemonKit.logger.info("Received error: #{@_event}")
+        serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+        serv.call('sendEvent', @_event)
+      end
     end
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
@@ -371,20 +378,14 @@ module Wescontrol
       EventMachine.cancel_timer @_timer if @_timer
       unless self.operational
         self.operational = true
-        @_event["severity"] = 0 if @_event
-        send_event @_event
+        send_event 0
       end
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
         self.operational = false
-        @_event = {"device" => "#{@hostname}", 
-                   "component" => "#{@name}", 
-                   "summary" => "Communication lost with #{@name}", 
-                   "eventClass" => "/Status/Device",
-                   "severity" => 5}
-        send_event @_event
+        send_event 5
         EventMachine.cancel_timer @_timer
-      end			
+      end
       #@_buffer ||= ""
 			@_responses ||= {}
       # if the buffer has gotten really big, it's probably because we
