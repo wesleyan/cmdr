@@ -13,7 +13,7 @@ class PJLinkProjector < SocketProjector
   INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22}
 
   configure do
-    DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{name}"
+    DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{@name}"
   end
 
   def initialize(name, options)
