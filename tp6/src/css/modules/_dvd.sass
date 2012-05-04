@@ -4,7 +4,7 @@ $button_height: 47px
 $button_spacing: 58px
 $control_width: 145px
 
-.dvd-module, .vcr-module
+.dvd-module, .vcr-module, .bluray-module
   .title
     margin-top: 10px
   .controls
@@ -138,6 +138,15 @@ $control_width: 145px
       background-position-y: -855px
 
 .vcr-module
+  .controls
+    +center-x($control_width, inherit)
+    top: 110px
+    bottom: 20px
+
+    .overlay
+      height: 160px
+
+.bluray-module
   .controls
     +center-x($control_width, inherit)
     top: 110px

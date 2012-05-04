@@ -19,10 +19,12 @@ module EventMachine
     end
 
     def connection_completed
-
     end
 
-    def stream &cb; @stream = cb; end
+    def stream &cb 
+      @stream = cb 
+    end
+      
     def disconnect &cb; @disconnect = cb; end
 
     def receive_data data

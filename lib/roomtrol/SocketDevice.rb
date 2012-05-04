@@ -15,7 +15,6 @@ module Wescontrol
 		configure do
 	    # uri in the form (Example) pjlink://129.133.125.197:4352
 		  uri :type => :uri
-      operational :type => :boolean
 			message_end "\r"
 			message_timeout 0.2
       message_delay 0
@@ -105,16 +104,11 @@ module Wescontrol
 			EM::run {
 				begin
 					ready_to_send = true
-          #@_conn = EventMachine::SocketClient.connect(configuration[:uri])
           p_uri = URI.parse configuration[:uri]
-          #EventMachine::connect(p_uri.host, p_uri.port || 80, self) do |c|
-          #  c.url = uri
-          #end
           @_conn = EventMachine::SocketClient.connect(configuration[:uri])
 					EM::add_periodic_timer configuration[:message_timeout] do
 						self.ready_to_send = @_ready_to_send
 					end
-          # serial_reader {|data| read data}
           @_conn.stream {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to connect: #{$!}"
@@ -386,7 +380,7 @@ module Wescontrol
         send_event 5
         EventMachine.cancel_timer @_timer
       end
-      #@_buffer ||= ""
+      @_buffer ||= ""
 			@_responses ||= {}
       # if the buffer has gotten really big, it's probably because we
       # failed to read a message at some point and junk data at the

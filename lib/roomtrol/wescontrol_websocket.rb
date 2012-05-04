@@ -143,6 +143,7 @@ module Wescontrol
       "projector"  => ["power", "video_mute", "state", "video_mute"],
       "volume"     => ["volume", "mute"],
       "switcher"   => ["input"],
+      "blurayplayer" => [],
       "ir_emitter" => [],
       "computer"   => ["reachable"],
       "mac"        => []
