@@ -65,6 +65,7 @@ class SocketBluray < Wescontrol::SocketDevice
   state_var :operational, :type => :boolean
 
   requests do
+    send :ping, "\r\n", 1.0
     send :time, "?T\r\n", 0.1
   end
 
