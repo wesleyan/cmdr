@@ -4,6 +4,8 @@ $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 require 'rubygems'
 require 'couchrest'
 require 'time'
+require 'yaml'
+require 'openssl'
 require 'roomtrol/constants'
 require 'roomtrol/device'
 require 'roomtrol/event_monitor'
@@ -35,7 +37,8 @@ Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 module Wescontrol
 	class Wescontrol
 		def initialize(device_hashes)
-			@db = CouchRest.database("http://localhost:5984/rooms")
+      @credentials = get_credentials
+			@db = CouchRest.database("#{@credentials}@http://localhost:5984/rooms")
 
 			@devices = device_hashes.collect{|hash|
 				begin
@@ -45,6 +48,20 @@ module Wescontrol
 				end
 			}.compact
 		end
+
+    def get_credentials
+      credentials = YAML::load_file "../credentials.yml"
+      key = YAML::load_file "../key.yml"
+
+      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
+      decipher.decrypt
+      decipher.key = key["key"]
+      decipher.iv = key["iv"]
+
+      pw = decipher.update(credentials["password"]) + decipher.final
+      credentials = "#{credentials["user"]}:#{pw}"
+    end
+      
 			
 		def inspect
 			"<Wescontrol:0x#{object_id.to_s(16)}>"

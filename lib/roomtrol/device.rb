@@ -2,6 +2,8 @@
 require 'couchrest'
 require 'mq'
 require 'json'
+require 'yaml'
+require 'openssl'
 
 module Wescontrol
 	# Device provides a DSL for describing devices of all
@@ -243,10 +245,24 @@ module Wescontrol
 				configuration[var.to_sym] = value
 			} if configuration
 			#TODO: The database uri should not be hard-coded
-			@db = CouchRest.database(db_uri)
+      @credentials = get_credentials
+			@db = CouchRest.database("#{@credentials}@#{db_uri}")
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
       @hostname = @db.view('room/by_mac')["rows"][0]["value"]["attributes"]["hostname"]
 		end
+
+    def get_credentials
+      credentials = YAML::load_file "../../credentials.yml"
+      key = YAML::load_file "../../key.yml"
+
+      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
+      decipher = decrypt
+      decipher.key = key["key"]
+      decipher.iv = key["iv"]
+
+      pw = decipher.update(credentials["password"]) + decipher.final
+      credentials = "#{credentials["user"]}:#{pw}"
+    end
 		
 		# Run is a blocking call that starts the device. While run is
 		# running, the device will watch for AMQP events as well as

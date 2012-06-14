@@ -4,6 +4,8 @@ require 'json'
 require 'mq'
 require 'couchrest'
 require 'state_machine'
+require 'yaml'
+require 'openssl'
 module Wescontrol
   # Wescontrol websocket server. Used to provide better interactivity to
   # the touchscreen interface. Communication is through JSON, like for
@@ -151,7 +153,8 @@ module Wescontrol
     RESOURCES = DEVICES.merge({"source" => ["source"]})
     
     def initialize
-      @db = CouchRest.database("http://localhost:5984/rooms")
+      @credentials = get_credentials
+      @db = CouchRest.database("#{@credentials}@http://localhost:5984/rooms")
 
       @room = @db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]['value']
@@ -188,6 +191,20 @@ module Wescontrol
         end
         @device_record_by_resource[k] = d
       end
+    end
+
+    # Decrypts the password for the database
+    def get_credentials
+      credentials = YAML::load_file "../../credentials.yml"
+      key = YAML::load_file "../../key.yml"
+
+      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
+      decipher.decrypt
+      decipher.key = key["key"]
+      decipher.iv = key["iv"]
+
+      pw = decipher.update(credentials["password"]) + decipher.final
+      credentials = "#{credentials["user"]}:#{pw}"
     end
 
     # Starts the websockets server. This is a blocking call if run

@@ -17,3 +17,5 @@ tp6/pub
 auto-save-list
 tramp
 .\#*
+key.yml
+credentials.yml
