@@ -154,7 +154,7 @@ module Wescontrol
     
     def initialize
       @credentials = get_credentials
-      @db = CouchRest.database("#{@credentials}@http://localhost:5984/rooms")
+      @db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
 
       @room = @db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]['value']
@@ -195,8 +195,8 @@ module Wescontrol
 
     # Decrypts the password for the database
     def get_credentials
-      credentials = YAML::load_file "../../credentials.yml"
-      key = YAML::load_file "../../key.yml"
+      credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
+      key = YAML::load_file "/var/roomtrol-daemon/key.yml"
 
       decipher = OpenSSL::Cipher::AES.new(128, :CBC)
       decipher.decrypt
@@ -204,7 +204,7 @@ module Wescontrol
       decipher.iv = key["iv"]
 
       pw = decipher.update(credentials["password"]) + decipher.final
-      credentials = "#{credentials["user"]}:#{pw}"
+      auth = "#{credentials["user"]}:#{pw}"
     end
 
     # Starts the websockets server. This is a blocking call if run

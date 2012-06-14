@@ -38,7 +38,7 @@ module Wescontrol
 	class Wescontrol
 		def initialize(device_hashes)
       @credentials = get_credentials
-			@db = CouchRest.database("#{@credentials}@http://localhost:5984/rooms")
+			@db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
 
 			@devices = device_hashes.collect{|hash|
 				begin
@@ -50,8 +50,8 @@ module Wescontrol
 		end
 
     def get_credentials
-      credentials = YAML::load_file "../credentials.yml"
-      key = YAML::load_file "../key.yml"
+      credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
+      key = YAML::load_file "/var/roomtrol-daemon/key.yml"
 
       decipher = OpenSSL::Cipher::AES.new(128, :CBC)
       decipher.decrypt
@@ -59,7 +59,7 @@ module Wescontrol
       decipher.iv = key["iv"]
 
       pw = decipher.update(credentials["password"]) + decipher.final
-      credentials = "#{credentials["user"]}:#{pw}"
+      auth = "#{credentials["user"]}:#{pw}"
     end
       
 			

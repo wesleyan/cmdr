@@ -1,3 +1,6 @@
+require 'yaml'
+require 'openssl'
+
 module Wescontrol
 	class WescontrolRoom < Wescontrol
 		def initialize
@@ -21,10 +24,12 @@ module Wescontrol
 	end
 	
 	class Room
-		@database = "http://localhost:5984/rooms"
-		
+		@database = "http://roomtrol:Pr351d3nt@localhost:5984/rooms"
+
 		def self.find_by_mac(mac, db_uri = @database)
-			db = CouchRest.database!(db_uri)
+      #credentials = Room.get_credentials
+			#db = CouchRest.database!("#{credentials}@#{db_uri}")
+      db = CouchRest.database!(db_uri)
 			retried = false
 			begin
 				db.get("_design/room").view("by_mac", {:key => mac})['rows'][0]
@@ -41,7 +46,9 @@ module Wescontrol
 		end
 		
 		def self.devices(room, db_uri = @database)
-			db = CouchRest.database!(db_uri)
+      #credentials = Room.get_credentials
+			#db = CouchRest.database!("#{credentials}@#{db_uri}")
+      db = CouchRest.database!(db_uri) 
 			retried = false
 			begin
 				db.get("_design/room").view("devices_for_room", {:key => room})['rows']
@@ -58,7 +65,9 @@ module Wescontrol
 		end
 		
 		def self.define_db_views(db_uri)
-			db = CouchRest.database!(db_uri)
+      #credentials = Room.get_credentials
+			#db = CouchRest.database!("#{credentials}@#{db_uri}")
+      db = CouchRest.database!(db_uri)
 
 			doc = {
 				"_id" => "_design/room",
@@ -89,7 +98,9 @@ module Wescontrol
 		
 		def self.create_room(db_uri = @database)
 			puts "Creating room"
-			db = CouchRest.database!(db_uri)
+      #credentials = Room.get_credentials
+			#db = CouchRest.database!("#{credentials}@#{db_uri}")
+      db = CouchRest.database!(db_uri)
 			
 			number = 0
 			serial_ports = `ls /dev/serial/by-path`.split("\n").collect do |port|
@@ -127,5 +138,18 @@ module Wescontrol
 			db.save_doc(room_doc)
 			db.save_doc(building_doc)
 		end
+
+    #def self.get_credentials
+    #  credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
+    #  key = YAML::load_file "/var/roomtrol-daemon/key.yml"
+
+    #  decipher = OpenSSL::Cipher::AES.new(128, :CBC)
+    #  decipher.decrypt
+    #  decipher.key = key["key"]
+    #  decipher.iv = key["iv"]
+
+    #  pw = decipher.update(credentials["password"]) + decipher.final
+    #  auth = "#{credentials["user"]}:#{pw}"
+    #end
 	end
 end
