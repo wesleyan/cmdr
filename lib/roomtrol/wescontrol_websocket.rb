@@ -195,6 +195,7 @@ module Wescontrol
 
     # Decrypts the password for the database
     def get_credentials
+      YAML::ENGINE.yamler = 'syck'
       credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
       key = YAML::load_file "/var/roomtrol-daemon/key.yml"
 

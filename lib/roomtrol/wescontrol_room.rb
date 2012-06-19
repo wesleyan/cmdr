@@ -1,5 +1,6 @@
 require 'yaml'
 require 'openssl'
+require 'couchrest'
 
 module Wescontrol
 	class WescontrolRoom < Wescontrol
@@ -25,6 +26,7 @@ module Wescontrol
 	
 	class Room
 		@database = "http://roomtrol:Pr351d3nt@localhost:5984/rooms"
+    #@database = "http://localhost:5984/rooms"
 
 		def self.find_by_mac(mac, db_uri = @database)
       #credentials = Room.get_credentials
