@@ -25,12 +25,24 @@ module Wescontrol
 	end
 	
 	class Room
-		@database = "http://roomtrol:Pr351d3nt@localhost:5984/rooms"
-    #@database = "http://localhost:5984/rooms"
+    def self.get_credentials
+      YAML::ENGINE::yamler = 'syck'
+      credentials = YAML.load_file "/var/roomtrol-daemon/credentials.yml"
+      key = YAML.load_file "/var/roomtrol-daemon/key.yml"
+
+      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
+      decipher.decrypt
+      decipher.key = key['key']
+      decipher.iv = key['iv']
+
+      pw = decipher.update(credentials['password']) + decipher.final
+      auth = "#{credentials['user']}:#{pw}"
+    end
+
+    @credentials = get_credentials
+    @database = "http://#{@credentials}@localhost:5984/rooms"
 
 		def self.find_by_mac(mac, db_uri = @database)
-      #credentials = Room.get_credentials
-			#db = CouchRest.database!("#{credentials}@#{db_uri}")
       db = CouchRest.database!(db_uri)
 			retried = false
 			begin
@@ -48,8 +60,6 @@ module Wescontrol
 		end
 		
 		def self.devices(room, db_uri = @database)
-      #credentials = Room.get_credentials
-			#db = CouchRest.database!("#{credentials}@#{db_uri}")
       db = CouchRest.database!(db_uri) 
 			retried = false
 			begin
@@ -67,8 +77,6 @@ module Wescontrol
 		end
 		
 		def self.define_db_views(db_uri)
-      #credentials = Room.get_credentials
-			#db = CouchRest.database!("#{credentials}@#{db_uri}")
       db = CouchRest.database!(db_uri)
 
 			doc = {
@@ -100,8 +108,6 @@ module Wescontrol
 		
 		def self.create_room(db_uri = @database)
 			puts "Creating room"
-      #credentials = Room.get_credentials
-			#db = CouchRest.database!("#{credentials}@#{db_uri}")
       db = CouchRest.database!(db_uri)
 			
 			number = 0
@@ -140,18 +146,5 @@ module Wescontrol
 			db.save_doc(room_doc)
 			db.save_doc(building_doc)
 		end
-
-    #def self.get_credentials
-    #  credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
-    #  key = YAML::load_file "/var/roomtrol-daemon/key.yml"
-
-    #  decipher = OpenSSL::Cipher::AES.new(128, :CBC)
-    #  decipher.decrypt
-    #  decipher.key = key["key"]
-    #  decipher.iv = key["iv"]
-
-    #  pw = decipher.update(credentials["password"]) + decipher.final
-    #  auth = "#{credentials["user"]}:#{pw}"
-    #end
 	end
 end
