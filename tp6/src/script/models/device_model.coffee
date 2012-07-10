@@ -12,6 +12,7 @@ class Device extends Backbone.Model
   command: (name, args = []) ->
     msg = {
       resource: this.get('name')
+      var: name
       method: name
       args: args
     }

@@ -143,6 +143,7 @@ module Wescontrol
       "projector"  => ["power", "video_mute", "state", "video_mute"],
       "volume"     => ["volume", "mute"],
       "switcher"   => ["input"],
+      "blurayplayer" => ["play", "pause", "forward", "back", "stop", "next", "previous", "title", "menu", "up", "down", "left", "right", "enter"],
       "ir_emitter" => [],
       "computer"   => ["reachable"],
       "mac"        => []
@@ -358,6 +359,7 @@ module Wescontrol
 
     def command req, df
       if (DEVICES[req['resource']] || []).include?(req['var'])
+        device = req['resource']
         device_req = {
           :id => UUIDTools::UUID.random_create.to_s,
           :queue => @queue_name,

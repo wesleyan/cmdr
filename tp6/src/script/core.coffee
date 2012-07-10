@@ -9,6 +9,7 @@ window.Tp.devices =
   projector: new Tp.Device {name: "projector"}
   volume: new Tp.Device {name: "volume"}
   ir_emitter: new Tp.Device {name: "ir_emitter"}
+  blurayplayer: new Tp.Device {name: "blurayplayer"}
   computer: new Tp.Device {name: "computer"}
 
 window.Tp.room = new Tp.Room

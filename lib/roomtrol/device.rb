@@ -245,6 +245,7 @@ module Wescontrol
 			#TODO: The database uri should not be hard-coded
 			@db = CouchRest.database(db_uri)
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
+      @hostname = @db.view('room/by_mac')["rows"][0]["value"]["attributes"]["hostname"]
 		end
 		
 		# Run is a blocking call that starts the device. While run is

@@ -2,6 +2,7 @@ require 'serialport'
 require 'strscan'
 #require 'roomtrol/em-serialport'
 require 'rubybits'
+require 'xmlrpc/client'
 
 module Wescontrol
 	# RS232Device is a subclass of {Wescontrol::Device} that makes the
@@ -180,6 +181,19 @@ module Wescontrol
         end
       end
 		end
+
+    def send_event severity 
+      @_event = {"device" => "#{@hostname}", 
+                 "component" => "#{@name}", 
+                 "summary" => "Communication lost with #{@name}", 
+                 "eventClass" => "/Status/Device",
+                 "severity" => severity}
+      EM.defer do
+        DaemonKit.logger.info("Received error: #{@_event}")
+        serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+        serv.call('sendEvent', @_event)
+      end
+    end
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
@@ -479,6 +493,17 @@ module Wescontrol
 		# ignored. Also sets ready_to_send, which causes the next request
 		# or command to be sent.
 		def read data
+      EventMachine.cancel_timer @_timer if @_timer
+      unless self.operational
+        self.operational = true
+        send_event 0
+      end
+      @_timer = EventMachine.add_timer(10) do
+        DaemonKit.logger.error("Lost communication with #{@name}")
+        self.operational = false
+        send_event 5
+        EventMachine.cancel_timer @_timer
+      end
 			@_buffer ||= ""
 			@_responses ||= {}
       # if the buffer has gotten really big, it's probably because we
