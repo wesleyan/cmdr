@@ -27,8 +27,10 @@ module Wescontrol
 	class Room
     def self.get_credentials
       YAML::ENGINE::yamler = 'syck'
-      credentials = YAML.load_file "/var/roomtrol-daemon/credentials.yml"
-      key = YAML.load_file "/var/roomtrol-daemon/key.yml"
+      #credentials = YAML.load_file "/var/roomtrol-daemon/credentials.yml"
+      #key = YAML.load_file "/var/roomtrol-daemon/key.yml"
+      credentials = YAML.load_file "/home/bgapinski/ims/roomtrol-daemon/credentials.yml"
+      key = YAML.load_file "/home/bgapinski/ims/roomtrol-daemon/key.yml"
 
       decipher = OpenSSL::Cipher::AES.new(128, :CBC)
       decipher.decrypt

@@ -1,2 +1,4 @@
 ignore:
   - script/vendor/
+#proxy:
+  #"/login": "http://127.0.0.1:4567/login.php"
