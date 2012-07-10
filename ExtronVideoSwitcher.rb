@@ -13,7 +13,6 @@ class ExtronVideoSwitcher < VideoSwitcher
 		baud        9600
 		message_end "\r\n"
 	end
-
 	#managed_state_var :input, 
 	#	:type => :option, 
 	#	:display_order => 1, 
@@ -28,7 +27,7 @@ class ExtronVideoSwitcher < VideoSwitcher
     :options => ("1".."6").to_a,
     :response => :channel,
     :action => proc{|input|
-      "#{input}!"
+      "#{input}&"
     }
   managed_state_var :audio,
     :type => :option,

@@ -68,7 +68,7 @@ class PJLinkProjector < SocketProjector
 
 	responses do
 		#ack ":"
-		error :general_error, "ERR4", "Received an error"
+		error :general_error, "ERR", "Received an error"
 		match :power,  /%1POWR=(.+)/, proc{|m|
 	 		DaemonKit.logger.info "Received power value #{m[1]}"
 			  self.power = (m[1] == "1")
