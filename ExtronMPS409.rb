@@ -1,5 +1,6 @@
 class ExtronMPS409 < ExtronVideoSwitcher
   AUDIO_HASH = {1 => "1*1", 2 => "1*2", 3 => "2*1", 4 => "2*2", 5 => "3*1", 6 => "3*2", 7 => "3*3", 8 => "4*1", 9 => "4*2"}
+  super
 
   managed_state_var :video,
     :type => :option,
