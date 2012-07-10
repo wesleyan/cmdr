@@ -13,7 +13,7 @@ class PJLinkProjector < SocketProjector
   INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22}
 
   configure do
-    DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{name}"
+    DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{@name}"
   end
 
   def initialize(name, options)
@@ -23,7 +23,6 @@ class PJLinkProjector < SocketProjector
   end
 
   # Generates the auth key for pjlink
-  #def receive_data data
   def read data
     EM.cancel_timer @_cooling_timer if @_cooling_timer
     @_cooling_timer = nil
@@ -66,10 +65,6 @@ class PJLinkProjector < SocketProjector
 		:action => proc{|on|
 			"%1AVMT #{on ? "31" : "30"}\r"
 		}
-		
-  #managed_state_var :operational,
-  #  :type => :boolean,
-  #  :action => proc{
 
 	responses do
 		#ack ":"

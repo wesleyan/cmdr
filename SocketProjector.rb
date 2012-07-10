@@ -44,7 +44,6 @@ class SocketProjector < Wescontrol::SocketDevice
 				!power ? "off" :
 					video_mute ? "muted" : "on"	    
 	}
-	
 	#time_since_var :on_time, :since => :turned_on, :before => :turned_off
 	#virtual_var :on_time, :type => 'decimal', :depends_on => [:turned_on], :transformation => proc {
 	#	(Time.now-turned_on)/(60*60) #Time.- returns seconds; converted to hours
