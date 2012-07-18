@@ -421,10 +421,10 @@ module Wescontrol
       defer_device_operation device_req, device, deferrable
     end
 
-    def set_device_state device, state, df = EM::DefaultDeferrable.new
+    def set_device_state device, state, input = :input, df = EM::DefaultDeferrable.new
       unless @dont_switch
         DaemonKit.logger.debug "Setting #{device} input to #{state}"
-        daemon_set :input, state, device, df
+        daemon_set input, state, device, df
       end
     end
     
@@ -496,7 +496,7 @@ module Wescontrol
                 parent.set_device_state parent.devices["projector"], p
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], v
+                parent.set_device_state parent.devices["switcher"], v, :video
               end
             end
             if a
@@ -504,7 +504,7 @@ module Wescontrol
                 transition all => this_state
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], a 
+                parent.set_device_state parent.devices["switcher"], a, :audio 
               end
             end
           end
