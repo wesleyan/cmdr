@@ -284,7 +284,9 @@ module Wescontrol
           case [resource, msg['var']]
           when ["projector", "input"]
             @source_fsm.send("projector_to_#{msg['now']}") rescue nil
-          when ["switcher", "input"]
+          when ["video", "input"]
+            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
+          when ["audio", "input"]
             @source_fms.send("switcher_to_#{msg['now']}") rescue nil
           end
         end
@@ -494,7 +496,7 @@ module Wescontrol
                 parent.set_device_state parent.devices["projector"], p
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], v, :video
+                parent.set_device_state parent.devices["switcher"], v
               end
             end
             if a
@@ -502,7 +504,9 @@ module Wescontrol
                 transition all => this_state
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["audio"], a, :audio
+                parent.set_device_state parent.devices["switcher"], a 
+              end
+            end
           end
         end
       end
