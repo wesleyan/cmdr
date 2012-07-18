@@ -1,6 +1,5 @@
-require 'yaml'
-require 'openssl'
 require 'couchrest'
+require 'roomtrol/authenticate'
 
 module Wescontrol
 	class WescontrolRoom < Wescontrol
@@ -25,24 +24,8 @@ module Wescontrol
 	end
 	
 	class Room
-    def self.get_credentials
-      YAML::ENGINE::yamler = 'syck'
-      #credentials = YAML.load_file "/var/roomtrol-daemon/credentials.yml"
-      #key = YAML.load_file "/var/roomtrol-daemon/key.yml"
-      credentials = YAML.load_file "/home/bgapinski/ims/roomtrol-daemon/credentials.yml"
-      key = YAML.load_file "/home/bgapinski/ims/roomtrol-daemon/key.yml"
-
-      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
-      decipher.decrypt
-      decipher.key = key['key']
-      decipher.iv = key['iv']
-
-      pw = decipher.update(credentials['password']) + decipher.final
-      auth = "#{credentials['user']}:#{pw}"
-    end
-
-    @credentials = get_credentials
-    @database = "http://#{@credentials}@localhost:5984/rooms"
+    @credentials = Authenticate.get_credentials
+    @database = "http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms"
 
 		def self.find_by_mac(mac, db_uri = @database)
       db = CouchRest.database!(db_uri)

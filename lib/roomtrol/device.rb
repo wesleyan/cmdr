@@ -2,8 +2,7 @@
 require 'couchrest'
 require 'mq'
 require 'json'
-require 'yaml'
-require 'openssl'
+require 'roomtrol/authenticate'
 
 module Wescontrol
 	# Device provides a DSL for describing devices of all
@@ -238,38 +237,21 @@ module Wescontrol
 		# the CouchDB database where updates should be saved @param
 		# [String] dqueue The AMQP queue that the device watches for
 		# messages
-		def initialize(name, hash = {}, db_uri = "http://roomtrol:Pr351d3nt@localhost:5984/rooms", dqueue = nil)
+		def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms", dqueue = nil)
 			hash_s = hash.symbolize_keys
 			@name = name
 			hash.each{|var, value|
 				configuration[var.to_sym] = value
 			} if configuration
 			#TODO: The database uri should not be hard-coded
-      @credentials = get_credentials
+      @credentials = Authenticate.get_credentials
       p_uri = URI.parse db_uri
-      auth_uri = "#{p_uri.scheme}://#{@credentials}@#{p_uri.host}:#{p_uri.port}#{p_uri.path}"
+      auth_uri = "#{p_uri.scheme}://#{@credentials["user"]}:#{@credentials["password"]}@#{p_uri.host}:#{p_uri.port}#{p_uri.path}"
       @db = CouchRest.database(auth_uri)
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
       @hostname = @db.view('room/by_mac')["rows"][0]["value"]["attributes"]["hostname"]
 		end
 
-    def get_credentials
-      YAML::ENGINE.yamler = 'syck'
-      #credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
-      #key = YAML::load_file "/var/roomtrol-daemon/key.yml"
-      credentials = YAML::load_file "/home/bgapinski/ims/roomtrol-daemon/credentials.yml"
-      key = YAML::load_file "/home/bgapinski/ims/roomtrol-daemon/key.yml"
-
-
-      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
-      decipher.decrypt
-      decipher.key = key["key"]
-      decipher.iv = key["iv"]
-
-      pw = decipher.update(credentials["password"]) + decipher.final
-      auth = "#{credentials["user"]}:#{pw}"
-    end
-		
 		# Run is a blocking call that starts the device. While run is
 		# running, the device will watch for AMQP events as well as
 		# whatever communication channels the device uses and react

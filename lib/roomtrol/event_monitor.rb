@@ -1,7 +1,6 @@
 require 'mq'
 require 'couchrest'
-require 'yaml'
-require 'openssl'
+require 'roomtrol/authenticate'
 module Wescontrol
 	# This class is responsible for watching the event queue, buffering the events and
 	# protecting the database from too-frequent updates (which can easily happen in the
@@ -12,27 +11,11 @@ module Wescontrol
 		# The number of seconds to wait before processing the next batch of events
 		TIMEOUT = 5.0
 		# A blocking method which starts event monitoring inside an EventMachine.
-    def self.get_credentials
-      YAML::ENGINE::yamler = 'syck'
-      #credentials = YAML::load_file '/var/roomtrol-daemon/credentials.yml'
-      #key = YAML::load_file '/var/roomtrol-daemon/key.yml'
-      credentials = YAML::load_file '/home/bgapinski/ims/roomtrol-daemon/credentials.yml'
-      key = YAML::load_file '/home/bgapinski/ims/roomtrol-daemon/key.yml'
-
-      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
-      decipher.decrypt
-      decipher.key = key['key']
-      decipher.iv = key['iv']
-
-      pw = decipher.update(credentials['password']) + decipher.final
-      auth = "#{credentials['user']}:#{pw}"
-    end
-
 		def self.run
 			buffer = {}
 			AMQP.start(:host => '127.0.0.1'){
-        @credentials = get_credentials
-				db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
+        @credentials = Authenticate.get_credentials
+				db = CouchRest.database("http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms")
         topic = MQ.new.topic(EVENT_TOPIC)
 				MQ.new.queue("roomtrol:event-monitor").bind(topic, :key => "*").subscribe do |json|
 					begin

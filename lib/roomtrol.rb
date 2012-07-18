@@ -4,8 +4,6 @@ $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 require 'rubygems'
 require 'couchrest'
 require 'time'
-require 'yaml'
-require 'openssl'
 require 'roomtrol/constants'
 require 'roomtrol/device'
 require 'roomtrol/event_monitor'
@@ -21,6 +19,7 @@ require 'roomtrol/video-encoder'
 require 'roomtrol/wescontrol_websocket'
 require 'roomtrol/SocketDevice'
 require 'roomtrol/devices/SocketProjector'
+require 'roomtrol/authenticate'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin
@@ -37,7 +36,8 @@ Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 module Wescontrol
 	class Wescontrol
 		def initialize(device_hashes)
-      @credentials = get_credentials
+      credentials = Authenticate.get_credentials
+      @credentials = "#{credentials["user"]}:#{credentials["password"]}"
 			@db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
 
 			@devices = device_hashes.collect{|hash|
@@ -49,24 +49,6 @@ module Wescontrol
 			}.compact
 		end
 
-    def get_credentials
-      YAML::ENGINE::yamler = 'syck'
-      #credentials = YAML::load_file "/var/roomtrol-daemon/credentials.yml"
-      #key = YAML::load_file "/var/roomtrol-daemon/key.yml"
-      credentials = YAML::load_file "/home/bgapinski/ims/roomtrol-daemon/credentials.yml"
-      key = YAML::load_file "/home/bgapinski/ims/roomtrol-daemon/key.yml"
-
-
-      decipher = OpenSSL::Cipher::AES.new(128, :CBC)
-      decipher.decrypt
-      decipher.key = key["key"]
-      decipher.iv = key["iv"]
-
-      pw = decipher.update(credentials["password"]) + decipher.final
-      auth = "#{credentials["user"]}:#{pw}"
-    end
-      
-			
 		def inspect
 			"<Wescontrol:0x#{object_id.to_s(16)}>"
 		end
