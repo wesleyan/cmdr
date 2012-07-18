@@ -1,0 +1,20 @@
+!!!5
+%html
+  %head
+    %link(rel="stylesheet" type="text/css" href="styles.css")
+  %body
+    %fieldset
+      %legend Register
+      %form{:name => "register", :action => "cgi-bin/register.cgi", :method => "post"}
+        %p
+          %label{:for => "user"} Username:
+          %input{:type => "text", :name => "user", :class => "text"}
+        %p
+          %label{:for => "password"} Password:
+          %input{:type => "password", :name => "password", :class => "password"}
+        %p
+          %label{:for => "pass2"} Retype Password
+          %input{:type => "password", :name => "pass2", :class => "password"}
+        .submit
+          %p
+            %input{:type => "submit", :value => "Register"}
