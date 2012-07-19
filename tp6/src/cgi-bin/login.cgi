@@ -5,6 +5,7 @@ require 'cgi/session'
 require 'couchrest'
 require 'digest'
 require 'iconv'
+require '../ruby/authenticate'
 
 def error
   puts "LOGIN FAILED: Incorrect username/password"
@@ -25,8 +26,10 @@ session = CGI::Session.new(cgi, 'new_session' => true)
 @username = cgi.has_key?('user') ? cgi['user'].to_s : ''
 @password = cgi.has_key?('password') ? cgi['password'].to_s : ''
 
+@creds = Authenticate.get_credentials("../security")
+@credentials = "#{@creds['user']}:#{@creds['password'}"
 
-@db = CouchRest.database("http://localhost:5984/roomtrol-users")
+@db = CouchRest.database("http://#{@credentials}@localhost:5984/roomtrol-users")
 
 @db.all_docs["rows"].each do |row|
   row = @db.get(row["id"]).to_hash
@@ -47,4 +50,5 @@ if @hash != @userData['password']
   error
 else
   session['valid'] = 1
+  puts cgi.header('Status' => "302 Moved", 'Location' => 'tp6.cgi')
 end

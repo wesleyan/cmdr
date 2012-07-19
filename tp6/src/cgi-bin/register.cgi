@@ -6,6 +6,7 @@ require 'digest'
 require 'digest/md5'
 require 'uuidtools'
 require 'iconv'
+require '../ruby/authenticate'
 
 def error e
   puts "Registration Error: #{e}"
@@ -32,7 +33,10 @@ end
 @hash = Digest::SHA256.digest(@salt + Digest::SHA256.digest(@password))
 @hash = Iconv.iconv('utf-8', 'iso8859-1', @hash)[0]
 
-@db = CouchRest.database("http://localhost:5984/roomtrol-users")
+@creds = Authenticate.get_credentials("../security")
+@credentials = "#{@creds['user']}:#{@creds['password']}"
+
+@db = CouchRest.database("http://#{@credentials}@localhost:5984/roomtrol-users")
 @doc = CouchRest::Document.new({"user" => @username, "password" => @hash, "salt" => @salt})
 
 @db.save_doc @doc
