@@ -5,6 +5,7 @@ require 'couchrest'
 require 'digest'
 require 'digest/md5'
 require 'uuidtools'
+require 'iconv'
 
 def error e
   puts "Registration Error: #{e}"
@@ -29,8 +30,9 @@ end
 
 @salt = SecureRandom.hex[0..2]
 @hash = Digest::SHA256.digest(@salt + Digest::SHA256.digest(@password))
+@hash = Iconv.iconv('utf-8', 'iso8859-1', @hash)[0]
 
-@db = CouchRest.database("http:localhost:5984/roomtrol-users")
-@doc = {"user" => "#{@username}", "password" => "#{@hash}", "salt" => "#{@salt}"}
+@db = CouchRest.database("http://localhost:5984/roomtrol-users")
+@doc = CouchRest::Document.new({"user" => @username, "password" => @hash, "salt" => @salt})
 
 @db.save_doc @doc

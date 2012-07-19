@@ -4,6 +4,7 @@ require 'cgi'
 require 'cgi/session'
 require 'couchrest'
 require 'digest'
+require 'iconv'
 
 def error
   puts "LOGIN FAILED: Incorrect username/password"
@@ -28,17 +29,19 @@ session = CGI::Session.new(cgi, 'new_session' => true)
 @db = CouchRest.database("http://localhost:5984/roomtrol-users")
 
 @db.all_docs["rows"].each do |row|
-  if row['username'] == @username
+  row = @db.get(row["id"]).to_hash
+  if row['user'] == @username
     @userData = row
     break
   end
 end
 
-if @doc.nil?
+if @userData.nil?
   error
 end
 
 @hash = Digest::SHA256.digest(@userData['salt'] + Digest::SHA256.digest(@password))
+@hash = Iconv.iconv('utf-8', 'iso8859-1', @hash)[0]
 
 if @hash != @userData['password']
   error
