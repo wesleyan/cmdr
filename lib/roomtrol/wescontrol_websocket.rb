@@ -285,9 +285,9 @@ module Wescontrol
           when ["projector", "input"]
             @source_fsm.send("projector_to_#{msg['now']}") rescue nil
           when ["video", "input"]
-            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
+            @source_fsm.send("switcher_to_#{msg['now']}") rescue nil
           when ["audio", "input"]
-            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
+            @source_fsm.send("switcher_to_#{msg['now']}") rescue nil
           end
         end
       end
@@ -496,6 +496,7 @@ module Wescontrol
                 parent.set_device_state parent.devices["projector"], p
               end
               after_transition any => this_state do
+                DaemonKit.logger.debug "VIDEO: Transitioned to #{this_state}, and #{v.inspect}"
                 parent.set_device_state parent.devices["switcher"], v, :video
               end
             end
@@ -504,6 +505,7 @@ module Wescontrol
                 transition all => this_state
               end
               after_transition any => this_state do
+                DaemonKit.logger.debug "AUDIO: Transitioned to #{this_state}, and #{a.inspect}"
                 parent.set_device_state parent.devices["switcher"], a, :audio 
               end
             end
