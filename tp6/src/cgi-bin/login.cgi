@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env /usr/local/rvm/bin/ruby
 
 require 'cgi'
 require 'cgi/session'
@@ -27,7 +27,7 @@ session = CGI::Session.new(cgi, 'new_session' => true)
 @password = cgi.has_key?('password') ? cgi['password'].to_s : ''
 
 @creds = Authenticate.get_credentials("../security")
-@credentials = "#{@creds['user']}:#{@creds['password'}"
+@credentials = "#{@creds['user']}:#{@creds['password']}"
 
 @db = CouchRest.database("http://#{@credentials}@localhost:5984/roomtrol-users")
 

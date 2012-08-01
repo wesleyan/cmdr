@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env /usr/local/rvm/bin/ruby
 
 require 'cgi'
 require 'couchrest'

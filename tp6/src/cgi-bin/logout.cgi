@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env /usr/local/rvm/bin/ruby
 require 'cgi'
 require 'cgi/session'
 
@@ -7,4 +7,4 @@ session = CGI::Session.new(cgi)
 
 session.delete()
 
-print cgi.header('Status' => '302 Moved', 'Location' => 'index.html')
+print cgi.header('Status' => '302 Moved', 'Location' => '../index.html')
