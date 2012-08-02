@@ -20,12 +20,15 @@ cgi = CGI.new("html4")
 @pass2 = cgi.has_key?('pass2') ? cgi['pass2'].to_s : ''
 
 if @username == '' or @password == ''
+  puts cgi.header
   error "All forms need to be filled out!"
 end
 if @password != @pass2
+  puts cgi.header
   error "Passwords do not match!"
 end
 if @username.length > 30
+  puts cgi.header
   error "Username must be fewer than 30 characters!"
 end
 

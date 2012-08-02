@@ -7,4 +7,4 @@ session = CGI::Session.new(cgi)
 
 session.delete()
 
-puts cgi.header('Status' => '302 Moved', 'Location' => '../index.html')
+puts cgi.header('Status' => '302 Moved', 'Location' => '../login.html')

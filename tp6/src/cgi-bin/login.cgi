@@ -40,6 +40,7 @@ session = CGI::Session.new(cgi, 'new_session' => true)
 end
 
 if @userData.nil?
+  puts cgi.header
   error
 end
 
@@ -47,6 +48,7 @@ end
 @hash = Iconv.iconv('utf-8', 'iso8859-1', @hash)[0]
 
 if @hash != @userData['password']
+  puts cgi.header
   error
 else
   session['valid'] = 1
