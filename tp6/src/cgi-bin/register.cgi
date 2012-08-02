@@ -40,3 +40,5 @@ end
 @doc = CouchRest::Document.new({"user" => @username, "password" => @hash, "salt" => @salt})
 
 @db.save_doc @doc
+
+puts cgi.header('Status' => '302 Moved', 'Location' => '../index.html')
