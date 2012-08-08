@@ -6,7 +6,7 @@ Tp.Module = Backbone.View.extend
     if $.template(@template_name) instanceof Function
       @template_loaded()
     else
-      $.get 'script/templates/modules/' + @name + '.html', (template) =>
+      $.get '../script/templates/modules/' + @name + '.html', (template) =>
         $.template @template_name, template
         @template_loaded()
 
