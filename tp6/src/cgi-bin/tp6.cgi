@@ -2,7 +2,6 @@
 require 'cgi'
 require 'cgi/session'
 require 'socket'
-Dir.chdir("..")
 
 cgi = CGI.new('html4')
 
@@ -10,7 +9,7 @@ session = CGI::Session.new(cgi)
 
 def tp6(cgi)
 puts cgi.header
-file = File.open("tp6", 'r')
+file = File.open("../tp6", 'r')
 file.each do |line|
   puts line
 end

@@ -5,13 +5,15 @@
     slinky_styles
 
     - ["json2", "jquery-1.7.1", "jquery.tmpl", "jquery.noisy", "underscore", "backbone"].each do |f|
-      %script{:src => "script/vendor/#{f}.js"}
+      %script{:src => "../script/vendor/#{f}.js"}
     slinky_scripts
   %body
     #page
       #top-bar
         #room-label.label
         #time-label.label
+        #logout-label.label
+          %a.logout{:href => "cgi-bin/logout.cig"}Logout
       #main-view
         #projector-pane
         #action-pane
