@@ -3,7 +3,7 @@ slinky_require('../../lib/module.coffee')
 BlurayModule = Tp.Module.extend
   name: "bluray"
 
-  buttons: ['play', 'back', 'pause', 'forward', 'stop', 'previous', 'next', 'menu', 'title', 'eject']
+  buttons: ['play', 'back', 'pause', 'forward', 'stop', 'eject', 'previous', 'next', 'menu', 'title']
 
   regions: [
     {
