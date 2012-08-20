@@ -285,9 +285,9 @@ module Wescontrol
           when ["projector", "input"]
             @source_fsm.send("projector_to_#{msg['now']}") rescue nil
           when ["video", "input"]
-            @source_fsm.send("switcher_to_#{msg['now']}") rescue nil
+            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
           when ["audio", "input"]
-            @source_fsm.send("switcher_to_#{msg['now']}") rescue nil
+            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
           end
         end
       end
