@@ -3,7 +3,7 @@ slinky_require('../../lib/module.coffee')
 DVDModule = Tp.Module.extend
   name: "dvd"
 
-  buttons: ['play', 'back', 'pause', 'forward', 'stop', 'previous', 'next', 'menu', 'title']
+  buttons: ['play', 'back', 'pause', 'forward', 'stop', 'eject', 'previous', 'next', 'menu', 'title']
 
   regions: [
     {
