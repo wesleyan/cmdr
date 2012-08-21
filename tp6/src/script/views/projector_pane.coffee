@@ -67,7 +67,7 @@ Tp.ProjectorPaneView = Backbone.View.extend
       sW = 80
       sH = 80
 
-      [w, h] = if W > H then [sW, sW * (W/H)] else [sH * (H/W), sH]
+      [w, h] = if W > H then [sW, sW * (H/W)] else [sH * (H/W), sH]
 
       y = (sH - h) / 2 + 80
 
