@@ -112,6 +112,10 @@ module Wescontrol
           @_conn.stream {|data| read data}
 				rescue
 					DaemonKit.logger.error "Failed to connect: #{$!}"
+          EventMachine::Timer.new(1) do
+            DaemonKit.logger.debug "Attempting to reconnect"
+            run
+          end
 				end
 				super
 			}
