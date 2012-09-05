@@ -61,9 +61,12 @@ module Wescontrol
                  "eventClass" => "/Status/Device",
                  "severity" => severity}
       EM.defer do
-        DaemonKit.logger.info("Received error: #{@_event}")
-        serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
-        serv.call('sendEvent', @_event)
+        begin
+          DaemonKit.logger.info("Received error: #{@_event}")
+          serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+          serv.call('sendEvent', @_event)
+        rescue
+        end
       end
     end
 

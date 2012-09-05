@@ -71,9 +71,9 @@ class PJLinkProjector < SocketProjector
 		error :general_error, "ERR", "Received an error"
 		match :power,  /%1POWR=(.+)/, proc{|m|
 	 		DaemonKit.logger.info "Received power value #{m[1]}"
-			  self.power = (m[1] == "1") || (m[1] == "ERR3")
+			  self.power = (m[1] == "1") 
 	  		self.cooling = (m[1] == "2")
-	  		self.warming = (m[1] == "3")
+	  		self.warming = (m[1] == "3") || (m[1] == "ERR3")
 		}
 		#match :mute,       /%1AVMT=(.+)/, proc{|m| self.mute = (m[1] == "31")}
 		match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}

@@ -26,11 +26,13 @@ class SocketBluray < Wescontrol::SocketDevice
     }
   command :next,
     :action => proc{
-      send_string "SF\r\n"
+      #send_string "SF\r\n"
+      send_string "/A181AF3D/RU\r\n"
     }
   command :previous,
     :action => proc{
-      send_string "SR\r\n"
+      #send_string "SR\r\n"
+      send_string "/A181AF3E/RU\r\n"
     }
   command :title,
     :action => proc{
