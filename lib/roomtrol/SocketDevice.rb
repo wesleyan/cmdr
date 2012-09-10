@@ -113,14 +113,14 @@ module Wescontrol
 						self.ready_to_send = @_ready_to_send
 					end
           @_conn.stream {|data| read data}
+          super
 				rescue
 					DaemonKit.logger.error "Failed to connect: #{$!}"
           EventMachine::Timer.new(1) do
-            DaemonKit.logger.debug "Attempting to reconnect"
+            DaemonKit.logger.debug "SocketDevice: Attempting to reconnect to #{@name}"
             run
           end
 				end
-				super
 			}
 			
 		end
@@ -386,6 +386,7 @@ module Wescontrol
         self.operational = false
         send_event 5
         EventMachine.cancel_timer @_timer
+        @_conn.close_connection
       end
       @_buffer ||= ""
 			@_responses ||= {}

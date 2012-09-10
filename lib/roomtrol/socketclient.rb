@@ -16,6 +16,8 @@ module EventMachine
     def post_init
       @_ip = @@ip
       @_port = @@port
+      comm_inactivity_timeout = 1.0
+      pending_connect_timeout = 5.0
     end
 
     def connection_completed
