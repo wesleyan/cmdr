@@ -53,7 +53,7 @@ module Wescontrol
         end
       end
 		end
-    
+
     def send_event severity 
       @_event = {"device" => "#{@hostname}", 
                  "component" => "#{@name}", 
@@ -67,6 +67,15 @@ module Wescontrol
           serv.call('sendEvent', @_event)
         rescue
         end
+      end
+    end
+
+    def operational= operational
+      self.operational = operational
+      if self.operational
+        send_event 0
+      else
+        send_event 5
       end
     end
 
@@ -116,13 +125,13 @@ module Wescontrol
           super
 				rescue
 					DaemonKit.logger.error "Failed to connect: #{$!}"
+          operational=false
           EventMachine::Timer.new(1) do
             DaemonKit.logger.debug "SocketDevice: Attempting to reconnect to #{@name}"
             run
           end
 				end
 			}
-			
 		end
 		
 		# This method, when called in a class body, creates a managed
@@ -378,13 +387,11 @@ module Wescontrol
 		def read data
       EventMachine.cancel_timer @_timer if @_timer
       unless self.operational
-        self.operational = true
-        send_event 0
+        operational=true
       end
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
-        self.operational = false
-        send_event 5
+        operational=false
         EventMachine.cancel_timer @_timer
         @_conn.close_connection
       end
