@@ -8,7 +8,7 @@
 #}
 #---
 
-class ExtronVideoSwitcher < VideoSwitcher
+class SocketExtron < SocketVideoSwitcher
 	configure do
     DaemonKit.logger.info "@Initializing SocketExtron at URI #{options[:uri]} with name #{name}"
 		message_end "\r\n"
@@ -80,6 +80,7 @@ class ExtronVideoSwitcher < VideoSwitcher
         end
       end
       self.video = (v1 < 3 ? ((v1-1)*2 + (v2-1) % 2 + 1) : ((v1-3)*3 + (v2-1) % 3 + 5)) if (v1 && v2)
+      DaemonKit.logger.info "Received video input #{v1} and #{v2}"
     }
     end
 	
