@@ -4,11 +4,6 @@ class SocketBluray < Wescontrol::SocketDevice
     DaemonKit.logger.info "@Initializing SocketBluray at URI #{options[:uri]} with name #{name}"
   end
 
-  def send_string string
-    DaemonKit.logger.info "sending command to bluray: #{string}"
-    super(string)
-  end
-
   command :play, 
       :action => proc{
       send_string "PL\r\n"
