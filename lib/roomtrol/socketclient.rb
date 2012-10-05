@@ -40,10 +40,36 @@ module EventMachine
     def send data
     end
 
+    def send_event severity 
+      @_event = {"device" => "#{@hostname}", 
+                 "component" => "#{@name}", 
+                 "summary" => "Communication lost with #{@name}", 
+                 "eventClass" => "/Status/Device",
+                 "severity" => severity}
+      EM.defer do
+        begin
+          DaemonKit.logger.info("Received error: #{@_event}")
+          serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+          serv.call('sendEvent', @_event)
+        rescue
+        end
+      end
+    end
+
+    def operational= operational
+      self.operational = operational
+      if self.operational
+        send_event 0
+      else
+        send_event 5
+      end
+    end
+
     def unbind
       @disconnect.call if @disconnect
       EventMachine::Timer.new(1) do
         DaemonKit.logger.info "Attempting to reconnect to #{@_ip}"
+        operational=false
         reconnect(@_ip, @_port || 80)
       end
     end
