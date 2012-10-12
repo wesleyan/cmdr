@@ -1,3 +1,0 @@
-[submodule "lib/roomtrol/devices"]
-	path = lib/roomtrol/devices
-	url = git@github.com:bgapinski/roomtrol-devices.git
