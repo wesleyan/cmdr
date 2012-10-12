@@ -143,7 +143,7 @@ module Wescontrol
       "projector"  => ["power", "video_mute", "state", "video_mute"],
       "volume"     => ["volume", "mute"],
       "switcher"   => ["video", "audio"],
-      "blurayplayer" => ["play", "pause", "forward", "back", "stop", "next", "previous", "title", "menu", "up", "down", "left", "right", "enter"],
+      "blurayplayer" => ["play", "pause", "forward", "back", "stop", "eject", "next", "previous", "title", "menu", "up", "down", "left", "right", "enter"],
       "ir_emitter" => [],
       "computer"   => ["reachable"],
       "mac"        => []

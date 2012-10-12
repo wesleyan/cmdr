@@ -53,7 +53,7 @@ module Wescontrol
         end
       end
 		end
-    
+
     def send_event severity 
       @_event = {"device" => "#{@hostname}", 
                  "component" => "#{@name}", 
@@ -61,9 +61,21 @@ module Wescontrol
                  "eventClass" => "/Status/Device",
                  "severity" => severity}
       EM.defer do
-        DaemonKit.logger.info("Received error: #{@_event}")
-        serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
-        serv.call('sendEvent', @_event)
+        begin
+          DaemonKit.logger.info("Received error: #{@_event}")
+          serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
+          serv.call('sendEvent', @_event)
+        rescue
+        end
+      end
+    end
+
+    def operational= operational
+      self.operational = operational
+      if self.operational
+        send_event 0
+      else
+        send_event 5
       end
     end
 
@@ -110,16 +122,16 @@ module Wescontrol
 						self.ready_to_send = @_ready_to_send
 					end
           @_conn.stream {|data| read data}
+          super
 				rescue
 					DaemonKit.logger.error "Failed to connect: #{$!}"
+          operational=false
           EventMachine::Timer.new(1) do
-            DaemonKit.logger.debug "Attempting to reconnect"
+            DaemonKit.logger.debug "SocketDevice: Attempting to reconnect to #{@name}"
             run
           end
 				end
-				super
 			}
-			
 		end
 		
 		# This method, when called in a class body, creates a managed
@@ -375,14 +387,13 @@ module Wescontrol
 		def read data
       EventMachine.cancel_timer @_timer if @_timer
       unless self.operational
-        self.operational = true
-        send_event 0
+        operational=true
       end
       @_timer = EventMachine.add_timer(10) do
         DaemonKit.logger.error("Lost communication with #{@name}")
-        self.operational = false
-        send_event 5
+        operational=false
         EventMachine.cancel_timer @_timer
+        @_conn.close_connection
       end
       @_buffer ||= ""
 			@_responses ||= {}
