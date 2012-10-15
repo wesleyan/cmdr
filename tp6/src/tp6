@@ -16,8 +16,6 @@
       <div id='top-bar'>
         <div class='label' id='room-label'></div>
         <div class='label' id='time-label'></div>
-        <div class='label' id='logout-label'>
-        </div>
       </div>
       <div id='main-view'>
         <div id='projector-pane'></div>
