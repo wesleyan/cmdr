@@ -17,6 +17,7 @@
         <div class='label' id='room-label'></div>
         <div class='label' id='time-label'></div>
         <div class='label' id='logout-label'>
+          <a class='logout' href='logout.cgi'>Logout</a>
         </div>
       </div>
       <div id='main-view'>

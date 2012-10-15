@@ -7,9 +7,9 @@ cgi = CGI.new('html4')
 
 session = CGI::Session.new(cgi)
 
-def tp6(cgi)
+def tp6(cgi, path="../tp6")
 puts cgi.header
-file = File.open("../tp6", 'r')
+file = File.open(path, 'r')
 file.each do |line|
   puts line
 end
@@ -32,7 +32,7 @@ end
 if cgi.remote_addr == "127.0.0.1"
   tp6 cgi
 elsif session['valid'] == 1
-  tp6 cgi
+  tp6(cgi, "../tp6_remote")
 else
   puts cgi.header('Status' => '302 Moved', 'Location' => '../login.html')
 end
