@@ -1,7 +1,7 @@
 slinky_require('../../lib/module.coffee')
 
-DVDModule = Tp.Module.extend
-  name: "dvd"
+BlurayModule = Tp.Module.extend
+  name: "bluray"
 
   buttons: ['play', 'back', 'pause', 'forward', 'stop', 'eject', 'previous', 'next', 'menu', 'title']
 
@@ -51,7 +51,7 @@ DVDModule = Tp.Module.extend
       @do_action e.target.title
 
   do_action: (action) ->
-    Tp.devices.ir_emitter?.command action
+    Tp.devices.blurayplayer?.command action
 
   point_in_polygon: `function (poly, point){
     var x = point[0];
@@ -75,4 +75,4 @@ DVDModule = Tp.Module.extend
   }`
 
 
-Tp.modules.dvd = new DVDModule()
+Tp.modules.bluray = new BlurayModule()

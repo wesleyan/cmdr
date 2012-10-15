@@ -20,6 +20,10 @@ require 'roomtrol/wescontrol_websocket'
 require 'roomtrol/SocketDevice'
 require 'roomtrol/devices/SocketProjector'
 require 'roomtrol/authenticate'
+require 'roomtrol/devices/SocketBluray'
+require 'roomtrol/devices/ExtronVideoSwitcher'
+require 'roomtrol/devices/SocketVideoSwitcher'
+require 'roomtrol/devices/SocketExtron'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 	begin

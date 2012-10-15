@@ -4,7 +4,7 @@ $button_height: 47px
 $button_spacing: 58px
 $control_width: 145px
 
-.dvd-module, .vcr-module
+.dvd-module, .vcr-module, .bluray-module
   .title
     margin-top: 10px
   .controls
@@ -82,8 +82,13 @@ $control_width: 145px
       &.stop
         top: $button_spacing*2
         left: 0
-        right: 0
+        width: $control_width/2 - 5px
     
+      &.eject
+        top: $button_spacing*2
+        right: 0
+        width: $control_width/2 - 5px
+        
       &.previous
         width: $control_width/2 - 5px
         left: 0
@@ -104,7 +109,7 @@ $control_width: 145px
         right: 0
         top: $button_spacing*4
         margin-top: 0
-          
+
     .pause-circle
       position: absolute
       width: 80px

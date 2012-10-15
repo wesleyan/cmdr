@@ -63,7 +63,6 @@ class Server
     this.state_get "volume", "volume"
     this.state_get "volume", "mute"
     this.state_get "source", "source"
-    this.state_get "computer", "reachable"
 
     # Prevent dragging of images. Wait a little while for stuff to load
     $('img').mousedown (event) -> event.preventDefault()

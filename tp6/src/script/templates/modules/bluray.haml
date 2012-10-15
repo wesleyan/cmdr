@@ -1,0 +1,14 @@
+.bluray-module
+  .title Bluray Player
+  .controls
+    .overlay
+    .background
+      .roomtrol-text Roomtroller
+
+    = "{{each buttons}}"
+    %div{:class => "${$value} dvd-button", :title => "${$value}"}
+    = "{{/each}}"
+
+    .pause-circle
+
+    .five-way

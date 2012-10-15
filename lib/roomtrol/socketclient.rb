@@ -16,13 +16,17 @@ module EventMachine
     def post_init
       @_ip = @@ip
       @_port = @@port
+      comm_inactivity_timeout = 1.0
+      pending_connect_timeout = 5.0
     end
 
     def connection_completed
-
     end
 
-    def stream &cb; @stream = cb; end
+    def stream &cb 
+      @stream = cb 
+    end
+      
     def disconnect &cb; @disconnect = cb; end
 
     def receive_data data
@@ -37,9 +41,11 @@ module EventMachine
     end
 
     def unbind
-      reconnect(@_ip, @_port || 80)
-      super
       @disconnect.call if @disconnect
+      EventMachine::Timer.new(1) do
+        DaemonKit.logger.info "Attempting to reconnect to #{@_ip}"
+        reconnect(@_ip, @_port || 80)
+      end
     end
   end
 end
