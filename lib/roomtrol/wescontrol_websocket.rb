@@ -244,17 +244,15 @@ module Wescontrol
     def setup
       # get the initial source
       proj = @device_record_by_resource['projector']
-      vid = @device_record_by_resource['video']
-      aud = @device_record_by_resource['audio']
       switch = @device_record_by_resource['switcher']
 
       p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
-      v_input = switch['attributes']['state_vars']['input']['state'] rescue nil
-      a_input = switch['attributes']['state_vars']['input']['state'] rescue nil
+      v_input = switch['attributes']['state_vars']['video']['state'] rescue nil
+      a_input = switch['attributes']['state_vars']['audio']['state'] rescue nil
       s_input = switch['attributes']['state_vars']['input']['state'] rescue nil
 
       p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
-      v_src = (@sources.find {|s| s['input']['video'] == s_input})['name'] rescue nil
+      v_src = (@sources.find {|s| s['input']['video'] == v_input})['name'] rescue nil
       a_src = (@sources.find {|s| s['input']['audio'] == a_input})['name'] rescue nil
       s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
 
