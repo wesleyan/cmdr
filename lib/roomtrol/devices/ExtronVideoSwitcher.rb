@@ -13,14 +13,14 @@ class ExtronVideoSwitcher < VideoSwitcher
 		baud        9600
 		message_end "\r\n"
 	end
-	#managed_state_var :input, 
-	#	:type => :option, 
-	#	:display_order => 1, 
-	#	:options => ("1".."6").to_a,
-	#	:response => :channel,
-	#	:action => proc{|input|
-	#		"#{input}!"
-	#	}
+	managed_state_var :input, 
+		:type => :option, 
+		:display_order => 1, 
+		:options => ("1".."6").to_a,
+		:response => :channel,
+		:action => proc{|input|
+			"#{input}!"
+		}
   managed_state_var :video,
     :type => :option,
     :display_order => 1,
@@ -62,9 +62,9 @@ class ExtronVideoSwitcher < VideoSwitcher
 		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
 		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
 		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
-			#self.input = m[1].to_i if m[1].to_i > 0
-      self.video = m[1].to_i if m[1].to_i > 0
-      self.audio = m[2].to_i if m[2].to_i > 0
+			self.input = m[1].to_i if m[1].to_i > 0
+      #self.video = m[1].to_i if m[1].to_i > 0
+      #self.audio = m[2].to_i if m[2].to_i > 0
 			self.clipping = (m[3] == "1")
 		}
     match :audio, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
@@ -84,7 +84,7 @@ class ExtronVideoSwitcher < VideoSwitcher
     end
 	
 	requests do
-		#send :input, "I", 0.5
+		send :input, "I", 0.5
     send :video, "I", 0.5
     send :audio, "I", 0.5
 		send :volume, "V", 0.5
