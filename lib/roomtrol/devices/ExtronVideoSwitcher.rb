@@ -84,7 +84,7 @@ class ExtronVideoSwitcher < VideoSwitcher
     end
 	
 	requests do
-		#send :input, "I", 0.5
+		send :input, "I", 0.5
     send :video, "I", 0.5
     send :audio, "I", 0.5
 		send :volume, "V", 0.5
