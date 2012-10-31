@@ -22,6 +22,22 @@ class ExtronVideoSwitcher < VideoSwitcher
 		:action => proc{|input|
 			"#{input}!"
 		}
+  managed_state_var :video,
+    :type => :option,
+    :display_order => 1,
+    :options => ("1".."6").to_a,
+    :response => :channel,
+    :action => proc{|input|
+      "#{input}!"
+    }
+  managed_state_var :audio,
+    :type => :option,
+    :display_order => 2,
+    :options => ("1".."6").to_a,
+    :response => :channel,
+    :action => proc{|input|
+      "#{input}$"
+    }
 	managed_state_var :volume,
 		:type => :percentage,
 		:display_order => 2,
@@ -48,7 +64,9 @@ class ExtronVideoSwitcher < VideoSwitcher
 		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
 		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
 			self.input = m[1].to_i if m[1].to_i > 0
-			self.clipping = (m[2] == "1")
+      #self.video = m[1].to_i if m[1].to_i > 0
+      #self.audio = m[2].to_i if m[2].to_i > 0
+			self.clipping = (m[3] == "1")
 		}
     match :input, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
       x1, x2 = [m[10].to_i, m[11].to_i]
@@ -64,6 +82,8 @@ class ExtronVideoSwitcher < VideoSwitcher
 	
 	requests do
 		send :input, "I", 0.5
+    send :video, "I", 0.5
+    send :audio, "I", 0.5
 		send :volume, "V", 0.5
 		send :mute, "Z", 0.5
 	end
