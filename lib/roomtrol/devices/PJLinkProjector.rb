@@ -43,7 +43,7 @@ class PJLinkProjector < SocketProjector
 		:action => proc{|on|
       "%1POWR #{on ? "1" : "0"}\r"
 		}
-	
+
 	managed_state_var :input, 
 		:type => :option,
 		# Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
@@ -58,7 +58,7 @@ class PJLinkProjector < SocketProjector
 		:action => proc{|on|
 			"%1AVMT #{on ? "31" : "30"}\r"
 		}
-	
+
 	managed_state_var :video_mute,
 		:type => :boolean,
 		:display_order => 4,
@@ -78,9 +78,9 @@ class PJLinkProjector < SocketProjector
 		#match :mute,       /%1AVMT=(.+)/, proc{|m| self.mute = (m[1] == "31")}
 		match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
 		match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
-		
+
 	end
-	
+
 	requests do
            send :power, "#{@_digest}%1POWR ?\r", 1
            send :source, "#{@_digest}%1INPT ?\r", 1

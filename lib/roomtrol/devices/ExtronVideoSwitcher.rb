@@ -13,6 +13,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 		baud        9600
 		message_end "\r\n"
 	end
+	
 	managed_state_var :input, 
 		:type => :option, 
 		:display_order => 1, 
@@ -39,14 +40,14 @@ class ExtronVideoSwitcher < VideoSwitcher
     }
 	managed_state_var :volume,
 		:type => :percentage,
-		:display_order => 3,
+		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
 			"#{(volume*100).to_i}V"
 		}
 	managed_state_var :mute,
 		:type => :boolean,
-		:display_order => 4,
+		:display_order => 3,
 		:response => :mute,
 		:action => proc{|on|
 			on ? "1Z" : "0Z"
@@ -55,10 +56,10 @@ class ExtronVideoSwitcher < VideoSwitcher
 	state_var :model, :type => 'string', :editable => false
 	state_var :firmware_version, :type => 'string', :editable => false
 	state_var :part_number, :type => 'string', :editable => false
-	state_var :clipping, :type => 'boolean', :display_order => 5, :editable => false
+	state_var :clipping, :type => 'boolean', :display_order => 4, :editable => false
 	
 	responses do
-		match :channel,  /Chn(\d)/, proc{|m| self.video = m[1].to_i.to_s}
+		match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i.to_s}
 		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
 		match :mute,     /Amt(\d+)/, proc{|m| self.mute = m[1] == "1"}
 		match :status,   /Vid(\d+) Aud(\d+) Clp(\d)/, proc{|m|
@@ -67,21 +68,17 @@ class ExtronVideoSwitcher < VideoSwitcher
       #self.audio = m[2].to_i if m[2].to_i > 0
 			self.clipping = (m[3] == "1")
 		}
-    match :audio, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
+    match :input, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
       x1, x2 = [m[10].to_i, m[11].to_i]
-    #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
-      self.audio = "#{x1}*#{x2}"
-    } 
-    match :video, /Mod(\d+) (\d)G(\d) (\d)G(\d) (\d)G(\d) (\d)G(\d)=(\d)G(\d)/, proc{|m|
-      for i in (1..4)
-        if m[2*i+1] != 0
-          v1, v2 = [m[2*i].to_i, m[2*i+1].to_i]
-          break
-        end
+      if x1 < 3
+        i = (x1-1)*2 + (x2-1) % 2 + 1
+      else
+        i = (x1-3)*3 + (x2-1) % 3 + 5
       end
-      self.video = (v1 < 3 ? ((v1-1)*2 + (v2-1) % 2 + 1) : ((v1-3)*3 + (v2-1) % 3 + 5)) if (v1 && v2)
+      #DaemonKit.logger.debug("INPUT = (#{i}, #{x1}, #{x2})")
+      self.input = i
     }
-    end
+	end
 	
 	requests do
 		send :input, "I", 0.5
