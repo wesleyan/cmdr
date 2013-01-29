@@ -22,6 +22,7 @@ require 'roomtrol/devices/SocketProjector'
 require 'roomtrol/devices/SocketBluray'
 require 'roomtrol/devices/ExtronVideoSwitcher'
 require 'roomtrol/devices/SocketVideoSwitcher'
+require 'roomtrol/devices/ExtronSystemPlus'
 require 'roomtrol/devices/SocketExtron'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
