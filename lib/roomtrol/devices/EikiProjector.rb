@@ -47,16 +47,18 @@ class EikiProjector < Projector
 		ack "\x06"
 		error :general_error, "", "Received an error"
 		match :power,  /((0|2|4|8)0)/, proc{|m|
-			DaemonKit.logger.info "Received power value: #{m[1]}"
+			#DaemonKit.logger.info "Received power value: #{m[1]}"
 			if m[1] == "00"
 				self.power = true
-			elsif m[1] == "80"
-				self.power = false
+			elsif m[1] == "80" and self.power
+				self.video_mute = false
+      else 
+        self.power = false
 			end
 			self.cooling = (m[1] == "20")
 			self.warming = (m[1] == "40")	
 		}
-		#match :video_mute, /(8(0|1))/, proc{|m| self.video_mute = (m[1] == "81")}
+		match :video_mute, /(81)/, proc{|m| self.video_mute = true}
 		match :input, /([1-3])/, proc{|m| 
 			#DaemonKit.logger.debug "Recieved source value: #{m[1]}"
 			if m[1] == "1"
@@ -72,7 +74,7 @@ class EikiProjector < Projector
 	requests do
            send :power, "CR0\r", 1
            send :source, "CR1\r", 1
-           #send :mute, "CRA\r", 1
+           send :mute, "CRA\r", 1
 	   send :clear, "\n", 1
            #send :lamp_usage, "CR3\r", 0.1
 	end
