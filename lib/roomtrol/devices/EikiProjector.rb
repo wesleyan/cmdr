@@ -52,11 +52,15 @@ class EikiProjector < Projector
 				self.power = true
 			elsif m[1] == "80" and self.power
 				self.video_mute = false
-      else 
+      elsif m[1] == "80" 
         self.power = false
 			end
 			self.cooling = (m[1] == "20")
-			self.warming = (m[1] == "40")	
+      if m[1] == "40"
+        self.warming = true
+      elsif not m[1] == "80" and not m[1] == "40"
+        self.warming = false
+      end
 		}
 		match :video_mute, /(81)/, proc{|m| self.video_mute = true}
 		match :input, /([1-3])/, proc{|m| 
