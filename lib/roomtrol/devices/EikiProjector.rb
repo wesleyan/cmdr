@@ -50,11 +50,17 @@ class EikiProjector < Projector
 			#DaemonKit.logger.info "Received power value: #{m[1]}"
 			if m[1] == "00"
 				self.power = true
-			elsif m[1] == "80" and self.power
-				self.video_mute = false
-      elsif m[1] == "80" 
-        self.power = false
+      elsif m[1] == "80"
+        if self.power then self.video_mute = false end
+        if self.cooling or not self.power
+          self.power = false
+        end
+			#elsif self.power and m[1] == "80"
+			#	self.video_mute = false
+      #else
+      #  self.power = false
 			end
+
 			self.cooling = (m[1] == "20")
       if m[1] == "40"
         self.warming = true
