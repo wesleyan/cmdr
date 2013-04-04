@@ -34,17 +34,19 @@ end
 
 desc "build touchscreen interface"
 task :build_tp do
-  `cd #{WORKING}/tp6/src && slinky build -o #{WORKING}/tp6/pub`
-  `sed -i '' -e 's/\\/scripts.js/scripts.js/; s/\\/styles.css/styles.css/' #{WORKING}/tp6/pub/index.html`
+  `rm -rf #{WORKING}/tp6/pub`
+  `cd #{WORKING}/tp6/src && slinky build -o #{WORKING}/tp6/pub && cat #{WORKING}/tp6/pub/tp6.html > #{WORKING}/tp6/pub/tp6 && cat #{WORKING}/tp6/pub/tp6_remote.html > #{WORKING}/tp6/pub/tp6_remote`
+  `sed -i '' -e 's/\\/scripts.js/..\\/scripts.js/; s/\\/styles.css/..\\/styles.css/' #{WORKING}/tp6/pub/tp6`
+  `sed -i '' -e 's/\\/scripts.js/..\\/scripts.js/; s/\\/styles.css/..\\/styles.css/' #{WORKING}/tp6/pub/tp6_remote`
   # Slinky::Builder.build(WORKING + "/tp6/src", WORKING + "/tp6/pub")
 end
 
 desc "deploy touchscreen interface"
 task :deploy_tp, [] => [:build_tp] do
   CONTROLLERS.each{|c|
-    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ roomtrol@#{c}:/var/www/tp6 --exclude '.git' 2>&1"
+    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ roomtrol@#{c}:/var/www/tp6 --exclude '.git' --exclude 'tp6.html' 2>&1"
     system(cmd)
-
+    `ssh roomtrol@#{c} 'sudo chmod 0755 /var/www/tp6/cgi-bin/*.cgi'`
   }
 end
 
