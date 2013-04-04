@@ -4,6 +4,7 @@ require 'json'
 require 'mq'
 require 'couchrest'
 require 'state_machine'
+require 'roomtrol/authenticate'
 module Wescontrol
   # Wescontrol websocket server. Used to provide better interactivity to
   # the touchscreen interface. Communication is through JSON, like for
@@ -152,7 +153,8 @@ module Wescontrol
     RESOURCES = DEVICES.merge({"source" => ["source"]})
     
     def initialize
-      @db = CouchRest.database("http://localhost:5984/rooms")
+      @credentials = Authenticate.get_credentials
+      @db = CouchRest.database("http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms")
 
       @room = @db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]['value']

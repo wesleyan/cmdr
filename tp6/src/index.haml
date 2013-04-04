@@ -1,29 +1,3 @@
 !!!5
 %html
-  %head
-    %title TP6
-    slinky_styles
-
-    - ["json2", "jquery-1.7.1", "jquery.tmpl", "jquery.noisy", "underscore", "backbone"].each do |f|
-      %script{:src => "script/vendor/#{f}.js"}
-    slinky_scripts
-  %body
-    #page
-      #top-bar
-        #room-label.label
-        #time-label.label
-      #main-view
-        #projector-pane
-        #action-pane
-          .action-module
-            %ul.action-list
-        #context-pane
-          .context-area
-          .projector-overlay
-    #lost-connection
-      .title Server Connection Lost
-      .text The connection to the server has been lost. Try operating the equipment manually, or call 4959 for help.
-      .reconnection-attempt
-        %span Will attempt to reconnect in
-        %span.reconnection-counter 2 seconds
-      .reconnecting{:style => "display:none;"} Reconnecting...
+  %meta{'http-equiv' => 'Refresh', :content => '0;url=cgi-bin/tp6.cgi'}
