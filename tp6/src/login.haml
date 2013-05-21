@@ -1,0 +1,17 @@
+!!!5
+%html
+  %head
+    %link(rel="stylesheet" type="text/css" href="styles.css")
+  %body
+    %fieldset
+      %legend Roomtrol
+      %form{:action => 'cgi-bin/login.cgi', :method => 'post', :name => 'login'}
+        %p
+          %label{:for => 'user'}Username:
+          %input{:class => 'text', :name => 'user', :type => 'text'}
+        %p
+          %label{:for => 'password'}Password:
+          %input{:class => 'password', :name => 'password', :type => 'password'}
+        %div.submit
+          %p
+            %input{:type => 'submit', :value => 'Login'}

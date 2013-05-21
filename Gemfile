@@ -16,7 +16,7 @@ gem 'macaddr'
 gem 'json'
 gem 'serialport'
 gem 'rubybits'
-gem 'couchrest'
+gem 'couchrest', "= 1.1.3"
 gem 'eventmachine'
 gem 'eventmachine_httpserver'
 gem 'chronic'

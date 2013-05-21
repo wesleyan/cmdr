@@ -19,9 +19,11 @@ require 'roomtrol/video-encoder'
 require 'roomtrol/wescontrol_websocket'
 require 'roomtrol/SocketDevice'
 require 'roomtrol/devices/SocketProjector'
+require 'roomtrol/authenticate'
 require 'roomtrol/devices/SocketBluray'
 require 'roomtrol/devices/ExtronVideoSwitcher'
 require 'roomtrol/devices/SocketVideoSwitcher'
+require 'roomtrol/devices/ExtronSystemPlus'
 require 'roomtrol/devices/SocketExtron'
 
 Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
@@ -39,7 +41,9 @@ Dir.glob("#{File.dirname(__FILE__)}/roomtrol/devices/*.rb").each{|device|
 module Wescontrol
 	class Wescontrol
 		def initialize(device_hashes)
-			@db = CouchRest.database("http://localhost:5984/rooms")
+      credentials = Authenticate.get_credentials
+      @credentials = "#{credentials["user"]}:#{credentials["password"]}"
+			@db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
 
 			@devices = device_hashes.collect{|hash|
 				begin
@@ -49,7 +53,7 @@ module Wescontrol
 				end
 			}.compact
 		end
-			
+
 		def inspect
 			"<Wescontrol:0x#{object_id.to_s(16)}>"
 		end
