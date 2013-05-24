@@ -168,7 +168,7 @@ module Wescontrol
       @sources = @db.get('_design/wescontrol_web').
         view('sources', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
-        
+
       @actions = @db.get('_design/wescontrol_web').
         view('actions', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
