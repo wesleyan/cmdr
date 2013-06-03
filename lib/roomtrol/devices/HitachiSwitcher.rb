@@ -38,22 +38,22 @@ class HitachiSwitcher < SocketVideoSwitcher
     	:options => ("1".."6").to_a,
     	:response => :channel,
     	:action => proc{|input|
-    		DaemonKit.logger.info "Current input: " + self.input ". Changing input to " + input
-      		send_string(inputCommand[input-1]) #Sends corresponding source command
+    		#DaemonKit.logger.info "Current input: " + self.input ". Changing input to " + input
+      		send_string inputCommand[input-1]  #Sends corresponding source command
     	}
 	managed_state_var :volume,
 		:type => :percentage,
 		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
-			DaemonKit.logger.info "Current volume: " + @volume ". Increasing volume to " + volume
+			#DaemonKit.logger.info "Current volume: " + @volume ". Increasing volume to " + volume
 			@volume.upto(volume) do #Increments volume up to inputed volume
-    			send_string("\xBE\xEF\x03\x06\x00\xAB\xC3\x04\x00\x50\x20\x00\x00")
+    			send_string "\xBE\xEF\x03\x06\x00\xAB\xC3\x04\x00\x50\x20\x00\x00" 
         		ack #Waits for a response from device before sending next command
         	end
-			DaemonKit.logger.info "Current volume: " + @volume ". Decreasing volume to " + volume
+			#DaemonKit.logger.info "Current volume: " + @volume ". Decreasing volume to " + volume
 			volume.upto(@volume) do #Decrements volume down to inputed volume
-    			send_string("\xBE\xEF\x03\x06\x00\x7A\xC2\x05\x00\x50\x20\x00\x00")
+    			send_string "\xBE\xEF\x03\x06\x00\x7A\xC2\x05\x00\x50\x20\x00\x00" 
         		ack #Waits for a response from device before sending next command
         	end
 		}
@@ -62,8 +62,8 @@ class HitachiSwitcher < SocketVideoSwitcher
 		:display_order => 3,
 		:response => :mute,
 		:action => proc{|on|
-			DaemonKit.logger.info "Current mute: " + @mute ". Changing mute to " + on
-			on ? send_string("\xBE\xEF\x03\x06\x00\xD6\xD2\x01\x00\x02\x20\x01\x00") : send_string("\xBE\xEF\x03\x06\x00\x46\xD3\x01\x00\x02\x20\x00\x00") #Sends mute or unmute command
+			#DaemonKit.logger.info "Current mute: " + @mute ". Changing mute to " + on
+			on ? send_string "\xBE\xEF\x03\x06\x00\xD6\xD2\x01\x00\x02\x20\x01\x00" : send_string("\xBE\xEF\x03\x06\x00\x46\xD3\x01\x00\x02\x20\x00\x00") #Sends mute or unmute command
 		}
 	
 	responses do
