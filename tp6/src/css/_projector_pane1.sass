@@ -1,0 +1,117 @@
+@import mixins.sass
+.projector1-module
+  +fill-height(150px)
+  +gradient(#d1d3d4, #9d9fa2, 0, 1)
+
+  border-right: #888 solid 1px
+  z-index: 1000
+  width: 150px
+  
+  img.status1-image
+    +center-x(106px, inherit)
+    top: 7px
+
+  img.source1-image
+    position: absolute
+    visibility: hidden
+    z-index: -10
+
+  img.screen1-image
+    +center-x(110px, inherit)
+    top: 135px
+    position: absolute
+
+  .screen1-image-overlay
+    background-color: black
+    position: absolute
+    top: 140px
+    opacity: 0
+    +center-x(104px, 70px)
+
+  .controls
+    top: 160px
+    bottom: 0
+    left: 0
+    right: 0
+    position: absolute
+
+    .label
+      position: absolute
+      +text-inset
+      font-family: "Myriad Pro"
+      font-weight: 600
+      text-align: center
+      &.header
+        font-size: 24px
+        color: #565656
+        left: 0
+        right: 0
+
+    .button
+      .label
+        +fill-parent
+        line-height: 35px
+        font-size: 21px
+        color: #333
+      +button
+      left: 9px
+      right: 9px
+      position: absolute
+      height: 30px
+
+    .projector-label
+      top: 0px
+
+    //.projector1-button, .projector2-button
+    //  top: 30px
+    //  width: 62px
+    //  .label
+    //    font-weight: 900
+    //    font-size: 32px
+
+    //  &.selected
+    //    text-shadow: 0px -1px 0px #000
+    //    +box-shadow(#330 0 0 4px inset)
+    //    background: #666
+    //    .label
+    //      color: #D9D9D9
+
+    //.projector2-button
+    //  right: 9px
+    //  left: auto
+
+    .power-button1
+      top: 30px
+    
+    .blank-button1
+      top: 70px
+
+    .audio1-label
+      top: 120px
+
+    .volume-plus1.button, .volume-minus1.button
+      top: 145px
+      width: 62px
+      .label
+        font-weight: 900
+        font-size: 32px
+
+    .volume-plus1.button
+      right: 9px
+      left: auto
+    
+    .volume-minus1.button .label
+      font-size: 48px
+
+    .mute-button1
+      top: 185px
+
+    .selected1
+      top: 235px
+
+      &.selected
+        text-shadow: 0px -1px 0px #000
+        +box-shadow(#330 0 0 4px inset)
+        background: #666
+        .label
+          color: #D9D9D9

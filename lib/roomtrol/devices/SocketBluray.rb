@@ -1,3 +1,14 @@
+#---
+#{
+#	"name": "SocketBluray",
+#	"depends_on": "SocketDevice",
+#	"description": "Class to control Pioneer bluray players over tcp/ip",
+#	"author": "Brian Gapinski",
+#	"email": "",
+#	"abstract": true,
+#	"type": "Bluray"
+#}
+#---
 class SocketBluray < Wescontrol::SocketDevice
 
   configure do

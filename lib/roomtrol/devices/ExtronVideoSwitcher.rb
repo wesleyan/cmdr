@@ -13,7 +13,7 @@ class ExtronVideoSwitcher < VideoSwitcher
 		baud        9600
 		message_end "\r\n"
 	end
-	
+
 	managed_state_var :input, 
 		:type => :option, 
 		:display_order => 1, 

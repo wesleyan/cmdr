@@ -6,11 +6,14 @@ slinky_require('models/source_model.coffee')
 slinky_require('server.coffee')
 
 window.Tp.devices =
-  projector: new Tp.Device {name: "projector"}
+  projector1: new Tp.Device {name: "projector1"}
+  projector2: new Tp.Device {name: "projector2"}
+  projector3: new Tp.Device {name: "projector3"}
   volume: new Tp.Device {name: "volume"}
   ir_emitter: new Tp.Device {name: "ir_emitter"}
   blurayplayer: new Tp.Device {name: "blurayplayer"}
   computer: new Tp.Device {name: "computer"}
+  selected_projector: [false,false,false]
 
 window.Tp.room = new Tp.Room
 

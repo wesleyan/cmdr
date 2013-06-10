@@ -2,7 +2,6 @@
 require 'couchrest'
 require 'mq'
 require 'json'
-require 'roomtrol/authenticate'
 
 module Wescontrol
 	# Device provides a DSL for describing devices of all
@@ -244,14 +243,11 @@ module Wescontrol
 				configuration[var.to_sym] = value
 			} if configuration
 			#TODO: The database uri should not be hard-coded
-      @credentials = Authenticate.get_credentials
-      p_uri = URI.parse db_uri
-      auth_uri = "#{p_uri.scheme}://#{@credentials["user"]}:#{@credentials["password"]}@#{p_uri.host}:#{p_uri.port}#{p_uri.path}"
-      @db = CouchRest.database(auth_uri)
+			@db = CouchRest.database(db_uri)
 			@dqueue = dqueue ? dqueue : "roomtrol:dqueue:#{@name}"
       @hostname = @db.view('room/by_mac')["rows"][0]["value"]["attributes"]["hostname"]
 		end
-
+		
 		# Run is a blocking call that starts the device. While run is
 		# running, the device will watch for AMQP events as well as
 		# whatever communication channels the device uses and react

@@ -58,11 +58,17 @@ class Server
       module: x.settings?.module
 
     # get initial states for devices
-    this.state_get "projector", "state"
-    this.state_get "projector", "video_mute"
+    this.state_get "projector1", "state"
+    this.state_get "projector1", "video_mute"
+    this.state_get "projector2", "state"
+    this.state_get "projector2", "video_mute"
+    this.state_get "projector3", "state"
+    this.state_get "projector3", "video_mute"
     this.state_get "volume", "volume"
     this.state_get "volume", "mute"
-    this.state_get "source", "source"
+    this.state_get "source", "source1"
+    this.state_get "source", "source2"
+    this.state_get "source", "source3"
 
     # Prevent dragging of images. Wait a little while for stuff to load
     $('img').mousedown (event) -> event.preventDefault()
@@ -92,7 +98,13 @@ class Server
   source_changed: (msg) ->
     name = msg['new'] or msg['result']
     state = Tp.sources.find (s) -> s.get('name') == name
-    Tp.room.set({source: state})
+    proj = msg['var']
+    if proj == 'source1'
+      Tp.room.set({source1: state})
+    else if proj == 'source2'
+      Tp.room.set({source2: state})
+    else if proj == 'source3'
+      Tp.room.set({source3: state})
 
   device_changed: (msg) ->
     device = Tp.devices[msg['resource']]

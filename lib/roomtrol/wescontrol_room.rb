@@ -1,6 +1,3 @@
-require 'couchrest'
-require 'roomtrol/authenticate'
-
 module Wescontrol
 	class WescontrolRoom < Wescontrol
 		def initialize
@@ -24,11 +21,10 @@ module Wescontrol
 	end
 	
 	class Room
-    @credentials = Authenticate.get_credentials
-    @database = "http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms"
-
+		@database = "http://localhost:5984/rooms"
+		
 		def self.find_by_mac(mac, db_uri = @database)
-      db = CouchRest.database!(db_uri)
+			db = CouchRest.database!(db_uri)
 			retried = false
 			begin
 				db.get("_design/room").view("by_mac", {:key => mac})['rows'][0]
@@ -45,7 +41,7 @@ module Wescontrol
 		end
 		
 		def self.devices(room, db_uri = @database)
-      db = CouchRest.database!(db_uri) 
+			db = CouchRest.database!(db_uri)
 			retried = false
 			begin
 				db.get("_design/room").view("devices_for_room", {:key => room})['rows']
@@ -62,7 +58,7 @@ module Wescontrol
 		end
 		
 		def self.define_db_views(db_uri)
-      db = CouchRest.database!(db_uri)
+			db = CouchRest.database!(db_uri)
 
 			doc = {
 				"_id" => "_design/room",
@@ -93,7 +89,7 @@ module Wescontrol
 		
 		def self.create_room(db_uri = @database)
 			puts "Creating room"
-      db = CouchRest.database!(db_uri)
+			db = CouchRest.database!(db_uri)
 			
 			number = 0
 			serial_ports = `ls /dev/serial/by-path`.split("\n").collect do |port|

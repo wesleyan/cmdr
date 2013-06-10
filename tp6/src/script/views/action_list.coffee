@@ -2,7 +2,7 @@ slinky_require('../core.coffee')
 
 Tp.ActionListView = Backbone.View.extend
   initialize: () ->
-    $.get '../script/templates/action_list.html', (template) =>
+    $.get 'script/templates/action_list.html', (template) =>
       $.template "action-list-template", template
       Tp.server.bind "loaded", this.render
       Tp.actions.bind "add", this.render
