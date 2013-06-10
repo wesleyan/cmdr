@@ -2,7 +2,7 @@
 #{
 #	"name": "ExtronSystemPlus",
 #	"depends_on": "SocketVideoSwitcher",
-#	"description": "Controls System 8 Plus and System 10 Plus Extrons"
+#	"description": "Controls System 8 Plus and System 10 Plus Extrons, as well as the IN1606 Extron switcher"
 #}
 #---
 
