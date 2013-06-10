@@ -124,7 +124,7 @@ module Wescontrol
           @_conn.stream {|data| read data}
           super
 				rescue
-					DaemonKit.logger.error "Failed to connect: #{$!}"
+					DaemonKit.logger.error "#{@name}: Failed to connect: #{$!}"
           operational=false
           EventMachine::Timer.new(1) do
             DaemonKit.logger.debug "SocketDevice: Attempting to reconnect to #{@name}"

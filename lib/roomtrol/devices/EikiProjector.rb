@@ -1,93 +1,136 @@
 #---
 #{
-#	"name": "EpsonProjector",
+#	"name": "EikiProjector",
 #	"depends_on": "Projector",
-#	"description": "Controls Epson PowerLite Pro G5750WU",
+#	"description": "Eiki projector class; doesn't currently work",
 #	"author": "Micah Wylde",
 #	"email": "mwylde@wesleyan.edu"
 #}
 #---
 
-class EikiProjector < Projector  
-  INPUT_HASH = {"RGB1" => 5, "RGB2" => 6, "VIDEO" => 7}
-
-  configure do
-    DaemonKit.logger.info "@Initializing projector on port #{options[:uri]} with name #{name}"
-    port :type => :port
-    baud :type => :integer, :default => 19200
-    data_bits 8
-    stop_bits 1
-    parity 0
-  end
-
-  managed_state_var :power, 
-    :type => :boolean,
-    :display_order => 1,
-    :action => proc{|on|
-       "C#{on ? "00" : "01"}\r"
-	}
+#Note: This class is old and does not work. Eventually,
+#I may get around to implementing it with the new scheme,
+#but for now it should not be used
+class EikiProjector < Projector
 	
-	managed_state_var :input, 
-		:type => :option,
-		# Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
-		:options => ['RGB1', 'RGB2', 'VIDEO', 'SVIDEO'] ,
-		:display_order => 2,
-		:action => proc{|source|
-			"C0#{INPUT_HASH[source]}\r"
-		}
+	attr_reader :power, :cooling, :input, :video_mute
+	
+	RGB1   = 1
+	RGB2   = 2
+	VIDEO  = 6
+	SVIDEO = 11
+	INPUT_HASH = {"RGB1" => 1, "RGB2" => 2, "VIDEO" => 6, "SVIDEO" => 11}
+	
 
-	managed_state_var :video_mute,
-		:type => :boolean,
-		:display_order => 4,
-		:action => proc{|on|
-			"C#{on ? "0D" : "0E"}\r"
-		}
+	def initialize(name, port, bus)
+		throw "Driver needs to be rewritten; see comment"
+		puts "Initializing projector on port #{port} with name #{name}"
+		Thread.abort_on_exception = true
+	
+		super(port, 19200, 8, 1, name, bus)
+
+		@frames = Array.new(2**8)
+		@responses = Array.new(2**8)
 		
-	responses do
-		ack "\x06"
-		error :general_error, "", "Received an error"
-		match :power,  /((0|2|4|8)0)/, proc{|m|
-			#DaemonKit.logger.info "Received power value: #{m[1]}"
-			if m[1] == "00"
-				self.power = true
-      elsif m[1] == "80"
-        if self.power then self.video_mute = false end
-        if self.cooling or not self.power
-          self.power = false
-        end
-			#elsif self.power and m[1] == "80"
-			#	self.video_mute = false
-      #else
-      #  self.power = false
-			end
+		@buffer = []
+		
+		@commands = {
+			#format is :name => [id1, id2, data, callback]
+			:power=              => [proc {|on| on ? "00" : "01"}],
+			:video_mute=         => [proc {|on| on ? "0D" : "0E"}]
+			#:input=              => [2, 3, proc {|source| [1, INPUT_HASH[source]].pack("cc")}, nil]
+		}
 
-			self.cooling = (m[1] == "20")
-      if m[1] == "40"
-        self.warming = true
-      elsif not m[1] == "80" and not m[1] == "40"
-        self.warming = false
-      end
-		}
-		match :video_mute, /(81)/, proc{|m| self.video_mute = true}
-		match :input, /([1-3])/, proc{|m| 
-			#DaemonKit.logger.debug "Recieved source value: #{m[1]}"
-			if m[1] == "1"
-				self.input = "RGB1"
-			elsif m[1] == "2"
-				self.input = "RGB2"
-			else
-				self.input = "VIDEO"
-			end 
-		}
+		Thread.new{ read() }
+
+
+		#check_status()
+	end
+
+	
+	def method_missing(method_name, *args)
+		if @commands[method_name]
+			command = @commands[method_name][0..-2].collect{|element| element.class == Proc ? element.call(*args) : element}
+			command << @commands[method_name][-1]
+			return send_command(*command)
+		else
+			super.method_missing(method_name, *args)
+		end
 	end
 	
-	requests do
-           send :power, "CR0\r", 1
-           send :source, "CR1\r", 1
-           send :mute, "CRA\r", 1
-	   send :clear, "\n", 1
-           #send :lamp_usage, "CR3\r", 0.1
+	def wait_for_response(id2)
+		count = 0
+		while(!@responses[id2])
+			#wait 1 seconds for a response before giving up
+			return "No response from projector" if count > 10*3
+			count += 1
+			sleep(0.1)
+		end
+		#puts "Response is #{@responses[id2]}"
+		response = @responses[id2]
+		@responses[id2] = nil
+		return response
 	end
 
-  
+	private
+	
+	def send_command(id)
+		#puts "id1 = #{id1}, id2 = #{id2}, data = #{data}"
+		#puts "Message = #{message.inspect}"
+		self.send_string("CR0")
+		return "ok"
+	end
+
+	
+	def read
+		while true do
+			@buffer << @serial_port.getc
+			@buffer[0..-6].each_index{|i|
+				puts "RECEIVED BIT: #{i}"
+			}
+		end
+	end
+	
+
+	
+	
+	def check_status
+		Thread.new{
+			class_vars = [:power, :cooling, :input, :video_mute, :has_signal, :picture_displaying,
+						:projector_model, :projector_name, :lamp_hours, :percent_lamp_used, 
+						:filter_hours, :projector_usage, :warming]
+			size = class_vars.collect{|var| var.to_s.size}.max
+			old_values = {}
+			while true do
+				class_vars.each{|var|
+					if old_values[var] != self.send(var)
+						printf("%-#{size}s = %s\n", var, self.send(var).to_s)
+						self.send("#{var.to_s}_changed".to_sym, self.send(var)) if self.respond_to?("#{var.to_s}_changed".to_sym)
+						old_values[var] = self.send(var)
+					end
+				}
+				sleep(0.1)
+			end
+		}
+	end
+end
+
+def projector_test
+	p = NECProjector.new(0)
+
+	p.power = true
+	sleep(10)
+	p.input = NECProjector::VIDEO
+	sleep(20)
+	puts "About to turn video mute on"
+	p.video_mute = true
+	sleep(10)
+	puts "About to turn video mute off"
+	p.video_mute = false
+	sleep(30)
+	puts "Power off"
+	p.power = false
+	sleep(100)
+	sleep(1000)
+	sources = [NECProjector::SVIDEO, NECProjector::VIDEO, NECProjector::RGB1, NECProjector::RGB2]
 end

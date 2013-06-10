@@ -1,0 +1,25 @@
+.projector2-module
+  %img.status2-image{:src =>"images/projector/${status_image}"}
+    
+  //%img.screen-image{:src =>"images/screen.png"}
+
+  %img.source2-image{:src => "images/sources/${source_image}"}
+
+  //.screen-image-overlay
+
+  .controls
+    .projector-label.header.label Center
+    .power-button2.button
+      .label ${power_button2_label}
+    .blank-button2.button
+      .label ${blank_button2_label}
+
+    .audio2-label.header.label audio
+    .volume-minus2.button
+      .label= "-"
+    .volume-plus2.button
+      .label +
+    .mute-button2.button
+      .label ${mute_button2_label}
+    .selected2.button{:class => "button ${selected}"}
+      .label ${selected2_label}
