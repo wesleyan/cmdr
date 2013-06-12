@@ -12,6 +12,7 @@ class ExtronDXP < MultiSocketVideoSwitcher
 	configure do
     DaemonKit.logger.info "@initializing MultiSocketExtron at URI #{options[:uri]} with name #{name}"
     send_string("1X")
+    @audioOut = 4 #HDMI to offload all audio to
 
 	end
 	
@@ -30,7 +31,7 @@ class ExtronDXP < MultiSocketVideoSwitcher
     :options => ["[1,1]", "[1,2]", "[1,3]", "[1,4]", "[2,1]", "[2,2]", "[2,3]", "[2,4]", "[3,1]", "[3,2]", "[3,3]", "[3,4]","[4,1]", "[4,2]", "[4,3]", "[4,4]"],
     :response => :channel,
     :action => proc{|input|
-      "#{input[0]}*#{input[1]}$"
+      "#{input[0]}*#{@audioOut}$"
     }
 	managed_state_var :mute,
 		:type => :boolean,
