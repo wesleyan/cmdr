@@ -4,7 +4,11 @@ require 'json'
 require 'mq'
 require 'couchrest'
 require 'state_machine'
+require 'roomtrol/authenticate'
 module Wescontrol
+  #This Wescontrol_websocket is for multi projector setups
+
+  
   # Wescontrol websocket server. Used to provide better interactivity to
   # the touchscreen interface. Communication is through JSON, like for
   # Wescontrol HTTP. Due to the nature of web sockets, message can either
@@ -154,27 +158,25 @@ module Wescontrol
     RESOURCES = DEVICES.merge({"source" => ["source"]})
     
     def initialize
-      @db = CouchRest.database("http://localhost:5984/rooms")
+      @credentials = Authenticate.get_credentials
+      @db = CouchRest.database("http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms")
 
       @room = @db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]['value']
-
       devices = @db.get('_design/room').
         view('devices_for_room', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
 
       @building = @db.get(@room['belongs_to'])['attributes']['name']
-
+      
       @sources = @db.get('_design/wescontrol_web').
         view('sources', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
-
       @actions = @db.get('_design/wescontrol_web').
         view('actions', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
-          
       @room_name = @room['attributes']['name']
-
+      
       @devices = {}
       
       DEVICES.each do |r, _|
@@ -184,19 +186,22 @@ module Wescontrol
       @devices_by_id = {}
       @device_record_by_resource = {}
       @devices.each do |k, v|
-        d = devices.find {|d| d['attributes']['name'] == v}
+        d = devices.find {|d| d['attributes']['name'] == v} 
         if d
           @devices_by_id[d['_id']] ||= []
           @devices_by_id[d['_id']] << k
         end
         @device_record_by_resource[k] = d
       end
+      #DaemonKit.logger.info "db = #{@db} \nROOM = #{@room}, \nDEVICES = #{devices}, \nBUILDING = #{@building}, \nSOURCES = #{@sources}, \nACTIONS = #{@actions}, \nROOMNAME = #{@room_name}, \n@DEVICES = #{@devices}"
     end
 
     # Starts the websockets server. This is a blocking call if run
     # outside of an EventMachine reactor.
     def run
+      
       AMQP.start(:host => "localhost") {
+        
         @mq = MQ.new
         @update_channel = EM::Channel.new
         @deferred_responses = {}
@@ -219,8 +224,9 @@ module Wescontrol
         end
 
         setup
-
+        
         EM::WebSocket.start({
+
                               :host => "0.0.0.0",
                               :port => 8000,
                               :debug => false
@@ -441,7 +447,7 @@ module Wescontrol
 
     def set_device_state device, state, input = :input, df = EM::DefaultDeferrable.new
       unless @dont_switch
-        DaemonKit.logger.debug "Setting #{device} input to #{state}"
+        DaemonKit.logger.debug "Setting #{device} #{input} to #{state}"
         daemon_set input, state, device, df
       end
     end
@@ -551,7 +557,8 @@ module Wescontrol
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "VIDEO: Transitioned to #{this_state}, and #{v.inspect}"
-                parent.set_device_state parent.devices["switcher"], v, :video
+                DaemonKit.logger.debug "Switching projector #{proj} to video #{v}"
+                parent.set_device_state parent.devices["switcher"], [v,proj.to_i], :video
               end
             end
             if a
@@ -560,7 +567,8 @@ module Wescontrol
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "AUDIO: Transitioned to #{this_state}, and #{a.inspect}"
-                parent.set_device_state parent.devices["switcher"], a, :audio 
+                DaemonKit.logger.debug "Switching projector #{proj} to audio #{v}"
+                parent.set_device_state parent.devices["switcher"], [a,proj.to_i], :audio 
               end
             end
             if s
@@ -569,7 +577,7 @@ module Wescontrol
                 parent.set_device_state parent.devices["projector#{proj}"], p
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], s
+                parent.set_device_state parent.devices["switcher"], [s,proj.to_i]
               end
             end
           end
