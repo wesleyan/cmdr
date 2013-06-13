@@ -21,7 +21,7 @@ aes = OpenSSL::Cipher.new("AES-128-CBC")
 key = SecureRandom.hex
 iv = aes.random_iv
 
-key_file = File.open("key.yml", "wb") do |file|
+File.open("key.yml", "wb") do |file|
   file.write "---\nkey: #{key}\niv: #{iv}"
 end
 
