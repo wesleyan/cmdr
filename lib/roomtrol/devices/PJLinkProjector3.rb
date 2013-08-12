@@ -9,7 +9,7 @@
 #---
 require 'digest/md5'
 
-class PJLinkProjector < SocketProjector  
+class PJLinkProjector3 < SocketProjector  
   INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22}
 
   configure do
@@ -31,8 +31,6 @@ class PJLinkProjector < SocketProjector
     if data.start_with? "PJLINK 1"
       @_digest = Digest::MD5.hexdigest "#{data.chop[9..-1]}#{@_password}"
     end
-		#DaemonKit.logger.info "#{@name} has digest #{@_digest}"
-		#DaemonKit.logger.info "#{@name} at uri #{@uri}: RECEIVED DATA:: #{data}"
     super data 
   end
 
@@ -72,7 +70,10 @@ class PJLinkProjector < SocketProjector
 
 	responses do
 		#ack ":"
-		error :general_error, "PJLINK ERRA", "Received an error"
+		error :general_error, "PJLINK ERR", "Received an error"
+    match :error, /PJLINK ERRA/, proc{|m|
+      DaemonKit.logger.info "#{@name}: Received authentication error"
+    }
 		match :power,  /%1POWR=(.+)/, proc{|m|
 	 		DaemonKit.logger.info "#{@name}: Received power value #{m[1]}"
 			  self.power = (m[1] == "1") 

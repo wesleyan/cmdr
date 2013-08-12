@@ -6,6 +6,9 @@ require 'couchrest'
 require 'state_machine'
 require 'roomtrol/authenticate'
 module Wescontrol
+  #This Wescontrol_websocket is for multi projector setups
+
+  
   # Wescontrol websocket server. Used to provide better interactivity to
   # the touchscreen interface. Communication is through JSON, like for
   # Wescontrol HTTP. Due to the nature of web sockets, message can either
@@ -141,7 +144,9 @@ module Wescontrol
     TIMEOUT = 4.0
     # The resource names for devices
     DEVICES = {
-      "projector"  => ["power", "video_mute", "state", "video_mute"],
+      "projector1" => ["power", "video_mute", "state", "video_mute"],
+      "projector2" => ["power", "video_mute", "state", "video_mute"],
+      "projector3" => ["power", "video_mute", "state", "video_mute"],
       "volume"     => ["volume", "mute"],
       "switcher"   => ["video", "audio"],
       "blurayplayer" => ["play", "pause", "forward", "back", "stop", "eject", "next", "previous", "title", "menu", "up", "down", "left", "right", "enter"],
@@ -158,23 +163,24 @@ module Wescontrol
 
       @room = @db.get("_design/room").
         view("by_mac", {:key => MAC.addr})['rows'][0]['value']
-
       devices = @db.get('_design/room').
         view('devices_for_room', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
 
       @building = @db.get(@room['belongs_to'])['attributes']['name']
-
+      
       @sources = @db.get('_design/wescontrol_web').
         view('sources', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
+<<<<<<< HEAD
 
+=======
+>>>>>>> pr/60
       @actions = @db.get('_design/wescontrol_web').
         view('actions', {:key => @room['_id']})['rows'].
         map{|x| x['value']}
-          
       @room_name = @room['attributes']['name']
-
+      
       @devices = {}
       
       DEVICES.each do |r, _|
@@ -184,19 +190,22 @@ module Wescontrol
       @devices_by_id = {}
       @device_record_by_resource = {}
       @devices.each do |k, v|
-        d = devices.find {|d| d['attributes']['name'] == v}
+        d = devices.find {|d| d['attributes']['name'] == v} 
         if d
           @devices_by_id[d['_id']] ||= []
           @devices_by_id[d['_id']] << k
         end
         @device_record_by_resource[k] = d
       end
+      #DaemonKit.logger.info "db = #{@db} \nROOM = #{@room}, \nDEVICES = #{devices}, \nBUILDING = #{@building}, \nSOURCES = #{@sources}, \nACTIONS = #{@actions}, \nROOMNAME = #{@room_name}, \n@DEVICES = #{@devices}"
     end
 
     # Starts the websockets server. This is a blocking call if run
     # outside of an EventMachine reactor.
     def run
+      
       AMQP.start(:host => "localhost") {
+        
         @mq = MQ.new
         @update_channel = EM::Channel.new
         @deferred_responses = {}
@@ -219,8 +228,9 @@ module Wescontrol
         end
 
         setup
-
+        
         EM::WebSocket.start({
+
                               :host => "0.0.0.0",
                               :port => 8000,
                               :debug => false
@@ -245,27 +255,35 @@ module Wescontrol
 
     def setup
       # get the initial source
-      proj = @device_record_by_resource['projector']
+      proj1 = @device_record_by_resource['projector1']
+      proj2 = @device_record_by_resource['projector2']
+      proj3 = @device_record_by_resource['projector3']
       switch = @device_record_by_resource['switcher']
 
-      p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
+      p1_input = proj1['attributes']['state_vars']['input']['state'] rescue nil
+			p2_input = proj2['attributes']['state_vars']['input']['state'] rescue nil
+      p3_input = proj3['attributes']['state_vars']['input']['state'] rescue nil
       v_input = switch['attributes']['state_vars']['video']['state'] rescue nil
       a_input = switch['attributes']['state_vars']['audio']['state'] rescue nil
       s_input = switch['attributes']['state_vars']['input']['state'] rescue nil
 
-      p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
+      p1_src = (@sources.find {|s| s['input']['projector'] == p1_input})['name'] rescue nil
+      p2_src = (@sources.find {|s| s['input']['projector'] == p2_input})['name'] rescue nil
+      p3_src = (@sources.find {|s| s['input']['projector'] == p3_input})['name'] rescue nil
       v_src = (@sources.find {|s| s['input']['video'] == v_input})['name'] rescue nil
       a_src = (@sources.find {|s| s['input']['audio'] == a_input})['name'] rescue nil
       s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
 
-      if initial_source = (v_src || p_src || a_src || s_src || @sources[0]['name'])
+      if initial_source = (v_src || p1_src || p2_src || p3_src || a_src || s_src || @sources[0]['name'])
         DaemonKit.logger.debug("Initial source: #{initial_source}")
         # For some reason, when we define events in make_state_machine
         # the events also get fired. This is highly undesireable. This
         # is just a hack that ignores the commands to switch until the
         # thing is defined.
         @dont_switch = true
-        @source_fsm = make_state_machine(self, @sources, initial_source.to_sym).new
+        @source_fsm1 = make_state_machine(self, @sources, initial_source.to_sym, "1").new
+        @source_fsm2 = make_state_machine(self, @sources, initial_source.to_sym, "2").new
+        @source_fsm3 = make_state_machine(self, @sources, initial_source.to_sym, "3").new
         @dont_switch = false
         # TODO: Reconsider this line. Commenting it out fixes an issue
         # where the projector flashes when the daemon starts, but
@@ -285,8 +303,13 @@ module Wescontrol
           DaemonKit.logger.debug("Setting FSM: #{resource}, #{msg['var']}")
           send_update resource, msg['var'], msg['was'], msg['now']
           case [resource, msg['var']]
-          when ["projector", "input"]
-            @source_fsm.send("projector_to_#{msg['now']}") rescue nil
+          when ["projector1", "input"]
+            DaemonKit.logger.info "projector 1 recevived a message to #{msg['now']}"
+            @source_fsm1.send("projector_to_#{msg['now']}") rescue nil
+          when ["projector2", "input"]
+            @source_fsm2.send("projector_to_#{msg['now']}") rescue nil
+          when ["projector3", "input"]
+            @source_fsm3.send("projector_to_#{msg['now']}") rescue nil
           when ["video", "input"]
             @source_fms.send("switcher_to_#{msg['now']}") rescue nil
           when ["audio", "input"]
@@ -428,7 +451,7 @@ module Wescontrol
 
     def set_device_state device, state, input = :input, df = EM::DefaultDeferrable.new
       unless @dont_switch
-        DaemonKit.logger.debug "Setting #{device} input to #{state}"
+        DaemonKit.logger.debug "Setting #{device} #{input} to #{state}"
         daemon_set input, state, device, df
       end
     end
@@ -449,26 +472,61 @@ module Wescontrol
     end
     
     def handle_source_get req, df
-      if @source_fsm
-        df.succeed({:result => @source_fsm.source})
-      else
-        df.succeed({:error => "No sources defined"})
+      case req['var']
+      when "source1"
+        if @source_fsm1
+          df.succeed({:result => @source_fsm1.source, :var => req['var']})
+        else
+          df.succeed({:error => "No sources defined"})
+        end
+      when "source2"
+        if @source_fsm2
+          df.succeed({:result => @source_fsm2.source, :var => req['var']})
+        else
+          df.succeed({:error => "No sources defined"})
+        end
+      when "source3"
+        if @source_fsm3
+          df.succeed({:result => @source_fsm3.source, :var => req['var']})
+        else
+          df.succeed({:error => "No sources defined"})
+        end
       end
     end
 
     def handle_source_set req, df
-      DaemonKit.logger.debug "setting source: #{req.inspect}"
-      @source_fsm.send "select_#{req['value']}" rescue nil
-      df.succeed({:ack => true})
+      projectors = req['projectors']
+      #case req['var']
+      #when "source1"
+      #if projectors[0] == 1
+      DaemonKit.logger.debug "received source set request: #{req.inspect}"
+      if projectors[0]
+        DaemonKit.logger.debug "setting source on projector 1: #{req.inspect}"
+        @source_fsm1.send "select_#{req['value']}" rescue nil
+        df.succeed({:ack => true})
+      end
+      #when "source2"
+      if projectors[1]
+        DaemonKit.logger.debug "setting source on projector 2: #{req.inspect}"
+        @source_fsm2.send "select_#{req['value']}" rescue nil
+        df.succeed({:ack => true})
+      end
+      #when "source3"
+      if projectors[2]
+        DaemonKit.logger.debug "setting source on projector 3: #{req.inspect}"
+        @source_fsm3.send "select_#{req['value']}" rescue nil
+        df.succeed({:ack => true})
+      end
+      #end
     end
 
-    def make_state_machine parent, sources, initial
+    def make_state_machine parent, sources, initial, proj = ""
       klass = Class.new
       klass.class_eval do
         state_machine :source, :initial => initial do
           after_transition any => any do |fsm, transition|
             DaemonKit.logger.debug "transitions from #{transition.from} to #{transition.to}"
-            parent.send_update :source, :source, transition.from, transition.to 
+            parent.send_update :source, "source#{proj}".to_sym, transition.from, transition.to 
           end
           sources.each do |source|
             this_state = source['name'].to_sym
@@ -493,17 +551,18 @@ module Wescontrol
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "Transitioned to #{this_state}, and #{p.inspect}"
-                parent.set_device_state parent.devices["projector"], p
+                parent.set_device_state parent.devices["projector#{proj}"], p
               end
             end
             if v
               event "switcher_to_#{v}" do
                 transition all => this_state
-                parent.set_device_state parent.devices["projector"], p
+                parent.set_device_state parent.devices["projector#{proj}"], p
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "VIDEO: Transitioned to #{this_state}, and #{v.inspect}"
-                parent.set_device_state parent.devices["switcher"], v, :video
+                DaemonKit.logger.debug "Switching projector #{proj} to video #{v}"
+                parent.set_device_state parent.devices["switcher"], [v,proj.to_i], :video
               end
             end
             if a
@@ -512,16 +571,17 @@ module Wescontrol
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "AUDIO: Transitioned to #{this_state}, and #{a.inspect}"
-                parent.set_device_state parent.devices["switcher"], a, :audio 
+                DaemonKit.logger.debug "Switching projector #{proj} to audio #{v}"
+                parent.set_device_state parent.devices["switcher"], [a,proj.to_i], :audio 
               end
             end
             if s
               event "switcher_to_#{s}" do
                 transition all => this_state
-                parent.set_device_state parent.devices["projector"], p
+                parent.set_device_state parent.devices["projector#{proj}"], p
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], s
+                parent.set_device_state parent.devices["switcher"], [s,proj.to_i]
               end
             end
           end

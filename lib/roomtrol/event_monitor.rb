@@ -1,6 +1,5 @@
 require 'mq'
 require 'couchrest'
-require 'roomtrol/authenticate'
 module Wescontrol
 	# This class is responsible for watching the event queue, buffering the events and
 	# protecting the database from too-frequent updates (which can easily happen in the
@@ -14,8 +13,7 @@ module Wescontrol
 		def self.run
 			buffer = {}
 			AMQP.start(:host => '127.0.0.1'){
-        @credentials = Authenticate.get_credentials
-				db = CouchRest.database("http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms")
+				db = CouchRest.database("http://localhost:5984/rooms")
         topic = MQ.new.topic(EVENT_TOPIC)
 				MQ.new.queue("roomtrol:event-monitor").bind(topic, :key => "*").subscribe do |json|
 					begin

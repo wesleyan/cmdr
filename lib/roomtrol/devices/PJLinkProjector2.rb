@@ -9,7 +9,7 @@
 #---
 require 'digest/md5'
 
-class PJLinkProjector < SocketProjector  
+class PJLinkProjector2 < SocketProjector  
   INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22}
 
   configure do
