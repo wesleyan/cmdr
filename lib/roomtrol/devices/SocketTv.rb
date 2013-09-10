@@ -1,10 +1,10 @@
 #---
 #{
-# "name": "SocketTv"
+# "name": "SocketTv",
 # "depends_on": "SocketDevice",
-# "description": "Generic class to control TV over a TCP connection
-# "author": "Justin Raymond"
-# "email": "jraymond@wesleyan.edu"
+# "description": "Generic class to control TV over a TCP connection. The class is modified to simulate a projector",
+# "author": "Justin Raymond",
+# "email": "jraymond@wesleyan.edu",
 # "abstract": true,
 # "type": "Tv"
 #}
@@ -15,13 +15,29 @@ class SocketTv < Wescontrol::SocketDevice
   @interface = "Tv"
 
   state_var :power, :type => :boolean, :display_order => 1
-  state_var :input, :type => :option, :options => ['TV','HDMI 1','HDMI 2','HDMI 3','HDMI 4','COMPONENT','VIDEO 1','VIDEO 2','PC'], :display_order => 2
-  #state_var :av_mode, :type => :option, :options => ['STANDARD','MOVIE','GAME','USER','DYNAMIC(fixed)','DYNAMIC','PC','STANDARD(3D)','MOVIE(3D)','GAME(3D)','AUTO']
-  state_var :volume, :type => :number
-  #state_var :position, :type => :option, :options => ['H-POSITION','V-POSITION','CLOCK','PHASE']
-  #state_var :view_mode, :type => :option, :options => ['Side Bar[AV]','S.Stretch[AV]','Zoom[AV]','Stretch[AV]','Normal[PC]','Zoom[PC]','Stretch[PC]','Dot by Dot[PC][AV]','Full Screen[AV]','Auto','Original']
-  state_var :mute, :type => :boolean
-  #state_var :surround, :type => :option, :options => ['Normal','Off','3D Hall','3D Movie','3D Standard','3D Stadium']
-  state_var :channel, :type => :number
-  #state_var :threeD, :type => :option, :options => ['3D Off','2D->3D','SBS','TAB','3D->2D(SBS)','3D-2D(TAB)','3D auto','2D auto']
-end 
+	state_var :operational, :type => :boolean
+	
+	#The following state vars are only to simulate a projector
+	state_var :video_mute, :type => :boolean
+	state_var :brightness, :type => :percentage
+  state_var :operational, :type => :boolean  
+	state_var :cooling, :type => :boolean, :editable => false
+	state_var :warming, :type => :boolean, :editable => false
+	state_var :model, :type => :string, :editable => false
+	state_var :lamp_hours, :type => :number, :editable => false
+	state_var :filter_hours,:type => :number, :editable => false
+	state_var :percent_lamp_used, :type => :percentage, :editable => false
+	
+	virtual_var :lamp_remaining, :type => :string, :depends_on => [:lamp_hours, :percent_lamp_used], :transformation => proc {
+		"#{((lamp_hours/percent_lamp_used - lamp_hours)/(60*60.0)).round(1)} hours"
+	}
+	
+	virtual_var :state, :type => :string, :depends_on => [:power, :warming, :cooling, :video_mute], :transformation => proc {
+		warming ? "warming" :
+			cooling ? "cooling" :
+				!power ? "off" :
+					video_mute ? "muted" : "on"	    
+	}
+  
+end
+
