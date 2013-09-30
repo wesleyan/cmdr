@@ -1,6 +1,7 @@
 slinky_require('../core.coffee')
 
 Tp.ProjectorPaneView = Backbone.View.extend
+
   initialize: () ->
     $.get '../script/templates/projector_module.html', (template) =>
       $.template "projector-pane-template", template
@@ -16,6 +17,8 @@ Tp.ProjectorPaneView = Backbone.View.extend
     Tp.devices.volume.bind "change:volume", @audioLevelChanged
     Tp.sources.bind "change", @sourceChanged
     Tp.room.bind "change:source", @sourceChanged
+
+    @timer = null
 
   render: () ->
     ($.tmpl "projector-pane-template", {
@@ -45,15 +48,22 @@ Tp.ProjectorPaneView = Backbone.View.extend
     $('.mute-button').click(@muteButtonClicked)
 
 
-
   projectorChanged: () ->
     state = Tp.devices.projector.get('state')
     console.log("Projector now " + state)
     text = if (["on", "muted", "warming"].indexOf(state) != -1) then "off" else "on"
+    @autoOff(state)
     $('.power-button .label').html("turn " + text)
     $('.status-image').attr 'src', '../images/projector/' + state + '.png'
     $('.source-image').css 'visibility', if text == "off" then "visible" else "hidden"
     $('.screen-image-overlay').css 'opacity', if text == "off" then 0 else 0.4
+
+  autoOff: (state) ->
+    if state == "on"
+      callback = -> Tp.devices.projector.state_set 'power', false
+      @timer = setTimeout callback, 10800000 # Three hour timer
+    else if state == "off"
+      if @timer then clearTimeout(@timer)
 
   sourceChanged: () ->
     state = Tp.room.get('source')
