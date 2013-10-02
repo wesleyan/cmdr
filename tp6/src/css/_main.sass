@@ -93,3 +93,35 @@ div, img, p
     font-size: 22px
     margin-top: 50px
   
+#auto-off
+  +fill-parent
+  background-color: rgba(0,0,0,0.9)
+  z-index: 100000
+  color: white
+  text-align: center
+  font-family: "Myriad Pro"
+
+  .title
+    margin-top: 40px
+    font-size: 60px
+
+  .text
+    margin-top: 60px
+    line-height: 40px
+    font-size: 28px
+    width: 85%
+    margin-left: auto
+    margin-right: auto
+
+  .cancel-button.button
+    .label
+      +fill-parent
+      line-height: 50px
+      font-size: 21px
+      color: #333
+    +button
+    left: 45%
+    position: absolute
+    height: 50px
+    width: 10%
+    margin-top: 5%
