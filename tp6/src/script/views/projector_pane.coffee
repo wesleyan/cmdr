@@ -17,8 +17,11 @@ Tp.ProjectorPaneView = Backbone.View.extend
     Tp.devices.volume.bind "change:volume", @audioLevelChanged
     Tp.sources.bind "change", @sourceChanged
     Tp.room.bind "change:source", @sourceChanged
+    #Tp.devices.projector.bind "autoOffCancel", @autoOffCancel
+    this.bind "autoOffCancel", @autoOffCancel
 
-    @timer = null
+    Tp.room.offTimer = null
+    Tp.room.warningTimer = null
 
   render: () ->
     ($.tmpl "projector-pane-template", {
@@ -46,7 +49,10 @@ Tp.ProjectorPaneView = Backbone.View.extend
     $('.volume-minus').click(@volumeDownClicked)
     $('.volume-plus').click(@volumeUpClicked)
     $('.mute-button').click(@muteButtonClicked)
+    $('#auto-off .cancel-button').click(@autoOffClicked)
 
+  cancel: () ->
+    console.log("This is a message for cancelling the autooff of projector.")
 
   projectorChanged: () ->
     state = Tp.devices.projector.get('state')
@@ -60,10 +66,25 @@ Tp.ProjectorPaneView = Backbone.View.extend
 
   autoOff: (state) ->
     if state == "on"
-      callback = -> Tp.devices.projector.state_set 'power', false
-      @timer = setTimeout callback, 10800000 # Three hour timer
+      #timer callbacks
+      shutOff = ->
+        Tp.devices.projector.state_set 'power', false
+      warning = ->
+        $('#auto-off').show()
+        Tp.room.offTimer = setTimeout shutOff, 60000
+      
+      Tp.room.warningTimer = setTimeout warning, 10740000
     else if state == "off"
-      if @timer then clearTimeout(@timer)
+      if Tp.room.warningTimer then clearTimeout(Tp.room.warningTimer)
+      if Tp.room.offTimer then clearTimeout(Tp.room.offTimer)
+      $('#auto-off').hide()
+
+  autoOffCancel: () ->
+    console.log "This thing should work.. Cancelling shutoff"
+    clearTimeout(Tp.room.warningTimer)
+    clearTimeout(Tp.room.offTimer)
+    $('#auto-off').hide()
+    Tp.projectorPane.autoOff("on")
 
   sourceChanged: () ->
     state = Tp.room.get('source')
@@ -119,3 +140,7 @@ Tp.ProjectorPaneView = Backbone.View.extend
   volumeDownClicked: () ->
     volume = Tp.devices.volume.get 'volume'
     Tp.devices.volume.state_set 'volume', volume - 0.1
+
+  autoOffClicked: () ->
+    console.log "Cancel button clicked"
+    Tp.projectorPane.trigger "autoOffCancel"
