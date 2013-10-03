@@ -20,8 +20,8 @@ Tp.ProjectorPaneView = Backbone.View.extend
     #Tp.devices.projector.bind "autoOffCancel", @autoOffCancel
     this.bind "autoOffCancel", @autoOffCancel
 
-    @warningTimer = null
-    @offTimer = null
+    Tp.room.offTimer = null
+    Tp.room.warningTimer = null
 
   render: () ->
     ($.tmpl "projector-pane-template", {
@@ -66,26 +66,23 @@ Tp.ProjectorPaneView = Backbone.View.extend
 
   autoOff: (state) ->
     if state == "on"
-      console.log "Timer turning on"
+      #timer callbacks
       shutOff = ->
         Tp.devices.projector.state_set 'power', false
       warning = ->
         $('#auto-off').show()
-        @offTimer = setTimeout shutOff, 5000
+        Tp.room.offTimer = setTimeout shutOff, 60000
       
-      #@timer = setTimeout callback, 10800000 # Three hour timer
-      @warningTimer = setTimeout warning, 10000
+      Tp.room.warningTimer = setTimeout warning, 10740000
     else if state == "off"
-      if @warningTimer then clearTimeout(@warningTimer)
-      if @offTimer then clearTimeout(@offTimer)
+      if Tp.room.warningTimer then clearTimeout(Tp.room.warningTimer)
+      if Tp.room.offTimer then clearTimeout(Tp.room.offTimer)
       $('#auto-off').hide()
 
-  autoOffCancel: () =>
+  autoOffCancel: () ->
     console.log "This thing should work.. Cancelling shutoff"
-    warningTimer = Tp.projectorPane.warningTimer
-    offTimeer = Tp.projectorPane.offTimer
-    if warningTimer then clearTimeout(Tp.projectorPane.warningTimer)
-    if offTimer then clearTimeout(Tp.projectorPane.offTimer)
+    clearTimeout(Tp.room.warningTimer)
+    clearTimeout(Tp.room.offTimer)
     $('#auto-off').hide()
     Tp.projectorPane.autoOff("on")
 
@@ -146,5 +143,4 @@ Tp.ProjectorPaneView = Backbone.View.extend
 
   autoOffClicked: () ->
     console.log "Cancel button clicked"
-    #Tp.devices.projector.trigger "autoOffCancel"
     Tp.projectorPane.trigger "autoOffCancel"
