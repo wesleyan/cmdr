@@ -1,0 +1,4 @@
+[subtree "lib/roomtrol/devices"]
+	url = git@github.com:imsdev/roomtrol-devices
+	path = lib/roomtrol/devices
+	branch = master
