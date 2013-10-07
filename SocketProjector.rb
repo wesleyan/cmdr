@@ -30,7 +30,7 @@ class SocketProjector < Wescontrol::SocketDevice
 	state_var :lamp_hours,  :type => :number, :editable => false
 	state_var :filter_hours,:type => :number, :editable => false
 	state_var :percent_lamp_used, :type => :percentage, :editable => false
-  state_var :operational, :type => :boolean
+	state_var :operational, :type => :boolean
 	#state_var :turned_on,  :type => :time', :editable => false
 	#state_var :turned_off,	:type => :time', :editable => false
 	
@@ -44,6 +44,7 @@ class SocketProjector < Wescontrol::SocketDevice
 				!power ? "off" :
 					video_mute ? "muted" : "on"	    
 	}
+	
 	#time_since_var :on_time, :since => :turned_on, :before => :turned_off
 	#virtual_var :on_time, :type => 'decimal', :depends_on => [:turned_on], :transformation => proc {
 	#	(Time.now-turned_on)/(60*60) #Time.- returns seconds; converted to hours
