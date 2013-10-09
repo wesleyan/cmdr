@@ -4,7 +4,8 @@
 #	"depends_on": "SocketProjector",
 #	"description": "Controls any projector capable of understanding the PJLink protocol standard, ie. the Epson PowerLite Pro G5750WU",
 #	"author": "Jonathan Lyons",
-#	"email": "jclyons@wesleyan.edu"
+#	"email": "jclyons@wesleyan.edu",
+# "type": "Projector"
 #}
 #---
 require 'digest/md5'
@@ -13,7 +14,7 @@ class PJLinkProjector < SocketProjector
   INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22}
 
   configure do
-    DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{@name}"
+    #DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{@name}"
   end
 
   def initialize(name, options)
@@ -70,7 +71,7 @@ class PJLinkProjector < SocketProjector
 		#ack ":"
 		error :general_error, "ERR", "Received an error"
 		match :power,  /%1POWR=(.+)/, proc{|m|
-	 		DaemonKit.logger.info "Received power value #{m[1]}"
+	 		#DaemonKit.logger.info "Received power value #{m[1]}"
 			  self.power = (m[1] == "1") 
 	  		self.cooling = (m[1] == "2")
 	  		self.warming = (m[1] == "3") || (m[1] == "ERR3")

@@ -1,3 +1,15 @@
+#---
+#{
+#	"name": "ExtronMPS409",
+#	"depends_on": "VideoSwitcher",
+#	"description": "Controls the MPS409 Extron switcher",
+#	"author": "Brian Gapinski",
+#	"email": "bgapinski@wesleyan.edu",
+#	"abstract": true,
+#	"type": "Video Switcher"
+#}
+#---
+
 class ExtronMPS409 < VideoSwitcher
   AUDIO_HASH = {1 => "1*1", 2 => "1*2", 3 => "2*1", 4 => "2*2", 5 => "3*1", 6 => "3*2", 7 => "3*3", 8 => "4*1", 9 => "4*2"}
 
