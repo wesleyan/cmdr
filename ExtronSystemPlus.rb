@@ -2,13 +2,14 @@
 #{
 #	"name": "ExtronSystemPlus",
 #	"depends_on": "SocketVideoSwitcher",
-#	"description": "Controls System 8 Plus and System 10 Plus Extrons, as well as the IN1606 Extron switcher"
+#	"description": "Controls System 8 Plus and System 10 Plus Extrons, as well as the IN1606 Extron switcher",
+# "type": "Video Switcher"
 #}
 #---
 
 class ExtronSystemPlus < SocketVideoSwitcher
 	configure do
-    DaemonKit.logger.info "@initializing SocketExtron at URI #{options[:uri]} with name #{name}"
+    #DaemonKit.logger.info "@initializing SocketExtron at URI #{options[:uri]} with name #{name}"
 	end
 	
   managed_state_var :video,

@@ -1,14 +1,18 @@
 #---
 #{
-#	"name": "ExtronSystemPlus",
+#	"name": "ExtronIN1606",
 #	"depends_on": "SocketVideoSwitcher",
-#	"description": "Controls the IN1606 Extron switcher"
+#	"description": "Controls the IN1606 Extron switcher",
+#	"author": "Brian Gapinski",
+#	"email": "bgapinski@wesleyan.edu",
+#	"abstract": true,
+#	"type": "Video Switcher"
 #}
 #---
 
 class ExtronIN1606 < SocketVideoSwitcher
 	configure do
-    DaemonKit.logger.info "@initializing SocketExtron at URI #{options[:uri]} with name #{name}"
+    #DaemonKit.logger.info "@initializing SocketExtron at URI #{options[:uri]} with name #{name}"
 	end
 	
   managed_state_var :video,
@@ -24,7 +28,6 @@ class ExtronIN1606 < SocketVideoSwitcher
 		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
-DaemonKit.logger.info "alskdjlkasjdlkajsdasdklj: #{volume}"
 			"\eD8*100#{volume > self.volume ? "+" : "-"}GRPM\r\n"
 		}
 	managed_state_var :mute,
@@ -50,7 +53,7 @@ DaemonKit.logger.info "alskdjlkasjdlkajsdasdklj: #{volume}"
     }
 	match :info, /60-1081-01/, proc{|m|}
 	match :volume, /-(\d+)/, proc{|m| 
-		DaemonKit.logger.info "Volume is at: #{(1000 - m[1].to_i) / 1000.0}"
+		#DaemonKit.logger.info "Volume is at: #{(1000 - m[1].to_i) / 1000.0}"
 		self.volume = (1000 - m[1].to_i) / 1000.0
 	}
 	match :mute, /(0|1)/, proc{|m|

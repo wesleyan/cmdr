@@ -4,7 +4,8 @@
 #	"depends_on": "Projector",
 #	"description": "Controls Epson PowerLite Pro G5750WU",
 #	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+#	"email": "mwylde@wesleyan.edu",
+# "type": "Projector"
 #}
 #---
 
@@ -12,7 +13,7 @@ class EpsonProjector < Projector
   INPUT_HASH = {"HDMI" => 30, "YPBR" => 14, "RGB1" =>  11, "VIDEO" => 41, "SVIDEO" => 42}
 
   configure do
-    DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
+    #DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
     port :type => :port
     baud :type => :integer, :default => 9600
     data_bits 8
@@ -65,7 +66,7 @@ class EpsonProjector < Projector
 		ack ":"
 		error :general_error, "ERR", "Received an error"
 		match :power,  /PWR=(.+)/, proc{|m|
-	  		DaemonKit.logger.info "Received power value #{m[1]}"
+	  		#DaemonKit.logger.info "Received power value #{m[1]}"
 			self.power = (m[1] == "01")
 			self.cooling = (m[1] == "03")
 			self.warming = (m[1] == "02")	
