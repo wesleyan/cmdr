@@ -12,7 +12,7 @@ class EikiProjector < Projector
   INPUT_HASH = {"RGB1" => 5, "RGB2" => 6, "VIDEO" => 7}
 
   configure do
-    DaemonKit.logger.info "@Initializing projector on port #{options[:uri]} with name #{name}"
+    #DaemonKit.logger.info "@Initializing projector on port #{options[:uri]} with name #{name}"
     port :type => :port
     baud :type => :integer, :default => 19200
     data_bits 8

@@ -1,6 +1,6 @@
 #---
 #{
-#	"name": "AT-PA 100",
+#	"name": "ATPA100",
 #	"depends_on": "RS232Device",
 #	"description": "Controls Atlona AT-PA 100 amplifiers.",
 #	"author": "Micah Wylde",

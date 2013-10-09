@@ -1,7 +1,18 @@
+#---
+#{
+# "name": "SocketBluray",
+# "depends_on": "SocketDevice",
+# "description": "Controls most pioneer bluray players",
+# "author": "Brian Gapinski",
+# "email": "bgapinski@wesleyan.edu",
+# "type": "SocketDevice"
+#}
+#---
+
 class SocketBluray < Wescontrol::SocketDevice
 
   configure do
-    DaemonKit.logger.info "@Initializing SocketBluray at URI #{options[:uri]} with name #{name}"
+    #DaemonKit.logger.info "@Initializing SocketBluray at URI #{options[:uri]} with name #{name}"
   end
 
   command :play, 
@@ -68,7 +79,7 @@ class SocketBluray < Wescontrol::SocketDevice
     }
 
 
-  state_var :operational, :type => :boolean
+  state_var :operational, :type => :boolean, :editable => false
 
   requests do
     send :ping, "\r\n", 1.0

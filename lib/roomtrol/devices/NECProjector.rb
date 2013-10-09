@@ -4,7 +4,8 @@
 # "depends_on": "Projector",
 # "description": "Controls most NEC projectors",
 # "author": "Micah Wylde",
-# "email": "mwylde@wesleyan.edu"
+# "email": "mwylde@wesleyan.edu",
+# "type": "Projector"
 #}
 #---
 

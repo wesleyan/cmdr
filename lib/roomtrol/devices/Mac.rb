@@ -4,7 +4,8 @@
 #	"depends_on": "Computer",
 #	"description": "Macintosh control class; provides lots of information about current status",
 #	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+#	"email": "mwylde@wesleyan.edu",
+# "type": "Computer"
 #}
 #---
 
