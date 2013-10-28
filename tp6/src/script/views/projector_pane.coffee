@@ -137,5 +137,4 @@ Tp.ProjectorPaneView = Backbone.View.extend
     Tp.devices.volume.state_set 'volume', volume - 0.1
 
   autoOffClicked: () ->
-    console.log "Cancel button clicked"
     Tp.projectorPane.trigger "autoOffCancel"
