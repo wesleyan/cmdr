@@ -57,7 +57,36 @@
       right: 9px
       position: absolute
       height: 50px
-
+    .volume-slider
+      .label
+        +fill-parent
+        line-height: 50px
+        font-size: 21px
+        color: #333
+      left: 9px
+      top: 190px
+      height: .8em
+      border-radius: 4px/*{cornerRadius}*/
+      border: 1px solid #aaaaaa/*{borderColorContent}*/
+      background: #ffffff/*{bgColorContent}*/ url(images/ui-bg_flat_75_ffffff_40x100.png)/*{bgImgUrlContent}*/ 50%/*{bgContentXPos}*/ 50%/*{bgContentYPos}*/ repeat-x/*{bgContentRepeat}*/
+      color: #222222/*{fcContent}*/
+      right: 9px
+      position: absolute
+      font-family: Verdana,Arial,sans-serif/*{ffDefault}*/
+      font-size: 1.1em/*{fsDefault}*/
+      .ui-slider-handle
+        border: 1px solid #d3d3d3/*{borderColorDefault}*/
+        background: #e6e6e6/*{bgColorDefault}*/ url(images/ui-bg_glass_75_e6e6e6_1x400.png)/*{bgImgUrlDefault}*/ 50%/*{bgDefaultXPos}*/ 50%/*{bgDefaultYPos}*/ repeat-x/*{bgDefaultRepeat}*/
+        font-weight: normal/*{fwDefault}*/
+        color: #555555/*{fcDefault}*/
+        top: -.3em
+        margin-left: -.6em
+        position: absolute
+        z-index: 2
+        width: 1.2em
+        height: 1.2em
+        cursor: default
+        border-radius: 4px/*{cornerRadius}*/
     .projector-label
       top: 0px
     
