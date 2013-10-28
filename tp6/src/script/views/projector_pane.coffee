@@ -45,16 +45,11 @@ Tp.ProjectorPaneView = Backbone.View.extend
     console.log("Setting up handlers")
     $('.power-button').click(@powerButtonClicked)
     $('.blank-button').click(@blankButtonClicked)
-    level = Tp.devices.volume.get('volume')
-    console.log('volume currently ' + level)
-    if level >= 0 and level <= 1
-      $('.volume-slider').slider("value", level * 100)
-    else
-      $('.volume-slider').slider()
-      
-    $( ".volume-slider" ).on( "slide", @volumeSliderChanged);
     $('.mute-button').click(@muteButtonClicked)
     $('#auto-off .cancel-button').click(@autoOffClicked)
+    $('.volume-slider').slider()
+    $('.volume-slider').on( "slide", @volumeSliderChanged)
+    $('.volume-slider').slider( "option", "disabled", true ) #Disabled, then reenabled with initial volume in audioLevelChanged, because get volume here comes back undefined otherwise
 
   cancel: () ->
     console.log("This is a message for cancelling the autooff of projector.")
@@ -123,12 +118,9 @@ Tp.ProjectorPaneView = Backbone.View.extend
 
   audioLevelChanged: () ->
     level = Tp.devices.volume.get('volume')
-    
-    # if level >= 0 and level <= 1
-    #   console.log('volume currently ' + level)
-      #$('.volume-slider').slider("value", level)
-    # if level >= 1 then $('.volume-plus.button').disable
-    # if level <= 0 then $('.volume-minus.button').disable
+    if $('.volume-slider').slider( "option", "disabled" ) #Part of the initialization of volume slider
+      $('.volume-slider').slider( "option", "disabled", false )
+      if level >= 0 and level <= 1 then $('.volume-slider').slider("value", level * 100)
 
   powerButtonClicked: () ->
     state = Tp.devices.projector.get 'state'
