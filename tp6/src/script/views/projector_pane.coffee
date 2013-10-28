@@ -51,12 +51,8 @@ Tp.ProjectorPaneView = Backbone.View.extend
     $('.mute-button').click(@muteButtonClicked)
     $('#auto-off .cancel-button').click(@autoOffClicked)
 
-  cancel: () ->
-    console.log("This is a message for cancelling the autooff of projector.")
-
   projectorChanged: () ->
     state = Tp.devices.projector.get('state')
-    console.log("Projector now " + state)
     text = if (["on", "muted", "warming"].indexOf(state) != -1) then "off" else "on"
     @autoOff(state)
     $('.power-button .label').html("turn " + text)
@@ -80,7 +76,6 @@ Tp.ProjectorPaneView = Backbone.View.extend
       $('#auto-off').hide()
 
   autoOffCancel: () ->
-    console.log "This thing should work.. Cancelling shutoff"
     clearTimeout(Tp.room.warningTimer)
     clearTimeout(Tp.room.offTimer)
     $('#auto-off').hide()
