@@ -57,36 +57,66 @@
       right: 9px
       position: absolute
       height: 50px
-    .volume-slider
-      .label
-        +fill-parent
-        line-height: 50px
-        font-size: 21px
-        color: #333
-      left: 9px
-      top: 190px
-      height: .8em
-      border-radius: 4px/*{cornerRadius}*/
-      border: 1px solid #aaaaaa/*{borderColorContent}*/
-      background: #ffffff/*{bgColorContent}*/ url(images/ui-bg_flat_75_ffffff_40x100.png)/*{bgImgUrlContent}*/ 50%/*{bgContentXPos}*/ 50%/*{bgContentYPos}*/ repeat-x/*{bgContentRepeat}*/
-      color: #222222/*{fcContent}*/
-      right: 9px
-      position: absolute
-      font-family: Verdana,Arial,sans-serif/*{ffDefault}*/
-      font-size: 1.1em/*{fsDefault}*/
-      .ui-slider-handle
-        border: 1px solid #d3d3d3/*{borderColorDefault}*/
-        background: #e6e6e6/*{bgColorDefault}*/ url(images/ui-bg_glass_75_e6e6e6_1x400.png)/*{bgImgUrlDefault}*/ 50%/*{bgDefaultXPos}*/ 50%/*{bgDefaultYPos}*/ repeat-x/*{bgDefaultRepeat}*/
-        font-weight: normal/*{fwDefault}*/
-        color: #555555/*{fcDefault}*/
-        top: -.3em
-        margin-left: -.6em
-        position: absolute
-        z-index: 2
-        width: 1.2em
+    .slider
+      .volume-slider
+        .label
+          +fill-parent
+          line-height: 50px
+          font-size: 21px
+          color: #333
+        left: 9px
+        top: 190px
         height: 1.2em
-        cursor: default
         border-radius: 4px/*{cornerRadius}*/
+        border: 1px solid #aaaaaa/*{borderColorContent}*/
+        background: #ffffff/*{bgColorContent}*/ url(images/ui-bg_flat_75_ffffff_40x100.png)/*{bgImgUrlContent}*/ 50%/*{bgContentXPos}*/ 50%/*{bgContentYPos}*/ repeat-x/*{bgContentRepeat}*/
+        color: #222222/*{fcContent}*/
+        right: 9px
+        position: absolute
+        font-family: Verdana,Arial,sans-serif/*{ffDefault}*/
+        font-size: 1.1em/*{fsDefault}*/
+        .ui-slider-handle
+          border: 1px solid #d3d3d3/*{borderColorDefault}*/
+          background: #e6e6e6/*{bgColorDefault}*/ url(images/ui-bg_glass_75_e6e6e6_1x400.png)/*{bgImgUrlDefault}*/ 50%/*{bgDefaultXPos}*/ 50%/*{bgDefaultYPos}*/ repeat-x/*{bgDefaultRepeat}*/
+          font-weight: normal/*{fwDefault}*/
+          color: #555555/*{fcDefault}*/
+          top: -.3em
+          margin-left: -.6em
+          position: absolute
+          z-index: 2
+          width: 1.2em
+          height: 1.2em
+          cursor: default
+          border-radius: 4px/*{cornerRadius}*/
+      .volume-gauge
+        right: 100%
+        top: 192px
+        height: 15px
+        border-radius: 2px
+        border-bottom-left-radius: 0
+        background: rgb(184, 196, 207)
+        color: #222
+        left: 10px
+        z-index: 0
+        position: absolute
+      .volume-divider
+        right: 10px
+        top: 207px
+        height: 1px
+        border-radius: 2px
+        background-color: #aaa
+        left: 10px
+        z-index: 0
+        position: absolute
+      .volume-now-gauge
+        right: 100%
+        top: 208px
+        height: 3px
+        z-index: 1
+        border-radius: 4px
+        background-color: #2C6191
+        left: 10px
+        position: absolute
     .projector-label
       top: 0px
     

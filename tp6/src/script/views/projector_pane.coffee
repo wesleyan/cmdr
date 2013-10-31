@@ -120,7 +120,10 @@ Tp.ProjectorPaneView = Backbone.View.extend
     level = Tp.devices.volume.get('volume')
     if $('.volume-slider').slider( "option", "disabled" ) #Part of the initialization of volume slider
       $('.volume-slider').slider( "option", "disabled", false )
-      if level >= 0 and level <= 1 then $('.volume-slider').slider("value", level * 100)
+      if level >= 0 and level <= 1
+        $('.volume-slider').slider("value", level * 100)
+        $(".volume-gauge").css("right",(100 - (level * 100)) + "%")
+    $(".volume-now-gauge").css("right",(100 - (level * 100)) + "%")
 
   powerButtonClicked: () ->
     state = Tp.devices.projector.get 'state'
@@ -137,6 +140,7 @@ Tp.ProjectorPaneView = Backbone.View.extend
   volumeSliderChanged: () ->
     volume = Tp.devices.volume.get 'volume'
     sliderVal = Math.round($( ".volume-slider" ).slider( "option", "value" ) / 10) / 10
+    $(".volume-gauge").css("right",(100 - $( ".volume-slider" ).slider( "option", "value" )) + "%")
     Tp.devices.volume.state_set 'volume', sliderVal
   
   volumeUpClicked: () ->
