@@ -5,7 +5,9 @@
 <link rel="stylesheet" href="../styles.css?605486946" />
     <script src='../script/vendor/json2.js'></script>
     <script src='../script/vendor/jquery-1.7.1.js'></script>
+    <script src='../script/vendor/jquery-ui.js'></script>
     <script src='../script/vendor/jquery.tmpl.js'></script>
+    <script src='../script/vendor/jquery-ui.slider.js'></script>
     <script src='../script/vendor/jquery.noisy.js'></script>
     <script src='../script/vendor/underscore.js'></script>
     <script src='../script/vendor/backbone.js'></script>
