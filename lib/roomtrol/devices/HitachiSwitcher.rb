@@ -4,7 +4,8 @@
 #	"depends_on": "VideoSwitcher",
 #	"description": "Controls Hitachi video switcher",
 #	"author": "Sam Giagtzoglou",
-#	"email": "sgiagtzoglou@wesleyan.edu"
+#	"email": "sgiagtzoglou@wesleyan.edu",
+# "type": "Video Swithcer"
 #}
 #---
 #
@@ -16,12 +17,12 @@
 require "socket"
 class HitachiSwitcher < Wescontrol::Device
 	configure do
-		DaemonKit.logger.info "@Initializing HitachiSwitcher at URI #{uri} with name #{name}"
+		#DaemonKit.logger.info "@Initializing HitachiSwitcher at URI #{uri} with name #{name}"
 	end
 
 	state_var :video, :type => :option, :editable => :true, :options => ("1".."6").to_a, :action => proc{|input|
 	    	if self.video != input #If input is not the input the switcher is already on
-	    		DaemonKit.logger.info("Changing switcher input from #{self.video} to #{input}")
+	    		#DaemonKit.logger.info("Changing switcher input from #{self.video} to #{input}")
 	    		@inputReq = input
 	    		@inputChanging = true
 	    	end
@@ -59,7 +60,7 @@ class HitachiSwitcher < Wescontrol::Device
 		super
 		socket = TCPSocket.new(@switcherIP, 23)
 		micvol = sendTCP(socket, "\xBE\xEF\x03\x06\x00\x75\xF1\x02\x00\xA2\x20\x00\x00")[1].unpack('C')[0]
-		DaemonKit.logger.info "Mic vol is #{micvol}, muting" if micvol != 0
+		#DaemonKit.logger.info "Mic vol is #{micvol}, muting" if micvol != 0
 		micvol.times{
 			socket.puts "\xBE\xEF\x03\x06\x00\xC2\xF0\x05\x00\xA2\x20\x00\x00" #Sets the unused mic volume to 0 to avoid hardware issue where input audio is picked up by the mic. Mic doesn't have a mute
 			socket.read 1 #The switcher sends back one packet - this limits the rate
@@ -78,12 +79,12 @@ class HitachiSwitcher < Wescontrol::Device
 					@mutereq ? (socket.puts "\xBE\xEF\x03\x06\x00\xD6\xD2\x01\x00\x02\x20\x01\x00") : (socket.puts "\xBE\xEF\x03\x06\x00\x46\xD3\x01\x00\x02\x20\x00\x00") #Sends mute or unmute command
 					socket.read 1
 					@muteChanging = false
-					DaemonKit.logger.info("Changing mute to #{@mutereq}")
+					#DaemonKit.logger.info("Changing mute to #{@mutereq}")
 				end
 				sleep 1
 			end
 		rescue Exception => e
-			DaemonKit.logger.error("Switcher Error: #{e.message}")
+			#DaemonKit.logger.error("Switcher Error: #{e.message}")
 			socket.close
 			sleep 1
 			socket = TCPSocket.new(@switcherIP, 23)
@@ -116,7 +117,7 @@ class HitachiSwitcher < Wescontrol::Device
 				raise "INPUT CHANGE #{input} to #{self.video} FAILED"
 			end
 		rescue Exception => e
-		 	DaemonKit.logger.error("Error switching input: #{e.message}")
+		 	#DaemonKit.logger.error("Error switching input: #{e.message}")
 		 	socket.close
 		 	socket = TCPSocket.new(@switcherIP, 23)
 		 	retry
@@ -124,7 +125,7 @@ class HitachiSwitcher < Wescontrol::Device
 		return socket
 	end
 	def changeVol(socket, newvol, oldvol)
-		DaemonKit.logger.info("Changing volume from #{oldvol} to #{newvol}")
+		#DaemonKit.logger.info("Changing volume from #{oldvol} to #{newvol}")
 		begin
 			oldvol.upto(newvol) do #Increments volume up to inputed volume
     			socket.puts "\xBE\xEF\x03\x06\x00\xAB\xC3\x04\x00\x50\x20\x00\x00"
@@ -135,7 +136,7 @@ class HitachiSwitcher < Wescontrol::Device
      			socket.read 1
         	end
 		rescue Exception => e
-			DaemonKit.logger.error("Error changing volume: #{e.message})")
+			#DaemonKit.logger.error("Error changing volume: #{e.message})")
 			socket.close
 			socket = TCPSocket.new(@switcherIP,23)
 			self.volume = sendTCP(socket, "\xBE\xEF\x03\x06\x00\xCD\xC3\x02\x00\x50\x20\x00\x00")[1].unpack('C')[0] #Gets volume as an int
