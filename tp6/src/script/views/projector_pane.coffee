@@ -45,11 +45,11 @@ Tp.ProjectorPaneView = Backbone.View.extend
     console.log("Setting up handlers")
     $('.power-button').click(@powerButtonClicked)
     $('.blank-button').click(@blankButtonClicked)
-
-    $('.volume-minus').click(@volumeDownClicked)
-    $('.volume-plus').click(@volumeUpClicked)
     $('.mute-button').click(@muteButtonClicked)
     $('#auto-off .cancel-button').click(@autoOffClicked)
+    $('.volume-slider').slider()
+    $('.volume-slider').on( "slide", @volumeSliderChanged)
+    $('.volume-slider').slider( "option", "disabled", true ) #Disabled, then reenabled with initial volume in audioLevelChanged, because get volume here comes back undefined otherwise
 
   projectorChanged: () ->
     state = Tp.devices.projector.get('state')
@@ -112,9 +112,13 @@ Tp.ProjectorPaneView = Backbone.View.extend
     $('.mute-button .label').html(text)
 
   audioLevelChanged: () ->
-    level = Tp.devices.volume.get('level')
-    if level >= 1 then $('.volume-plus.button').disable
-    if level <= 0 then $('.volume-minus.button').disable
+    level = Tp.devices.volume.get('volume')
+    if $('.volume-slider').slider( "option", "disabled" ) #Part of the initialization of volume slider
+      $('.volume-slider').slider( "option", "disabled", false )
+      if level >= 0 and level <= 1
+        $('.volume-slider').slider("value", level * 100)
+        $(".volume-gauge").css("right",(100 - (level * 100)) + "%")
+    $(".volume-now-gauge").css("right",(100 - (level * 100)) + "%")
 
   powerButtonClicked: () ->
     state = Tp.devices.projector.get 'state'
@@ -127,7 +131,13 @@ Tp.ProjectorPaneView = Backbone.View.extend
   muteButtonClicked: () ->
     mute = Tp.devices.volume.get 'mute'
     Tp.devices.volume.state_set 'mute', !mute
-
+  
+  volumeSliderChanged: () ->
+    volume = Tp.devices.volume.get 'volume'
+    sliderVal = Math.round($( ".volume-slider" ).slider( "option", "value" ) / 10) / 10
+    $(".volume-gauge").css("right",(100 - $( ".volume-slider" ).slider( "option", "value" )) + "%")
+    Tp.devices.volume.state_set 'volume', sliderVal
+  
   volumeUpClicked: () ->
     volume = Tp.devices.volume.get 'volume'
     Tp.devices.volume.state_set 'volume', volume + 0.1
