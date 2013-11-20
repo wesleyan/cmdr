@@ -118,7 +118,10 @@ Tp.ProjectorPaneView = Backbone.View.extend
       if level >= 0 and level <= 1
         $('.volume-slider').slider("value", level * 100)
         $(".volume-gauge").css("right",(100 - (level * 100)) + "%")
-    $(".volume-now-gauge").css("right",(100 - (level * 100)) + "%")
+    if level == 1
+      $(".volume-now-gauge").css("right","7%")
+    else
+      $(".volume-now-gauge").css("right",(100 - (level * 100)) + "%")
 
   powerButtonClicked: () ->
     state = Tp.devices.projector.get 'state'
