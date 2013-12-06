@@ -28,7 +28,7 @@ class ExtronIN1606 < SocketVideoSwitcher
 		:display_order => 2,
 		:response => :volume,
 		:action => proc{|volume|
-			"\eD8*100#{volume > self.volume ? "+" : "-"}GRPM\r\n"
+      volume >= 1 ? "\eD8*-1GRPM\r\n" : "\eD8*100#{volume > self.volume ? "+" : "-"}GRPM\r\n"
 		}
 	managed_state_var :mute,
 		:type => :boolean,
