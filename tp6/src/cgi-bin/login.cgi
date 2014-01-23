@@ -1,4 +1,4 @@
-#!/usr/bin/env /usr/local/rvm/bin/ruby
+#!/usr/bin/env /usr/local/rvm/bin/rvm-auto-ruby
 
 require 'cgi'
 require 'cgi/session'
