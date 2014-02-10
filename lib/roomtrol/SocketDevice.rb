@@ -3,7 +3,7 @@ require 'strscan'
 require 'rubybits'
 require 'socket'
 require 'eventmachine'
-
+require 'roomtrol/communication'
 module Wescontrol
 
 	class SocketDevice < Device
@@ -54,30 +54,7 @@ module Wescontrol
       end
 		end
 
-    def send_event severity 
-      @_event = {"device" => "#{@hostname}", 
-                 "component" => "#{@name}", 
-                 "summary" => "Communication lost with #{@name}", 
-                 "eventClass" => "/Status/Device",
-                 "severity" => severity}
-      EM.defer do
-        begin
-          DaemonKit.logger.info("Received error: #{@_event}")
-          serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
-          serv.call('sendEvent', @_event)
-        rescue
-        end
-      end
-    end
-
-    def operational= operational
-      self.operational = operational
-      if self.operational
-        send_event 0
-      else
-        send_event 5
-      end
-    end
+    
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
