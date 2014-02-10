@@ -3,7 +3,7 @@ require 'strscan'
 #require 'roomtrol/em-serialport'
 require 'rubybits'
 require 'xmlrpc/client'
-
+require 'roomtrol/communication'
 module Wescontrol
 	# RS232Device is a subclass of {Wescontrol::Device} that makes the
 	# job of controlling devices that communicate over RS232 serial
@@ -182,18 +182,7 @@ module Wescontrol
       end
 		end
 
-    def send_event severity 
-      @_event = {"device" => "#{@hostname}", 
-                 "component" => "#{@name}", 
-                 "summary" => "Communication lost with #{@name}", 
-                 "eventClass" => "/Status/Device",
-                 "severity" => severity}
-      EM.defer do
-        DaemonKit.logger.info("Received error: #{@_event}")
-        serv = XMLRPC::Client.new2('http://roomtrol:Pr351d3nt@imsvm:8080/zport/dmd/ZenEventManager')
-        serv.call('sendEvent', @_event)
-      end
-    end
+    
 
     # Creates a fake evented serial connection, which calls the passed-in callback when
     # data is received. Note that you should only call this method once.
