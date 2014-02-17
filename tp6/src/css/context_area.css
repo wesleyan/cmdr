@@ -1,0 +1,18 @@
+.context-area {
+  padding-top: 20px;
+  left: 440px;
+  right: 0;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: #888888 solid 1px;
+  z-index: 1000;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0, #d1d3d4), color-stop(1, #9d9fa2));
+  background: -moz-linear-gradient(center top, #d1d3d4 0%, #9d9fa2 100%); }
+  .context-area .title {
+    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+    color: black;
+    font-family: "Myriad Pro";
+    font-size: 48px;
+    text-align: center;
+    line-height: 48px; }

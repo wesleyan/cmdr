@@ -1,0 +1,179 @@
+.projector-module {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 150px;
+  position: absolute;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0, #d1d3d4), color-stop(1, #9d9fa2));
+  background: -moz-linear-gradient(center top, #d1d3d4 0%, #9d9fa2 100%);
+  border-right: #888888 solid 1px;
+  z-index: 1000; }
+  .projector-module img.status-image {
+    width: 106px;
+    height: inherit;
+    left: 50%;
+    margin-left: -53px;
+    position: absolute;
+    top: 7px; }
+  .projector-module img.source-image {
+    position: absolute;
+    visibility: hidden;
+    z-index: -10; }
+  .projector-module img.screen-image {
+    width: 110px;
+    height: inherit;
+    left: 50%;
+    margin-left: -55px;
+    position: absolute;
+    top: 135px;
+    position: absolute; }
+  .projector-module .screen-image-overlay {
+    background-color: black;
+    position: absolute;
+    top: 140px;
+    opacity: 0;
+    width: 104px;
+    height: 70px;
+    left: 50%;
+    margin-left: -52px;
+    position: absolute; }
+  .projector-module .controls {
+    top: 160px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute; }
+    .projector-module .controls .label {
+      position: absolute;
+      text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+      font-family: "Myriad Pro";
+      font-weight: 600;
+      text-align: center; }
+      .projector-module .controls .label.header {
+        font-size: 24px;
+        color: #565656;
+        left: 0;
+        right: 0; }
+    .projector-module .controls .button {
+      -webkit-border-radius: 5px;
+      -moz-border-radius: 5px;
+      border-radius: 5px;
+      border: 1px solid white;
+      -moz-box-shadow: 0 0 3px black;
+      -webkit-box-shadow: 0 0 3px black;
+      box-shadow: 0 0 3px black;
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #f6f6f6), color-stop(1, #c4c4c4));
+      background: -moz-linear-gradient(center top, #f6f6f6 25%, #c4c4c4 100%);
+      left: 9px;
+      right: 9px;
+      position: absolute;
+      height: 50px; }
+      .projector-module .controls .button .label {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        position: absolute;
+        line-height: 50px;
+        font-size: 21px;
+        color: #333333; }
+      .projector-module .controls .button:active {
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #c4c4c4), color-stop(1, #acacac));
+        background: -moz-linear-gradient(center top, #c4c4c4 25%, #acacac 100%);
+        -moz-box-shadow: 0 0 3px black inset;
+        -webkit-box-shadow: 0 0 3px black inset;
+        box-shadow: 0 0 3px black inset; }
+      .projector-module .controls .button.disabled {
+        opacity: 0.6;
+        -moz-box-shadow: 0 0 3px black;
+        -webkit-box-shadow: 0 0 3px black;
+        box-shadow: 0 0 3px black;
+        -moz-box-shadow: 0 0 3px black;
+        -webkit-box-shadow: 0 0 3px black;
+        box-shadow: 0 0 3px black;
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #f6f6f6), color-stop(1, #c4c4c4));
+        background: -moz-linear-gradient(center top, #f6f6f6 25%, #c4c4c4 100%); }
+    .projector-module .controls .slider .volume-slider {
+      left: 9px;
+      top: 190px;
+      height: 1.2em;
+      border-radius: 4px;
+      border: 1px solid #aaaaaa;
+      background: white url(images/ui-bg_flat_75_ffffff_40x100.png) 50% 50% repeat-x;
+      color: #222222;
+      right: 9px;
+      position: absolute;
+      font-family: Verdana, Arial, sans-serif;
+      font-size: 1.1em; }
+      .projector-module .controls .slider .volume-slider .label {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        position: absolute;
+        line-height: 50px;
+        font-size: 21px;
+        color: #333333; }
+      .projector-module .controls .slider .volume-slider .ui-slider-handle {
+        border: 1px solid lightgrey;
+        background: #e6e6e6 url(images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x;
+        font-weight: normal;
+        color: #555555;
+        top: -0.3em;
+        margin-left: -0.6em;
+        position: absolute;
+        z-index: 2;
+        width: 1.2em;
+        height: 1.2em;
+        cursor: default;
+        border-radius: 4px; }
+    .projector-module .controls .slider .volume-gauge {
+      right: 100%;
+      top: 192px;
+      height: 15px;
+      border-radius: 2px;
+      border-bottom-left-radius: 0;
+      background: #b8c4cf;
+      color: #222222;
+      left: 10px;
+      z-index: 0;
+      position: absolute; }
+    .projector-module .controls .slider .volume-divider {
+      right: 10px;
+      top: 207px;
+      height: 1px;
+      border-radius: 2px;
+      background-color: #aaaaaa;
+      left: 10px;
+      z-index: 0;
+      position: absolute; }
+    .projector-module .controls .slider .volume-now-gauge {
+      right: 100%;
+      top: 208px;
+      height: 3px;
+      z-index: 1;
+      border-radius: 4px;
+      background-color: #2c6191;
+      left: 10px;
+      position: absolute; }
+    .projector-module .controls .projector-label {
+      top: 0px; }
+    .projector-module .controls .power-button {
+      top: 30px; }
+    .projector-module .controls .blank-button {
+      top: 90px; }
+    .projector-module .controls .audio-label {
+      top: 150px; }
+    .projector-module .controls .volume-plus.button, .projector-module .controls .volume-minus.button {
+      top: 175px;
+      width: 62px; }
+      .projector-module .controls .volume-plus.button .label, .projector-module .controls .volume-minus.button .label {
+        font-weight: 900;
+        font-size: 32px; }
+    .projector-module .controls .volume-plus.button {
+      right: 9px;
+      left: auto; }
+    .projector-module .controls .volume-minus.button .label {
+      font-size: 48px; }
+    .projector-module .controls .mute-button {
+      top: 235px; }
