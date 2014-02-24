@@ -99,7 +99,7 @@
       height: 1.2em;
       border-radius: 4px;
       border: 1px solid #aaaaaa;
-      background: white url(images/ui-bg_flat_75_ffffff_40x100.png) 50% 50% repeat-x;
+      background: white url(../images/ui-bg_flat_75_ffffff_40x100.png) 50% 50% repeat-x;
       color: #222222;
       right: 9px;
       position: absolute;
@@ -116,7 +116,7 @@
         color: #333333; }
       .projector-module .controls .slider .volume-slider .ui-slider-handle {
         border: 1px solid lightgrey;
-        background: #e6e6e6 url(images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x;
+        background: #e6e6e6 url(../images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x;
         font-weight: normal;
         color: #555555;
         top: -0.3em;
