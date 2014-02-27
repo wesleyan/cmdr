@@ -1,0 +1,169 @@
+@-webkit-keyframes 'pulse' {
+  from {
+    opacity: 0; }
+
+  40% {
+    opacity: 0.6; }
+
+  60% {
+    opacity: 0.6; }
+
+  to {
+    opacity: 0; } }
+
+@-moz-keyframes 'pulse' {
+  from {
+    opacity: 0; }
+
+  40% {
+    opacity: 0.6; }
+
+  60% {
+    opacity: 0.6; }
+
+  to {
+    opacity: 0; } }
+
+.overflow {
+  overflow: visible; }
+
+div, img, p {
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none; }
+
+#top-bar {
+  background-color: black;
+  overflow: visible;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  position: absolute; }
+  #top-bar .label {
+    color: #e6e7e8;
+    font-family: "Myriad Pro";
+    -webkit-user-select: none;
+    font-size: 19px;
+    top: 5px;
+    position: absolute; }
+    #top-bar .label#room-label {
+      left: 20px;
+      width: 200px; }
+    #top-bar .label#time-label {
+      line-height: 22px;
+      text-align: right;
+      right: 20px;
+      width: 100px; }
+    #top-bar .label#logout-label {
+      right: 130px;
+      width: 30px;
+      text-align: center;
+      font-size: 15px;
+      top: 8px; }
+      #top-bar .label#logout-label a.logout {
+        color: #e6e7e8; }
+        #top-bar .label#logout-label a.logout:link {
+          text-decoration: none; }
+        #top-bar .label#logout-label a.logout:visited {
+          text-decoration: none; }
+        #top-bar .label#logout-label a.logout:active {
+          text-decoration: none; }
+        #top-bar .label#logout-label a.logout:hover {
+          text-decoration: underline;
+          color: blue; }
+
+#main-view {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+  top: 30px; }
+
+#lost-connection {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 100000;
+  color: white;
+  text-align: center;
+  font-family: "Myriad Pro"; }
+  #lost-connection .title {
+    margin-top: 40px;
+    font-size: 60px; }
+  #lost-connection .text {
+    margin-top: 60px;
+    line-height: 40px;
+    font-size: 28px;
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto; }
+  #lost-connection .reconnection-attempt, #lost-connection .reconnecting {
+    font-size: 22px;
+    margin-top: 50px; }
+
+#auto-off {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 100000;
+  color: white;
+  text-align: center;
+  font-family: "Myriad Pro"; }
+  #auto-off .title {
+    margin-top: 40px;
+    font-size: 60px; }
+  #auto-off .text {
+    margin-top: 60px;
+    line-height: 40px;
+    font-size: 28px;
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto; }
+  #auto-off .cancel-button.button {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid white;
+    -moz-box-shadow: 0 0 3px black;
+    -webkit-box-shadow: 0 0 3px black;
+    box-shadow: 0 0 3px black;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #f6f6f6), color-stop(1, #c4c4c4));
+    background: -moz-linear-gradient(center top, #f6f6f6 25%, #c4c4c4 100%);
+    left: 45%;
+    position: absolute;
+    height: 50px;
+    width: 10%;
+    margin-top: 5%; }
+    #auto-off .cancel-button.button .label {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+      line-height: 50px;
+      font-size: 21px;
+      color: #333333; }
+    #auto-off .cancel-button.button:active {
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #c4c4c4), color-stop(1, #acacac));
+      background: -moz-linear-gradient(center top, #c4c4c4 25%, #acacac 100%);
+      -moz-box-shadow: 0 0 3px black inset;
+      -webkit-box-shadow: 0 0 3px black inset;
+      box-shadow: 0 0 3px black inset; }
+    #auto-off .cancel-button.button.disabled {
+      opacity: 0.6;
+      -moz-box-shadow: 0 0 3px black;
+      -webkit-box-shadow: 0 0 3px black;
+      box-shadow: 0 0 3px black;
+      -moz-box-shadow: 0 0 3px black;
+      -webkit-box-shadow: 0 0 3px black;
+      box-shadow: 0 0 3px black;
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0.25, #f6f6f6), color-stop(1, #c4c4c4));
+      background: -moz-linear-gradient(center top, #f6f6f6 25%, #c4c4c4 100%); }

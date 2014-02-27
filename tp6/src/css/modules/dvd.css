@@ -1,0 +1,134 @@
+.dvd-module .title, .vcr-module .title, .bluray-module .title {
+  margin-top: 10px; }
+.dvd-module .controls, .vcr-module .controls, .bluray-module .controls {
+  position: absolute;
+  left: 30px;
+  width: 145px;
+  top: 110px;
+  bottom: 20px; }
+  .dvd-module .controls .overlay, .vcr-module .controls .overlay, .bluray-module .controls .overlay {
+    z-index: 100;
+    pointer-events: none;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    background-image: url("../../images/remote/dvd_controls.png");
+    background-repeat: no-repeat; }
+  .dvd-module .controls .background, .vcr-module .controls .background, .bluray-module .controls .background {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background-color: #3e3e3e;
+    -webkit-border-radius: 20px;
+    -webkit-box-shadow: 0 0 3px 4px #333333; }
+    .dvd-module .controls .background .roomtrol-text, .vcr-module .controls .background .roomtrol-text, .bluray-module .controls .background .roomtrol-text {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      color: #b7b7b8;
+      font-family: "Myriad Pro";
+      font-weight: bold;
+      font-size: 13px; }
+  .dvd-module .controls .dvd-button, .vcr-module .controls .dvd-button, .bluray-module .controls .dvd-button {
+    height: 47px;
+    position: absolute;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#bababa), to(white));
+    -webkit-box-shadow: 0 0 2px #333333;
+    -webkit-border-radius: 5px;
+    z-index: 60;
+    border: 1px solid white; }
+    .dvd-module .controls .dvd-button:active, .vcr-module .controls .dvd-button:active, .bluray-module .controls .dvd-button:active {
+      background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#949494), to(#828282));
+      -webkit-box-shadow: 0 0 3px black inset; }
+    .dvd-module .controls .dvd-button.play, .vcr-module .controls .dvd-button.play, .bluray-module .controls .dvd-button.play {
+      left: 0;
+      right: 0;
+      top: 0; }
+    .dvd-module .controls .dvd-button.back, .vcr-module .controls .dvd-button.back, .bluray-module .controls .dvd-button.back {
+      top: 58px;
+      left: 0;
+      width: 57px; }
+    .dvd-module .controls .dvd-button.pause, .vcr-module .controls .dvd-button.pause, .bluray-module .controls .dvd-button.pause {
+      top: 58px;
+      left: 50%;
+      margin-left: -30px;
+      width: 60px;
+      background: -webkit-gradient(linear, 0% 0%, 0% 75%, from(#ffe37b), to(#fee22d));
+      -webkit-border-radius: 100px;
+      z-index: 62; }
+      .dvd-module .controls .dvd-button.pause:active, .vcr-module .controls .dvd-button.pause:active, .bluray-module .controls .dvd-button.pause:active {
+        background: -webkit-gradient("linear", 0% 25%, 0% 100%, from(#ccb562), to(#b29e56)); }
+    .dvd-module .controls .dvd-button.forward, .vcr-module .controls .dvd-button.forward, .bluray-module .controls .dvd-button.forward {
+      top: 58px;
+      right: 0;
+      width: 57px; }
+    .dvd-module .controls .dvd-button.stop, .vcr-module .controls .dvd-button.stop, .bluray-module .controls .dvd-button.stop {
+      top: 116px;
+      left: 0;
+      width: 67.5px; }
+    .dvd-module .controls .dvd-button.eject, .vcr-module .controls .dvd-button.eject, .bluray-module .controls .dvd-button.eject {
+      top: 116px;
+      right: 0;
+      width: 67.5px; }
+    .dvd-module .controls .dvd-button.previous, .vcr-module .controls .dvd-button.previous, .bluray-module .controls .dvd-button.previous {
+      width: 67.5px;
+      left: 0;
+      top: 174px; }
+    .dvd-module .controls .dvd-button.next, .vcr-module .controls .dvd-button.next, .bluray-module .controls .dvd-button.next {
+      width: 67.5px;
+      right: 0;
+      top: 174px; }
+    .dvd-module .controls .dvd-button.menu, .vcr-module .controls .dvd-button.menu, .bluray-module .controls .dvd-button.menu {
+      width: 67.5px;
+      left: 0;
+      top: 232px; }
+    .dvd-module .controls .dvd-button.title, .vcr-module .controls .dvd-button.title, .bluray-module .controls .dvd-button.title {
+      width: 67.5px;
+      right: 0;
+      top: 232px;
+      margin-top: 0; }
+  .dvd-module .controls .pause-circle, .vcr-module .controls .pause-circle, .bluray-module .controls .pause-circle {
+    position: absolute;
+    width: 80px;
+    height: 57px;
+    top: 53px;
+    left: 50%;
+    margin-left: -40px;
+    -webkit-border-radius: 100px;
+    background: #3e3e3e;
+    z-index: 61; }
+.dvd-module .five-way, .vcr-module .five-way, .bluray-module .five-way {
+  position: absolute;
+  width: 157px;
+  height: 157px;
+  top: 90px;
+  left: 165px;
+  background-image: url("../../images/remote/five-way.png");
+  background-position-x: 50%;
+  background-position-y: -5px;
+  z-index: 62; }
+  .dvd-module .five-way.right, .vcr-module .five-way.right, .bluray-module .five-way.right {
+    background-position-y: -175px; }
+  .dvd-module .five-way.down, .vcr-module .five-way.down, .bluray-module .five-way.down {
+    background-position-y: -345px; }
+  .dvd-module .five-way.left, .vcr-module .five-way.left, .bluray-module .five-way.left {
+    background-position-y: -515px; }
+  .dvd-module .five-way.up, .vcr-module .five-way.up, .bluray-module .five-way.up {
+    background-position-y: -685px; }
+  .dvd-module .five-way.enter, .vcr-module .five-way.enter, .bluray-module .five-way.enter {
+    background-position-y: -855px; }
+
+.vcr-module .controls {
+  width: 145px;
+  height: inherit;
+  left: 50%;
+  margin-left: -72.5px;
+  position: absolute;
+  top: 110px;
+  bottom: 20px; }
+  .vcr-module .controls .overlay {
+    height: 160px; }
