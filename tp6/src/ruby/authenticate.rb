@@ -1,7 +1,7 @@
 require 'yaml'
 require 'openssl'
 module Authenticate
-  def Authenticate.get_credentials(path="/var/roomtrol-daemon")
+  def Authenticate.get_credentials(path="/var/cmdr-daemon")
     YAML::ENGINE::yamler = 'syck'
 
     credentials = YAML::load_file "#{path}/credentials.yml"

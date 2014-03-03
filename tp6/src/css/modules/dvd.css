@@ -25,7 +25,7 @@
     background-color: #3e3e3e;
     -webkit-border-radius: 20px;
     -webkit-box-shadow: 0 0 3px 4px #333333; }
-    .dvd-module .controls .background .roomtrol-text, .vcr-module .controls .background .roomtrol-text, .bluray-module .controls .background .roomtrol-text {
+    .dvd-module .controls .background .cmdr-text, .vcr-module .controls .background .cmdr-text, .bluray-module .controls .background .cmdr-text {
       position: absolute;
       bottom: 8px;
       right: 10px;

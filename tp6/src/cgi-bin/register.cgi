@@ -39,7 +39,7 @@ end
 @creds = Authenticate.get_credentials("../security")
 @credentials = "#{@creds['user']}:#{@creds['password']}"
 
-@db = CouchRest.database("http://#{@credentials}@localhost:5984/roomtrol-users")
+@db = CouchRest.database("http://#{@credentials}@localhost:5984/cmdr-users")
 @doc = CouchRest::Document.new({"user" => @username, "password" => @hash, "salt" => @salt})
 
 @db.save_doc @doc
