@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+#
+# Stub executable for cmdr
+
+require_relative '../config/environment'
+
+DaemonKit::Application.exec( DAEMON_ROOT + '/libexec/video-daemon.rb' )

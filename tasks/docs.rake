@@ -25,21 +25,21 @@ begin
 		end
 
 		#If the wiki is not checked out, check it out
-		unless Dir.exists? "roomtrol-daemon.wiki"
-			Git.clone('git@github.com:mwylde/roomtrol-daemon.wiki.git', 'roomtrol-daemon.wiki')
+		unless Dir.exists? "cmdr-daemon.wiki"
+			Git.clone('git@github.com:mwylde/cmdr-daemon.wiki.git', 'cmdr-daemon.wiki')
 		end
 
-		File.open "roomtrol-daemon.wiki/Device.md", "w+" do |f|
-			YARD.parse('lib/roomtrol/device.rb')
-			f.write YARD::Registry.objects["Wescontrol::Device"].docstring
+		File.open "cmdr-daemon.wiki/Device.md", "w+" do |f|
+			YARD.parse('lib/cmdr/device.rb')
+			f.write YARD::Registry.objects["Cmdr::Device"].docstring
 		end
 		
-		File.open "roomtrol-daemon.wiki/RS232Device.md", "w+" do |f|
-			YARD.parse('lib/roomtrol/RS232Device.rb')
-			f.write YARD::Registry.objects["Wescontrol::RS232Device"].docstring
+		File.open "cmdr-daemon.wiki/RS232Device.md", "w+" do |f|
+			YARD.parse('lib/cmdr/RS232Device.rb')
+			f.write YARD::Registry.objects["Cmdr::RS232Device"].docstring
 		end
 
-		g = Git.open('roomtrol-daemon.wiki')
+		g = Git.open('cmdr-daemon.wiki')
 		g.add('Device.md')
 		g.add('RS232Device.md')
 		g.commit("Updated Device")

@@ -12,5 +12,10 @@ DaemonKit::Application.running! do |config|
 end
 
 # Sample loop to show process
-puts "Starting RemoteRecorder"
-CmdrVideo::RemoteRecorder.new("cmdr:video:send:queue").run
+puts "Starting CmdrHTTP on 0.0.0.0:1412"
+
+begin
+  Cmdr::CmdrRoom.new.start
+rescue => e
+  DaemonKit.logger.exception e
+end

@@ -1,6 +1,6 @@
 require_relative 'spec_helper.rb'
-require_relative '../lib/roomtrol/device.rb'
-require_relative '../lib/roomtrol/constants.rb'
+require_relative '../lib/cmdr/device.rb'
+require_relative '../lib/cmdr/constants.rb'
 require 'eventmachine'
 require 'mq'
 require 'couchrest'
@@ -22,14 +22,14 @@ end
 
 describe "allow configuration" do
 	it "should respond to configure" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 			end
 		end
 	end
 	
 	it "should set configuration info" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -40,7 +40,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow variable configuration" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				port :type => :string
 			end
@@ -50,7 +50,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow default values for variable configuration" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				baud :type => :integer, :default => 9600
 			end
@@ -60,7 +60,7 @@ describe "allow configuration" do
 	end
 	
 	it "should allow multiple configuration blocks" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -76,7 +76,7 @@ describe "allow configuration" do
 	
 	it "should not allow multiple values in configuration" do
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < Cmdr::Device
 				configure do
 					baud 9600, 400, "no"
 				end
@@ -85,7 +85,7 @@ describe "allow configuration" do
 	end
 	
 	it "should share configuration with subclasses" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				baud 9600
 				port "/dev/something"
@@ -103,27 +103,27 @@ end
 
 describe "deal with state_vars properly" do
 	it "should respond to state_var" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :power, :type => :boolean
 		end
 	end
 	
 	it "should require a :type field" do
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < Cmdr::Device
 				state_var :power
 			end
 		}.should raise_error
 		
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < Cmdr::Device
 				state_var :power, :someting => :else
 			end
 		}.should raise_error
 	end
 
 	it "should create accessor methods for state_var" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :text, :type => :string
 		end
 		ds = DeviceSubclass.new("device")
@@ -132,7 +132,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should inherit state_vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -145,7 +145,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should not share state_var values between subclasses" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :text, :type => :string
 		end
 		class DeviceSubSubclass < DeviceSubclass
@@ -173,7 +173,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should set all state_vars in state_vars hash and allow access" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :text, :type => :string
 			state_var :something, :type => :option, :options => (1..6).to_a
 		end
@@ -185,7 +185,7 @@ describe "deal with state_vars properly" do
 	end
 	
 	it "should create set_ methods if :action is provided" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :power, :type => :string, :action => proc {|x| "hello #{x}"}
 		end
 		ds = DeviceSubclass.new("device")
@@ -195,7 +195,7 @@ end
 
 describe "do virtual vars" do
 	it "should allow creation of virtual vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -209,14 +209,14 @@ describe "do virtual vars" do
 	end
 	it "should require a depends_on and transformation field" do
 		proc {
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < Cmdr::Device
 				state_var :text, :type => :string
 				virtual_var :capital_name, :type => :string
 			end
 		}.should raise_error
 	end
 	it "should recalculate virtual vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :text, :type => :string
 			virtual_var :capital_name, 
 				:type => :string, 
@@ -230,7 +230,7 @@ describe "do virtual vars" do
 		ds.capital_name.should == "MICAH"
 	end
 	it "should work with multiple depends_on vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -246,7 +246,7 @@ describe "do virtual vars" do
 		ds.full_name.should == "Micah Wylde"
 	end
 	it "should inherit virtual_vars properly" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :first, :type => :string
 			state_var :last, :type => :string
 			virtual_var :full_name, 
@@ -283,19 +283,19 @@ end
 
 describe "deal with commands" do
 	it "should allow setting commands" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :do_thing
 		end
 	end
 	it "should allow settings command with actions" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :do_thing, :action => proc{"hello"}
 		end
 		ds = DeviceSubclass.new("device")
 		ds.do_thing.should == "hello"
 	end
 	it "should allow accessing commands" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :something
 			command :another, :type => :array
 		end
@@ -303,7 +303,7 @@ describe "deal with commands" do
 		DeviceSubclass.commands[:another].should == {:type => :array}
 	end
 	it "should allow commands with arguments" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :do_thing, :type => "percentage", :action => proc{|p| (p*100).to_i}
 			
 		end
@@ -314,7 +314,7 @@ end
 
 describe "persist to couchdb database" do
 	it "should create hash representation of device" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				data_bits 8
 				baud :type => :integer, :default => 9600
@@ -352,7 +352,7 @@ describe "persist to couchdb database" do
 	end
 	
 	it "should load a new device from hash" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			configure do
 				data_bits 8
 				baud :type => :integer, :default => 9600
@@ -402,19 +402,19 @@ end
 describe "handling requests from amqp" do
 	it "should work for setting vars" do
 		Thread.abort_on_exception = true
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :power, :type => :boolean
 			def set_power state
 				self.power = state
 			end
 		end
 		
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:1")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "cmdr:test:dqueue:1")
 		ds.power = false
 		ds.power.should == false
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
-			"queue": "roomtrol:test:3",
+			"queue": "cmdr:test:3",
 			"type": "state_set",
 			"var": "power",
 			"value": true
@@ -422,10 +422,10 @@ describe "handling requests from amqp" do
 		AMQP.start(:host => '127.0.0.1') do
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
-			amq.queue('roomtrol:test:3').purge
+			amq.queue('cmdr:test:3').purge
 			ds.run
 			amq.queue(ds.dqueue).publish(json)
-			amq.queue('roomtrol:test:3').subscribe{|msg|
+			amq.queue('cmdr:test:3').subscribe{|msg|
 				@msg = msg
 				AMQP.stop do
 					EM.stop
@@ -447,15 +447,15 @@ describe "handling requests from amqp" do
 	end
 	it "should work for commands" do
 		Thread.abort_on_exception = true
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :power, :action => proc{|on| "power=#{on}"}
 		end
 		
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:2")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "cmdr:test:dqueue:2")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
-			"queue": "roomtrol:test:2",
+			"queue": "cmdr:test:2",
 			"type": "command",
 			"method": "power",
 			"args": [true]
@@ -463,10 +463,10 @@ describe "handling requests from amqp" do
 		AMQP.start(:host => '127.0.0.1') do
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
-			amq.queue('roomtrol:test:2').purge
+			amq.queue('cmdr:test:2').purge
 			ds.run
 			amq.queue(ds.dqueue).publish(json)
-			amq.queue('roomtrol:test:2').subscribe{|msg|
+			amq.queue('cmdr:test:2').subscribe{|msg|
 				@msg = msg
 				AMQP.stop do
 					EM.stop
@@ -487,25 +487,25 @@ describe "handling requests from amqp" do
 	end
 	it "should return requested data" do
 		Thread.abort_on_exception = true
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :name, :type => :string
 		end
 		
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:3")
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "cmdr:test:dqueue:3")
 		
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
-			"queue": "roomtrol:test:1",
+			"queue": "cmdr:test:1",
 			"type": "state_get",
 			"var": "name"
 		}'
 		AMQP.start(:host => '127.0.0.1') do
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
-			amq.queue('roomtrol:test:1').purge
+			amq.queue('cmdr:test:1').purge
 			ds.run
 			amq.queue(ds.dqueue).publish(json)
-			amq.queue('roomtrol:test:1').subscribe{|msg|
+			amq.queue('cmdr:test:1').subscribe{|msg|
 				@msg = msg
 				AMQP.stop do
 					EM.stop
@@ -526,14 +526,14 @@ describe "handling requests from amqp" do
 	it "should work under stressful situations" do
 		Thread.abort_on_exception = true
 		@times = 1000
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :zoom, :action => proc{|zoom| "zoom=#{zoom}"}
 			#state_var :power, :type => :boolean, :action => proc{|on| this.power = on}
 			state_var :brightness, :type => :integer, :action => proc{|v| self.brightness = v}
 			state_var :volume, :type => :integer, :action => proc{|v| self.volume = v}
 		end
 				
-		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "roomtrol:test:dqueue:4")	
+		ds = DeviceSubclass.new("Extron", {}, TEST_DB, "cmdr:test:dqueue:4")	
 		
 		@states = {:brightness => 1, :volume => 1}
 		
@@ -549,9 +549,9 @@ describe "handling requests from amqp" do
 			end
 			amq = MQ.new
 			amq.queue(ds.dqueue).purge
-			amq.queue('roomtrol:test:4').purge
+			amq.queue('cmdr:test:4').purge
 			ds.run
-			amq.queue('roomtrol:test:4').subscribe{|json|
+			amq.queue('cmdr:test:4').subscribe{|json|
 				msg = JSON.parse(json)
 				if @messages[msg["id"]].is_a? Symbol
 					#puts "Symbol"
@@ -567,7 +567,7 @@ describe "handling requests from amqp" do
 				end
 			}
 			@times.times{|i|
-				msg = {:id => i, :queue => "roomtrol:test:4"}
+				msg = {:id => i, :queue => "cmdr:test:4"}
 				case types[rand(3)]
 				when :state_get then
 					msg[:type] = :state_get
@@ -591,10 +591,10 @@ describe "handling requests from amqp" do
 	end
 	describe "Event handling" do
 		it "should send events when device state vars change" do
-      old_topic = Wescontrol::EVENT_TOPIC
-      Wescontrol.redefine_const(:EVENT_TOPIC, "roomtrol:test:event_topic_#{rand(100000)}")
+      old_topic = Cmdr::EVENT_TOPIC
+      Cmdr.redefine_const(:EVENT_TOPIC, "cmdr:test:event_topic_#{rand(100000)}")
 
-			class DeviceSubclass < Wescontrol::Device
+			class DeviceSubclass < Cmdr::Device
 				state_var :text, :type => :string
 			end
 			
@@ -613,7 +613,7 @@ describe "handling requests from amqp" do
 						EM.stop
 					end
 				end
-				MQ.new.queue("roomtrol:test:watch_#{rand(100000)}").bind(MQ.new.topic(Wescontrol::EVENT_TOPIC), :key => "*").subscribe{|json|
+				MQ.new.queue("cmdr:test:watch_#{rand(100000)}").bind(MQ.new.topic(Cmdr::EVENT_TOPIC), :key => "*").subscribe{|json|
 					msg = JSON.parse(json)
 					Time.at(msg.delete('time')).hour.should == Time.now.hour
 					msg.should == {
@@ -636,7 +636,7 @@ describe "handling requests from amqp" do
 			end
 			@recv.should == 0
 
-      Wescontrol.redefine_cost(:EVENT_TOPIC, old_topic)
+      Cmdr.redefine_cost(:EVENT_TOPIC, old_topic)
 		end
 	end
 end

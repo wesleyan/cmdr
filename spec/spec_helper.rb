@@ -6,8 +6,8 @@ DAEMON_ENV = 'test' unless defined?( DAEMON_ENV )
 begin
 	require 'rspec'
 	require 'mq'
-	require_relative '../lib/roomtrol/device.rb'
-	require_relative '../lib/roomtrol/constants.rb'
+	require_relative '../lib/cmdr/device.rb'
+	require_relative '../lib/cmdr/constants.rb'
 rescue LoadError
 	require 'rubygems'
 	gem 'rspec'
@@ -38,7 +38,7 @@ class DaemonKit
 	end
 end
 
-class Wescontrol::Device
+class Cmdr::Device
 	# We change the default db_uri to the test database, so that we don't
 	# insert fake data into the real database
 	def new_initialize name, hash = {}, db_uri = TEST_DB, dqueue = nil

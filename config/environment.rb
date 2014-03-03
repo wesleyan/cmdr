@@ -9,7 +9,7 @@ require_relative 'boot'
 DaemonKit::Initializer.run do |config|
 
 	# The name of the daemon as reported by process monitoring tools
-	config.daemon_name = 'roomtrol'
+	config.daemon_name = 'cmdr'
 
 	# Force the daemon to be killed after X seconds from asking it to
 	config.force_kill_wait = 15
@@ -23,14 +23,14 @@ DaemonKit::Initializer.run do |config|
 	#config.safety_net.mail.host = 'localhost'
 	
 	if File.writable?("/var/log") #are we root?
-		config.log_path = "/var/log/roomtrol.log"
-    config.pid_file = "/var/log/roomtrol.pid"
+		config.log_path = "/var/log/cmdr.log"
+    config.pid_file = "/var/log/cmdr.pid"
 	else
 		unless File.directory?(File.expand_path "~/log")
 			require 'fileutils'
 			FileUtils.mkdir(File.expand_path "~/log")
 		end
-		config.log_path = File.expand_path "~/log/roomtrol.log"
-    config.pid_file = File.expand_path "~/log/roomtrol.pid"
+		config.log_path = File.expand_path "~/log/cmdr.log"
+    config.pid_file = File.expand_path "~/log/cmdr.pid"
 	end
 end

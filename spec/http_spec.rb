@@ -1,6 +1,6 @@
 require_relative 'spec_helper.rb'
-require_relative '../lib/roomtrol/device.rb'
-require_relative '../lib/roomtrol/wescontrol_http'
+require_relative '../lib/cmdr/device.rb'
+require_relative '../lib/cmdr/wescontrol_http'
 # Time to add your specs!
 # http://rspec.info/
 
@@ -9,16 +9,16 @@ require_relative '../lib/roomtrol/wescontrol_http'
 describe "HTTP API" do
   
 	it "should respond to a GET request" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :volume, :type => :percentage
 		end
 		
 		ds = DeviceSubclass.new("extron")
 		ds.volume = 0.5
-		Wescontrol::WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
+		Cmdr::CmdrHTTP.instance_variable_set(:@devices, ["extron"])
 		EventMachine::run {
 			ds.run
-			EventMachine::start_server "0.0.0.0", 9812, Wescontrol::WescontrolHTTP
+			EventMachine::start_server "0.0.0.0", 9812, Cmdr::CmdrHTTP
 			http = EventMachine::Protocols::HttpClient.request(
 				:host => "0.0.0.0",
 				:port => 9812,
@@ -35,7 +35,7 @@ describe "HTTP API" do
 		@called.should == true
 	end
 	it "should respond to a setting state_vars" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			state_var :volume, :type => :percentage, :action => proc {|v|
 				self.volume = v
 			}
@@ -43,10 +43,10 @@ describe "HTTP API" do
 		
 		ds = DeviceSubclass.new("extron")
 		ds.volume = 0.5
-		Wescontrol::WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
+		Cmdr::CmdrHTTP.instance_variable_set(:@devices, ["extron"])
 		EventMachine::run {
 			ds.run
-			EventMachine::start_server "0.0.0.0", 9812, Wescontrol::WescontrolHTTP
+			EventMachine::start_server "0.0.0.0", 9812, Cmdr::CmdrHTTP
 			http = EventMachine::Protocols::HttpClient.request(
 				:host => "0.0.0.0",
 				:port => 9812,
@@ -66,17 +66,17 @@ describe "HTTP API" do
 		@called.should == true
 	end
 	it "should respond to a command" do
-		class DeviceSubclass < Wescontrol::Device
+		class DeviceSubclass < Cmdr::Device
 			command :play, :action => proc {|arg|
 				arg.upcase
 			}
 		end
 		
 		ds = DeviceSubclass.new("extron")
-		Wescontrol::WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
+		Cmdr::CmdrHTTP.instance_variable_set(:@devices, ["extron"])
 		EventMachine::run {
 			ds.run
-			EventMachine::start_server "0.0.0.0", 9812, Wescontrol::WescontrolHTTP
+			EventMachine::start_server "0.0.0.0", 9812, Cmdr::CmdrHTTP
 			http = EventMachine::Protocols::HttpClient.request(
 				:host => "0.0.0.0",
 				:port => 9812,
@@ -96,7 +96,7 @@ describe "HTTP API" do
 	end
 	
 	it "should send appropriate error messages" do
-		Wescontrol::WescontrolHTTP.instance_variable_set(:@devices, ["extron"])
+		Cmdr::CmdrHTTP.instance_variable_set(:@devices, ["extron"])
 		@called = 0
 		@tests = [
 			["/hello", {"error" => "resource_not_found"}, 404],
@@ -115,7 +115,7 @@ describe "HTTP API" do
 				end
 			}
 			
-			EventMachine::start_server "0.0.0.0", 9812, Wescontrol::WescontrolHTTP
+			EventMachine::start_server "0.0.0.0", 9812, Cmdr::CmdrHTTP
 			@tests.each{|test|
 				conn = EM::Protocols::HttpClient2.connect '0.0.0.0', 9812
 				req = conn.get(test[0])

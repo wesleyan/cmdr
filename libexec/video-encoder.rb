@@ -13,4 +13,4 @@ end
 
 # Sample loop to show process
 puts "Starting RemoteEncoder"
-RoomtrolVideo::RemoteEncoder.new.run
+CmdrVideo::RemoteEncoder.new.run

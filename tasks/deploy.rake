@@ -44,9 +44,9 @@ end
 desc "deploy touchscreen interface"
 task :deploy_tp, [] => [:build_tp] do
   CONTROLLERS.each{|c|
-    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ roomtrol@#{c}:/var/www/tp6 --exclude '.git' --exclude 'tp6.html' 2>&1"
+    cmd = "rsync -arvz -e ssh #{WORKING}/tp6/pub/ cmdr@#{c}:/var/www/tp6 --exclude '.git' --exclude 'tp6.html' 2>&1"
     system(cmd)
-    `ssh roomtrol@#{c} 'sudo chmod 0755 /var/www/tp6/cgi-bin/*.cgi'`
+    `ssh cmdr@#{c} 'sudo chmod 0755 /var/www/tp6/cgi-bin/*.cgi'`
   }
 end
 
@@ -64,31 +64,31 @@ def deploy servers
 		exit(1)
 	end
 	
-	puts "\tCreating zip of roomtrol-daemon"
-	`rm /tmp/roomtrol-daemon.zip`
-  `cd #{WORKING} && zip -r /tmp/roomtrol-daemon.zip * -x .\*`
+	puts "\tCreating zip of cmdr-daemon"
+	`rm /tmp/cmdr-daemon.zip`
+  `cd #{WORKING} && zip -r /tmp/cmdr-daemon.zip * -x .\*`
 	
 	servers.each do |controller|
 		puts "Deploying to controller #{controller}"
-		Net::SSH.start(controller, 'roomtrol', :password => OPTS[:password]) do |ssh|
-			puts ssh.exec!("if [ ! -d /var/roomtrol-daemon ]; then sudo mkdir /var/roomtrol-daemon; fi; sudo chown roomtrol /var/roomtrol-daemon")
+		Net::SSH.start(controller, 'cmdr', :password => OPTS[:password]) do |ssh|
+			puts ssh.exec!("if [ ! -d /var/cmdr-daemon ]; then sudo mkdir /var/cmdr-daemon; fi; sudo chown cmdr /var/cmdr-daemon")
 		end
-		Net::SCP.start(controller, 'roomtrol', :password => OPTS[:password]) do |scp|
-			local_path = "/tmp/roomtrol-daemon.zip"
+		Net::SCP.start(controller, 'cmdr', :password => OPTS[:password]) do |scp|
+			local_path = "/tmp/cmdr-daemon.zip"
 			remote_path = "/tmp"
-			puts "Copying roomtrol-daemon to #{controller}"
+			puts "Copying cmdr-daemon to #{controller}"
 			scp.upload! local_path, remote_path, :recursive => false
 		end
-		Net::SSH.start(controller, "roomtrol", :password => OPTS[:password]) do |ssh|
+		Net::SSH.start(controller, "cmdr", :password => OPTS[:password]) do |ssh|
 			puts "Installing gems on server"
-			path = "/var/roomtrol-daemon"
+			path = "/var/cmdr-daemon"
 			commands = [
                   "echo 'starting'",
                   "cd #{path}",
                   "rm -Rf *",
-                  "mv /tmp/roomtrol-daemon.zip .",
-                  "unzip -q roomtrol-daemon.zip",
-                  "rm roomtrol-daemon.zip",
+                  "mv /tmp/cmdr-daemon.zip .",
+                  "unzip -q cmdr-daemon.zip",
+                  "rm cmdr-daemon.zip",
                   "echo 'Unzipped zip file'"]
 		  
 			puts ssh.exec!(commands.join("; "))
@@ -97,7 +97,7 @@ def deploy servers
         
              'GEM_HOME="/usr/local/rvm/gems/ruby-1.9.3-p429"',
              'GEM_PATH="/usr/local/rvm/gems/ruby-1.9.3-p429:/usr/local/rvm/gems/ruby-1.9.3-p429@global"',
-             'BUNDLE_GEMFILE="/var/roomtrol-daemon/Gemfile"',
+             'BUNDLE_GEMFILE="/var/cmdr-daemon/Gemfile"',
              'TERM=xterm',
              'RUBY_VERSION=ruby-1.9.3-p429'
             ]
@@ -105,7 +105,7 @@ def deploy servers
 
       puts ssh.exec!("#{env.join(" ")} rvmsudo bundle install")
 			puts "Restarting daemon"
-			puts ssh.exec!("sudo restart roomtrol-daemon")
+			puts ssh.exec!("sudo restart cmdr-daemon")
 			
 		end
 		puts "\tInstallation finished on #{controller}"

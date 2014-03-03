@@ -1,8 +1,6 @@
 require "openssl"
 require "yaml"
 
-#credentials = YAML::load_file "../../roomtrol-daemon/credentials.yml"
-#key = YAML::load_file "../../roomtrol-daemon/key.yml"
 YAML::ENGINE::yamler = 'syck'
 credentials = YAML::load_file "credentials.yml"
 key = YAML::load_file "key.yml"

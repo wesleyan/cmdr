@@ -1,6 +1,6 @@
 require_relative 'spec_helper.rb'
-require_relative '../lib/roomtrol/device.rb'
-require_relative '../lib/roomtrol/rs232device.rb'
+require_relative '../lib/cmdr/device.rb'
+require_relative '../lib/cmdr/rs232device.rb'
 
 RSpec.configure do |config|
 	#For some reason in Ruby 1.9.2 class definition constants leak between tests, causing errors
@@ -11,7 +11,7 @@ end
 
 describe "managed_state_var enhancements" do
 	it "shouldn't break managed_state_vars" do
-		class MR232DeviceSubclass1 < Wescontrol::RS232Device
+		class MR232DeviceSubclass1 < Cmdr::RS232Device
 			managed_state_var :input, 
 				:type => :options, 
 				:display_order => 1, 
@@ -24,7 +24,7 @@ describe "managed_state_var enhancements" do
 		MR232DeviceSubclass1.state_vars[:input][:type] == :option
 	end
 	it "should create action methods that add the message to the send queue" do
-		class MR232DeviceSubclass2 < Wescontrol::RS232Device
+		class MR232DeviceSubclass2 < Cmdr::RS232Device
 			attr_accessor :_send_queue
 			managed_state_var :input, 
 				:type => :options, 
@@ -43,7 +43,7 @@ end
 
 describe "do responses" do
 	it "should respond to responses" do
-		class MR232DeviceSubclass3 < Wescontrol::RS232Device
+		class MR232DeviceSubclass3 < Cmdr::RS232Device
 			responses do
 			end
 		end
@@ -51,7 +51,7 @@ describe "do responses" do
 
 	it "should allow setting responses with match" do
 		$proc = proc{|m| self.input = m[1]}
-		class MR232DeviceSubclass4 < Wescontrol::RS232Device
+		class MR232DeviceSubclass4 < Cmdr::RS232Device
 			responses do
 				match :channel,  /Chn(\d)/, $proc
 			end
@@ -60,7 +60,7 @@ describe "do responses" do
 	end
 	it "should allow setting multiple matches" do
 		$proc = proc{|m| self.input = m[1]}
-		class MR232DeviceSubclass5 < Wescontrol::RS232Device
+		class MR232DeviceSubclass5 < Cmdr::RS232Device
 			responses do
 				match :channel,  /Chn(\d)/, $proc
 				match :volume, /Vol(\d)/, $proc
@@ -72,7 +72,7 @@ describe "do responses" do
 		]
 	end
 	it "should properly match regexps, strings and procs" do
-		class MR232DeviceSubclass6 < Wescontrol::RS232Device
+		class MR232DeviceSubclass6 < Cmdr::RS232Device
 			managed_state_var :input, 
 				:type => 'option', 
 				:display_order => 1, 
@@ -107,7 +107,7 @@ describe "do responses" do
 	end
 
   it "should properly match with messages defined by a regex message_end" do
-		class MR232DeviceSubclass7a < Wescontrol::RS232Device
+		class MR232DeviceSubclass7a < Cmdr::RS232Device
 			configure do
 				message_end(/\r\n|\n\r/)
 			end
@@ -150,7 +150,7 @@ describe "do responses" do
 
   
 	it "should properly match with messages defined by message_format" do
-		class MR232DeviceSubclass7 < Wescontrol::RS232Device
+		class MR232DeviceSubclass7 < Cmdr::RS232Device
 			configure do
 				message_format(/#(.+?)#/)
 			end
@@ -195,7 +195,7 @@ end
 describe "do requests" do
 	it "should properly send requests" do
 		puts "Doing this test"
-		class MR232DeviceSubclass8 < Wescontrol::RS232Device
+		class MR232DeviceSubclass8 < Cmdr::RS232Device
 			attr_reader :string_array
 			def initialize(name, options)
 				super(name, options)
@@ -232,7 +232,7 @@ end
 describe "sending messages" do
 	it "should respond to AMQP messages appropriately" do
 		puts "doing this test"
-		class MR232DeviceSubclass9 < Wescontrol::RS232Device
+		class MR232DeviceSubclass9 < Cmdr::RS232Device
 			attr_reader :string_array
 			
 			configure do
@@ -257,7 +257,7 @@ describe "sending messages" do
 		ds = MR232DeviceSubclass9.new('ExtronTestDevice', :port => '/dev/null')
 		json = '{
 			"id": "FF00F317-108C-41BD-90CB-388F4419B9A1",
-			"queue": "roomtrol:test:3",
+			"queue": "cmdr:test:3",
 			"type": "state_set",
 			"var": "power",
 			"value": false

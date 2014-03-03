@@ -1,0 +1,88 @@
+libdir = File.dirname(__FILE__)
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+
+require 'rubygems'
+require 'couchrest'
+require 'time'
+require 'cmdr/constants'
+require 'cmdr/device'
+require 'cmdr/event_monitor'
+require 'cmdr/cmdr_http'
+require 'cmdr/RS232Device'
+require 'cmdr/devices/Projector'
+require 'cmdr/devices/VideoSwitcher'
+require 'cmdr/devices/Computer'
+require 'cmdr/MAC.rb'
+require 'cmdr/process'
+require 'cmdr/video-recorder'
+require 'cmdr/video-encoder'
+require 'cmdr/cmdr_websocket'
+require 'cmdr/SocketDevice'
+require 'cmdr/communication'
+require 'cmdr/devices/SocketProjector'
+require 'cmdr/authenticate'
+require 'cmdr/devices/SocketBluray'
+require 'cmdr/devices/ExtronVideoSwitcher'
+require 'cmdr/devices/SocketVideoSwitcher'
+require 'cmdr/devices/ExtronSystemPlus'
+require 'cmdr/devices/SocketExtron'
+
+Dir.glob("#{File.dirname(__FILE__)}/cmdr/devices/*.rb").each{|device|
+	begin
+		require device
+	rescue => e
+		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
+		DaemonKit.logger.error e.backtrace
+	rescue LoadError => error
+		DaemonKit.logger.error "Failed to load #{device}: syntax error"
+		DaemonKit.logger.error e.backtrace
+	end
+}
+
+module Cmdr
+	class Cmdr
+		def initialize(device_hashes)
+      credentials = Authenticate.get_credentials
+      @credentials = "#{credentials["user"]}:#{credentials["password"]}"
+			@db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
+
+			@devices = device_hashes.collect{|hash|
+				begin
+					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
+				rescue
+					DaemonKit.logger.error "Failed to create device #{hash['value']}: #{$!}"
+				end
+			}.compact
+		end
+
+		def inspect
+			"<Cmdr:0x#{object_id.to_s(16)}>"
+		end
+		
+		def start
+			#start each device
+			CmdrHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
+      names_by_id = {}
+      @devices.each{|d| names_by_id[d._id] = d.name}
+      CmdrHTTP.instance_variable_set(:@device_ids, names_by_id)
+			EventMachine::run {
+				EventMachine::start_server "0.0.0.0", 1412, CmdrHTTP
+				EventMonitor.run
+        cmdrWebsocket.new.run rescue nil
+				@devices.each{|device|
+					Thread.new do
+						begin
+							device.run
+						rescue
+							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+							retry
+						end
+					end
+				}
+			}
+		end
+	end
+end
+
+require "#{File.dirname(__FILE__)}/cmdr/cmdr_room"
+require "#{File.dirname(__FILE__)}/cmdr/cmdr_lab"
