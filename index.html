@@ -1,33 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>cmdr by wesleyan</title>
 
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
-
-    <title>the cmdr project</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
-
-    <header>
-      <div class="container">
+    <div class="wrapper">
+      <header>
         <h1>cmdr</h1>
-        <h2>An A/V control system built on Ruby with an HTML5 frontend</h2>
+        <p>An A/V control system built on Ruby with an HTML5 frontend</p>
 
-        <section id="downloads">
-          <a href="https://github.com/wesleyan/cmdr/zipball/master" class="btn">Download as .zip</a>
-          <a href="https://github.com/wesleyan/cmdr/tarball/master" class="btn">Download as .tar.gz</a>
-          <a href="https://github.com/wesleyan/cmdr" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
-        </section>
-      </div>
-    </header>
+        <p class="view"><a href="https://github.com/wesleyan/cmdr">View the Project on GitHub <small>wesleyan/cmdr</small></a></p>
 
-    <div class="container">
-      <section id="main_content">
+
+        <ul>
+          <li><a href="https://github.com/wesleyan/cmdr/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/wesleyan/cmdr/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/wesleyan/cmdr">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
         <h1>
 <a name="cmdr" class="anchor" href="#cmdr"><span class="octicon octicon-link"></span></a>cmdr</h1>
 
@@ -45,51 +45,19 @@ as the touchscreen interface, and
 <a href="https://github.com/wesleyan/cmdr-devices">cmdr-devices</a> which holds the 
 various device drivers that have been written.</p>
 
-<p><strong>Note: We use subtrees for the devices. More information can be found
-<a href="http://blogs.atlassian.com/2013/05/alternatives-to-git-submodule-git-subtree/">here</a></strong></p>
-
-<h2>
-<a name="development-notes" class="anchor" href="#development-notes"><span class="octicon octicon-link"></span></a>Development notes</h2>
-
 <h3>
-<a name="code-style" class="anchor" href="#code-style"><span class="octicon octicon-link"></span></a>Code style</h3>
+<a name="contact-us" class="anchor" href="#contact-us"><span class="octicon octicon-link"></span></a>Contact Us</h3>
 
-<p>All code should match the following style: spaces for indentation and 
-aligning and line lengths should be minimized but there is no hard cut-off. 
-For Ruby code, class names ShouldBeCamelCased, variable and method names 
-should_be_underscored, every method and class should be documented 
-using <a href="yardoc.com">Yardoc</a> tags and 
-<a href="http://daringfireball.net/projects/markdown/">markdown</a> formatting 
-and <a href="rpsec.org">RSpec</a> tests should be written for all functionality.</p>
+<p>The best way to reach the team is via our mailing list: <a href="mailto:cmdr-project@googlegroups.com">cmdr-project@googlegroups.com</a></p>
 
-<p>For Javascript, the same formatting rules should apply, but variable 
-and method names shouldBeCamelCased as well as class names. Methods 
-and classes should be documented using 
-<a href="http://code.google.com/p/jsdoc-toolkit/">JSDoc</a>. Also, all code 
-should be run through <a href="http://www.jslint.com/">JSLint</a> and any errors 
-it identifies should be corrected (this means no global variables 
-and semi-colons are mandatory).</p>
-
-<p>In general, try to maintain the style already found in the code.</p>
-
-<h3>
-<a name="git-usage" class="anchor" href="#git-usage"><span class="octicon octicon-link"></span></a>Git usage</h3>
-
-<p>We are using <a href="http://nvie.com/git-model">Git Flow</a> as described in that blog post. 
-There is also <a href="http://github.com/nvie/gitflow">a tool</a> that makes it easier 
-to follow. The basic idea is that the master branch should only be used 
-for tested and vetted releases. The normal development integration branch 
-is develop, while features are staged in their own branches, which are named 
-features/xxx. When a feature is finished, it is merged back into develop. 
-When a number of features have been finished and it becomes prudent to release, 
-you create a release branch from develop. The release branch is then heavily 
-tested and any issues found are fixed. When considered production-ready, 
-the release branch is merged into master, which is then tagged with the 
-version number. This way, master is always stable and ready to be deployed, 
-while you can have more freedom to break things in your feature branch and in develop.</p>
+<p>Alternatively you can access the archive and post to the list at <a href="https://groups.google.com/d/forum/cmdr-project">https://groups.google.com/d/forum/cmdr-project</a></p>
       </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/wesleyan">wesleyan</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
     </div>
-
+    <script src="javascripts/scale.fix.js"></script>
     
   </body>
 </html>
