@@ -1,3 +1,5 @@
+#!/usr/bin/env /usr/local/rvm/bin/rvm-auto-ruby
+
 # Copyright (C) 2014 Wesleyan University
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env /usr/local/rvm/bin/rvm-auto-ruby
 require 'cgi'
 require 'cgi/session'
 
