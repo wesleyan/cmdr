@@ -18,7 +18,7 @@
   Tp.ProjectorPaneView = Backbone.View.extend({
     initialize: function() {
       var _this = this;
-      $.get('../src/script/templates/projector_module.html', function(template) {
+      $.get('../tp6/script/templates/projector_module.html', function(template) {
         $.template("projector-pane-template", template);
         return _this.render();
       });

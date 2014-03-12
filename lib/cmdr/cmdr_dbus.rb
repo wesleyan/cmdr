@@ -17,9 +17,9 @@ module Cmdr
 	class CmdrDBus < DBus::Object
 		attr_accessor :cmdr
 		def initialize devices
-			super("/edu/wesleyan/cmdr/controller")
+			super("/edu/wesleyan/Cmdr/controller")
 			@bus = DBus::SystemBus.instance
-			@service = @bus.request_service("edu.wesleyan.cmdr")
+			@service = @bus.request_service("edu.wesleyan.Cmdr")
 			@service.export(self)
 			
 			devices.each{|device|
@@ -61,7 +61,7 @@ module Cmdr
 						:decimal => 'd',
 						:option => 's'
 					}
-					dbus_interface "edu.wesleyan.cmdr.#{device.interface}" do
+					dbus_interface "edu.wesleyan.Cmdr.#{device.interface}" do
 						@device.state_vars.each do |name, options|
 							type = type_map[options[:kind].to_sym]
 							dbus_method name, "out #{name}:#{type}" do |*args|
@@ -77,7 +77,7 @@ module Cmdr
 					end
 				end
 
-				device_dbus = deviceclass.new("/edu/wesleyan/cmdr/#{device.name}")
+				device_dbus = deviceclass.new("/edu/wesleyan/Cmdr/#{device.name}")
 				@service.export(device_dbus)
 				
 				device.auto_register_for_changes {|var, val|
@@ -86,7 +86,7 @@ module Cmdr
 			}
 		end
 		def start
-			puts "Starting DBus on edu.wesleyan.cmdr"
+			puts "Starting DBus on edu.wesleyan.Cmdr"
 			while true do
 				#begin
 					main = DBus::Main.new
@@ -97,7 +97,7 @@ module Cmdr
 				#end
 			end
 		end
-		dbus_interface "edu.wesleyan.cmdr.controller" do
+		dbus_interface "edu.wesleyan.Cmdr.controller" do
 			dbus_method :room_name, "out name:s" do
 				[self.name]
 			end

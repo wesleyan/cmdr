@@ -18,7 +18,7 @@
   Tp.ActionListView = Backbone.View.extend({
     initialize: function() {
       var _this = this;
-      return $.get('../src/script/templates/action_list.html', function(template) {
+      return $.get('../tp6/script/templates/action_list.html', function(template) {
         $.template("action-list-template", template);
         Tp.server.bind("loaded", _this.render);
         Tp.actions.bind("add", _this.render);
