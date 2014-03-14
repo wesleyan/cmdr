@@ -16,7 +16,7 @@ require 'eventmachine'
 require 'net/http'
 
 module Communication
-  def send_event event
+  def Communication.send_event event
         EM.defer do
           begin
             DaemonKit.logger.info("Received error: #{event}")
@@ -24,9 +24,9 @@ module Communication
             headers = {"Content-Type" => "application/json",
                        "Accept-Encoding" => "gzip,deflate",
                        "Accept" => "application/json"}
-            http = Net::HTTP.new(uri.host, uri.port)
-            response = http.post(uri.path, event.to_json, headers)
-            DaemonKit.logger.info "Sent event. Response: #{response}"
+            http = Net::HTTP.new(url.host, url.port)
+            response = http.post(url.path, event.to_json, headers)
+            DaemonKit.logger.info "Sent event. Response: #{response.body}"
           rescue
           end
         end
