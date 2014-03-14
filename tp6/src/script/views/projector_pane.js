@@ -33,7 +33,7 @@
       Tp.room.bind("change:source", this.sourceChanged);
       this.bind("autoOffCancel", this.autoOffCancel);
       Tp.room.offTimer = null;
-      return Tp.room.warningTimer = null;
+      Tp.room.warningTimer = null;
     },
     render: function() {
       ($.tmpl("projector-pane-template", {
@@ -62,17 +62,21 @@
       $('.source-image').css('visibility', text === "off" ? "visible" : "hidden");
       return $('.screen-image-overlay').css('opacity', text === "off" ? 0 : 0.4);
     },
+
     autoOff: function(state) {
       var shutOff, warning;
       if (state === "on") {
+
         shutOff = function() {
-          return Tp.devices.projector.state_set('power', false);
+          Tp.devices.projector.state_set('power', false);
         };
+
         warning = function() {
           $('#auto-off').show();
-          return Tp.room.offTimer = setTimeout(shutOff, 60000);
+          Tp.room.offTimer = setTimeout(shutOff, 60000);
         };
-        return Tp.room.warningTimer = setTimeout(warning, 10740000);
+
+        Tp.room.warningTimer = setTimeout(warning, 10740000);
       } else if (state === "off") {
         if (Tp.room.warningTimer) {
           clearTimeout(Tp.room.warningTimer);
@@ -83,6 +87,7 @@
         return $('#auto-off').hide();
       }
     },
+
     autoOffCancel: function() {
       clearTimeout(Tp.room.warningTimer);
       clearTimeout(Tp.room.offTimer);

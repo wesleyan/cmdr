@@ -68,6 +68,23 @@ module Cmdr
       end
 		end
 
+    def operational= operational
+      self.operational = operational
+      event = { "device" => @hostname,
+                "component" => @name,
+                "location" => configuration[:uri],
+                "summary" => "Communication lost with #{@name}",
+                "eventClass" => "/Status/Device",
+                "time" => Time.new,
+                "severity" => 0}
+      if self.operational
+        Communication.send_event event
+      else
+        event["severity"] = 5
+        Communication.send_event event
+      end
+      DaemonKit.logger.info "Sending event #{event}"
+    end
     
 
     # Creates a fake evented serial connection, which calls the passed-in callback when

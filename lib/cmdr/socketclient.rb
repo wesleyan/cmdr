@@ -60,7 +60,12 @@ module EventMachine
       @disconnect.call if @disconnect
       EventMachine::Timer.new(1) do
         DaemonKit.logger.info "Attempting to reconnect to #{@_ip}"
-        operational=false
+        event = {"device" => @hostname,
+                 "component" => @name,
+                 "summary" => "Disconnected from #{@name}",
+                 "eventClass" => "/Status/Device",
+                 "severity" => 5}
+        Communication.send_event event
         reconnect(@_ip, @_port || 80)
       end
     end

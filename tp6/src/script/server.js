@@ -28,6 +28,7 @@
         return $('#lost-connection').show();
       });
       this.websock.bind("connected", function() {
+        $('auto-off').hide();
         return $('#lost-connection').hide();
       });
       this.websock.bind("connecting", function() {

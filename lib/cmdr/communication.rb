@@ -12,36 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#require 'cmdr/socketclient'
-require 'strscan'
-require 'rubybits'
-require 'socket'
 require 'eventmachine'
+require 'net/http'
 
-def send_event severity 
-      @_event = {"device" => "#{@hostname}", 
-                 "component" => "#{@name}", 
-                 "location" => "#{configuration[:uri]}",
-                 "title" => "Communication lost with #{@name}",
-                 "description" => "Communication lost with #{@name}", 
-                 "device_type" => "/Status/Device",
-                 "time" => Time.new,
-                 "severity" => severity}
-      EM.defer do
-        begin
-          DaemonKit.logger.info("Received error: #{@_event}")
-          serv = XMLRPC::Client.new2('http://localhost:5000/messages/')
-          serv.call('sendEvent', @_event)
-        rescue
+module Communication
+  def send_event event
+        EM.defer do
+          begin
+            DaemonKit.logger.info("Received error: #{event}")
+            url = URI.parse 'http://ims-dev.wesleyan.edu/pulleffect/messages'
+            headers = {"Content-Type" => "application/json",
+                       "Accept-Encoding" => "gzip,deflate",
+                       "Accept" => "application/json"}
+            http = Net::HTTP.new(uri.host, uri.port)
+            response = http.post(uri.path, event.to_json, headers)
+            DaemonKit.logger.info "Sent event. Response: #{response}"
+          rescue
+          end
         end
-      end
-    end
-
-def operational= operational
-  self.operational = operational
-  if self.operational
-    send_event 0
-  else
-    send_event 5
   end
 end
