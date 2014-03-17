@@ -55,6 +55,14 @@ class PJLinkProjector < SocketProjector
     super string
   end
 
+  def interpret_error(error)
+    error.each_char do |e|
+      if e == "1"
+      elsif e == "2"
+      end
+    end
+  end
+
 	managed_state_var :power, 
 		:type => :boolean,
 		:display_order => 1,
@@ -87,6 +95,9 @@ class PJLinkProjector < SocketProjector
 	responses do
 		#ack ":"
 		error :general_error, "ERR", "Received an error"
+    match :err_status, /%1ERST=(\d+)/, proc{|m|
+        interpret_error m[1] if m[1] != "000000"
+    }
 		match :power,  /%1POWR=(.+)/, proc{|m|
 	 		#DaemonKit.logger.info "Received power value #{m[1]}"
 			  self.power = (m[1] == "1") 
@@ -96,6 +107,13 @@ class PJLinkProjector < SocketProjector
 		#match :mute,       /%1AVMT=(.+)/, proc{|m| self.mute = (m[1] == "31")}
 		match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
 		match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
+    match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
+        self.lamp_hours = m[1].to_i
+        self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
+    }
+    match :name, /%1NAME=(.*)/, proc{|m|
+        self.projector_name = m[1].chomp 
+    }
 
 	end
 
@@ -104,7 +122,9 @@ class PJLinkProjector < SocketProjector
            send :source, "#{@_digest}%1INPT ?\r", 1
            send :mute, "#{@_digest}%1AVMT ?\r", 1
            #send :lamp_usage, "*ltim=?#", 0.1
+           send :err_status, "#{@_digest}%1ERST ?\r", 0.1
            send :lamp_usage, "#{@_digest}%1LAMP ?\r", 0.1
+           send :info, "#{@_digest}%1NAME ?\r", 0.01
 	end
 
 end
