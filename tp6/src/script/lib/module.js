@@ -22,7 +22,7 @@
       if ($.template(this.template_name) instanceof Function) {
         return this.template_loaded();
       } else {
-        return $.get('../src/script/templates/modules/' + this.name + '.html', function(template) {
+        return $.get('../tp6/script/templates/modules/' + this.name + '.html', function(template) {
           $.template(_this.template_name, template);
           return _this.template_loaded();
         });

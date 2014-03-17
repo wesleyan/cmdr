@@ -44,6 +44,7 @@
       var building, name;
       building = Tp.room.get('building');
       name = Tp.room.get('name');
+      $('#location > p').html(building.slice(0,4) + " " + name);
       return $('#room-label').html(building + " " + name);
     };
 

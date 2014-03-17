@@ -15,11 +15,11 @@
  */
 
 (function() {
-  Tp.ActionListView = Backbone.View.extend({
+  Tp.InputListView = Backbone.View.extend({
     initialize: function() {
       var _this = this;
-      return $.get('../tp6/script/templates/action_list.html', function(template) {
-        $.template("action-list-template", template);
+      return $.get('../tp6/script/templates/input_list.html', function(template) {
+        $.template("input-list-template", template);
         Tp.server.bind("loaded", _this.render);
         Tp.actions.bind("add", _this.render);
         Tp.actions.bind("change", _this.render);
@@ -27,13 +27,13 @@
       });
     },
     render: function() {
-      var actionItemClicked, _ref,
+      var actionItemClicked, _ref
         _this = this;
-      $('.action-list').html($.tmpl("action-list-template", (_ref = Tp.actions) != null ? _ref.map(function(action) {
+        $('#src-group').html($.tmpl("input-list-template", (_ref = Tp.actions) != null ? _ref.map(function(action) {
         return {
           id: action.get('id'),
-          name: action.get('name'),
-          icon: action.icon()
+          name: action.get('name').toLowerCase(),
+          css: action.css(2)
         };
       }) : void 0));
       actionItemClicked = function(event) {
@@ -41,13 +41,19 @@
         return Tp.actions.select(event.currentTarget.id);
       };
       return window.setTimeout((function() {
-        return $('.action-list-item').unbind('click').click(actionItemClicked);
+        return $('.input-list-item').unbind('click').click(actionItemClicked);
       }), 500);
     },
     selectionChanged: function() {
-      var _ref;
-      $('.action-list-item').removeClass('selected');
-      return $("#" + ((_ref = Tp.actions.selection) != null ? _ref.id : void 0)).addClass('selected');
+      var _ref, _sel;
+      _ref = Tp.actions.selection;
+      _sel = $('#' + (_ref != null ? _ref.id : void 0));
+      console.log(_sel);
+      console.log('selection changed '+Tp.actions.selection.id);
+      $('.input-list-item').removeClass('selected');
+      _sel.addClass('selected').children('input').prop('checked', true);
+
+      return _sel;
     }
   });
 
