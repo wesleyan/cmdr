@@ -105,7 +105,7 @@
           $('#auto-off').show();
           Tp.room.offTimer = setTimeout(shutOff, 15000);
         };
-        Tp.room.warningTimer = setTimeout(warning, 300000);
+        Tp.room.warningTimer = setTimeout(warning, 3000000);
       } else if (state === "off") {
         if (Tp.room.warningTimer) {
           clearTimeout(Tp.room.warningTimer);

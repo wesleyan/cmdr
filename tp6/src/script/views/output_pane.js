@@ -194,6 +194,15 @@
     },
     powerButtonClicked: function() {
       var state;
+      var label = $('.pwr-btn > label');
+      if (label.hasClass('pwr-on')) {
+        label.removeClass('pwr-on warming');
+      }
+      else if (label.hasClass('warming')) { 
+      }
+      else { 
+        label.addClass('warming');
+      }
       state = Tp.devices.projector.get('state');
       return Tp.devices.projector.state_set('power', state === "off");
     },
@@ -213,6 +222,9 @@
     },
     autoOffClicked: function() {
       return Tp.OutputPane.trigger("autoOffCancel");
+    },
+    checkState: function() {
+      console.log('checking state');
     }
   });
 
