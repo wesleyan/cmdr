@@ -88,7 +88,6 @@
 
       return $('.screen-image-overlay').css('opacity', text === "off" ? 0 : 0.4);
     },
-
     sourceChanged: function() {
       var state;
       state = Tp.room.get('source');
