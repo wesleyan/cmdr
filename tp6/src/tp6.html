@@ -18,7 +18,7 @@ limitations under the License.
 <html>
   <head>
     <title>TP6</title>
-<link rel="stylesheet" href="styles.css" />
+    <!--link rel="stylesheet" href="styles.css" /-->
     <script src='script/vendor/json2.js'></script>
     <script src='script/vendor/jquery-1.7.1.js'></script>
     <script src='script/vendor/jquery-ui.js'></script>
@@ -38,7 +38,9 @@ limitations under the License.
     <script src='script/lib/controllers.js'></script>
     <script src='script/lib/module.js'></script>
     <script src='script/views/projector_pane.js'></script>
+    <script src='script/views/output_pane.js'></script>
     <script src='script/views/action_list.js'></script>
+    <script src='script/views/input_list.js'></script>
     <script src='script/views/context_view.js'></script>
     <script src='script/views/main_view.js'></script>
     <script src='script/views/modules/bluray_module.js'></script>
@@ -47,8 +49,31 @@ limitations under the License.
 
 
 
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="ui/css/bootstrap.min.css">
+    <style>
+      body {
+      padding-top: 50px;
+      padding-bottom: 20px;
+      }
+    </style>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="ui/css/font-awesome.min.css">
+    <link rel="stylesheet" href="ui/css/fontcustom-bootstrap.css">
+    <link rel="stylesheet" href="ui/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="ui/css/main.css">
+    <link rel="stylesheet" href="ui/css/power_button.css">
+    <link rel="stylesheet" href="ui/css/volume.css">
+    <link rel="stylesheet" href="ui/css/videomutebuttom.css">
+    <script src="ui/js/vendor/modernizr-2.6.2.min.js"></script>
+
   </head>
   <body>
+    <!--
     <div id='page'>
       <div id='top-bar'>
         <div class='label' id='room-label'></div>
@@ -67,6 +92,121 @@ limitations under the License.
         </div>
       </div>
     </div>
+    -->
+
+  <!-- The contents of the page. 7 spans for main, 5 for the sidebar. -->
+    <div id="content">
+      <div id="control" class="container">
+        <!-- CMDR INFO -->
+        <div id="clock"></div>
+
+        <!-- VOLUME KNOB -->
+        <div id="volume-knob" class="row">
+          <div id="vol-container">
+            <!-- TEXT -->
+            <div id="vol-knob" id="vol-knob">
+
+              <!-- LINE -->
+              <hr class="vol-line">
+              <hr class="vol-line">
+              <hr class="vol-line">
+
+              <!-- SWITCH -->
+              <div id="vol-switches">
+                
+                <label for="switch-m" id="switch-m-l" style="display:none">
+                  <div class="vol-slice">
+                    <div></div>
+                  </div>
+                </label>
+                <label for="switch-1">
+                  <div class="vol-slice" id="vol-s-1">
+                    <div class="vol-c">
+                    </div>
+                  </div>
+                </label>
+                <label for="switch-2">
+                  <div class="vol-slice" id="vol-s-2">
+                    <div class="vol-c">
+                    </div>
+                  </div>
+                </label>
+                <label for="switch-3">
+                  <div class="vol-slice" id="vol-s-3">
+                    <div class="vol-c">
+                    </div>
+                  </div>
+                </label>
+                <label for="switch-4">
+                  <div class="vol-slice" id="vol-s-4">
+                    <div class="vol-c">
+                    </div>
+                  </div>
+                </label>
+                <label for="switch-5">
+                  <div class="vol-slice" id="vol-s-5">
+                    <div class="vol-c">
+                    </div>
+                  </div>
+                </label>
+
+
+                <input id="switch-m" name="switch" type="radio" checked>
+                <input id="switch-1" name="switch" type="radio">
+                <input id="switch-2" name="switch" type="radio">
+                <input id="switch-3" name="switch" type="radio">
+                <input id="switch-4" name="switch" type="radio">
+                <input id="switch-5" name="switch" type="radio">
+
+                  <!-- CENTER -->
+                <div id="vol-center">
+                  <div id="vol-mute">
+                    <i class="fa fa-volume-off fa-4x"></i>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date and location -->
+        <div class="row">
+          <div id="date" class="col-xs-6">
+            <span id="month"></span><span id="day"></span><span id="daySuffix"></span>
+          </div>
+          <div id="location" class="col-xs-6">
+            <p>Allb 004</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="sources" class="container">
+
+        <div class="row" id="out-group">
+          <div id="transform">
+            <div id="stage">
+              <div id="octagon">
+                <div id='o-1' class="o-face clearfix"></div>
+                <div id="o-2" class="o-face clearfix"></div>
+                <div id="o-3" class="o-face clearfix"></div>
+                <div id="o-4" class="o-face clearfix"></div>
+                <div id="o-5" class="o-face clearfix"></div>
+                <div id="o-6" class="o-face clearfix"></div>
+                <div id="o-7" class="o-face clearfix"></div>
+                <div id="o-8" class="o-face clearfix"></div>
+              </div>
+            </div>
+          </div>
+            
+          <div class="row" id="src-group">
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <div id='lost-connection'>
       <div class='title'>Server Connection Lost</div>
       <div class='text'>The connection to the server has been lost. Try operating the equipment manually, or call 4959 for help.</div>
@@ -76,12 +216,12 @@ limitations under the License.
       </div>
       <div class='reconnecting' style='display:none;'>Reconnecting...</div>
     </div>
-    <div id='auto-off'>
-      <div class='title'>Projector Shutting Down!</div>
-      <div class='text'>To continue using the projector, press the button below.</div>
-      <div class='cancel-button button'>
-        <div class='label'>Cancel</div>
-      </div>
-    </div>
+
+    <script>window.jQuery || document.write('<script src="ui/js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
+
+    <script src="ui/js/vendor/bootstrap.min.js"></script>
+
+    <script src="ui/js/plugins.js"></script>
+    <script src="ui/js/main.js"></script>
   </body>
 </html>

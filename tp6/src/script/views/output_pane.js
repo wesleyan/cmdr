@@ -15,11 +15,11 @@
  */
 
 (function() {
-  Tp.ProjectorPaneView = Backbone.View.extend({
+  Tp.OutputPaneView = Backbone.View.extend({
     initialize: function() {
       var _this = this;
-      $.get('../tp6/script/templates/projector_module.html', function(template) {
-        $.template("projector-pane-template", template);
+      $.get('../tp6/script/templates/output_module.html', function(template) {
+        $.template("output-pane-template", template);
         return _this.render();
       });
       _.bindAll(this, 'projectorChanged');
@@ -33,23 +33,14 @@
       Tp.room.bind("change:source", this.sourceChanged);
       this.bind("autoOffCancel", this.autoOffCancel);
       Tp.room.offTimer = null;
-      Tp.room.warningTimer = null;
+      return Tp.room.warningTimer = null;
     },
     render: function() {
-      ($.tmpl("projector-pane-template", {
-        status_image: "off.png",
-        source_image: "x.png",
-        power_button_label: "loading...",
-        blank_button_label: "loading...",
-        mute_button_label: "loading..."
-      })).appendTo("#projector-pane");
+      ($.tmpl("output-pane-template", {
+        output_icon: "fa fa-video-camera",
+        name: "projector"
+      })).appendTo("#o-1");
       console.log("Setting up handlers");
-      $('.power-button').click(this.powerButtonClicked);
-      $('.blank-button').click(this.blankButtonClicked);
-      $('.mute-button').click(this.muteButtonClicked);
-      $('#auto-off .cancel-button').click(this.autoOffClicked);
-      $('.volume-slider').slider();
-      $('.volume-slider').on("slide", this.volumeSliderChanged);
 
       //NEW INTERFACE
       $('.pwr-btn > label').click(this.powerButtonClicked);
@@ -62,16 +53,12 @@
       $('#vol-s-5').children().click({volume: 1.0}, this.volumeClicked);
     
 
-      return $('.volume-slider').slider("option", "disabled", true);
+      return $('#vol-knob');
     },
     projectorChanged: function() {
       var state, text;
       state = Tp.devices.projector.get('state');
-      text = ["on", "muted", "warming"].indexOf(state) !== -1 ? "off" : "on";
       this.autoOff(state);
-      $('.power-button .label').html("turn " + text);
-      $('.status-image').attr('src', '../images/projector/' + state + '.png');
-      $('.source-image').css('visibility', text === "off" ? "visible" : "hidden");
       
       //NEW INTERFACE
       console.log('projector state: ' + state);
@@ -93,22 +80,17 @@
 
       return $('.screen-image-overlay').css('opacity', text === "off" ? 0 : 0.4);
     },
-
     autoOff: function(state) {
       var shutOff, warning;
       if (state === "on") {
-
         shutOff = function() {
-          Tp.devices.projector.state_set('power', false);
+          return Tp.devices.projector.state_set('power', false);
         };
-
         warning = function() {
-          console.log("Warning! Automatic shutoff about to commence!");
           $('#auto-off').show();
-          Tp.room.offTimer = setTimeout(shutOff, 60000);
+          return Tp.room.offTimer = setTimeout(shutOff, 60000);
         };
-
-        Tp.room.warningTimer = setTimeout(warning, 10740000);
+        return Tp.room.warningTimer = setTimeout(warning, 10740000);
       } else if (state === "off") {
         if (Tp.room.warningTimer) {
           clearTimeout(Tp.room.warningTimer);
@@ -116,15 +98,14 @@
         if (Tp.room.offTimer) {
           clearTimeout(Tp.room.offTimer);
         }
-        $('#auto-off').hide();
+        return $('#auto-off').hide();
       }
     },
-
     autoOffCancel: function() {
       clearTimeout(Tp.room.warningTimer);
       clearTimeout(Tp.room.offTimer);
       $('#auto-off').hide();
-      return Tp.projectorPane.autoOff("on");
+      return Tp.OutputPane.autoOff("on");
     },
     sourceChanged: function() {
       var state;
@@ -146,22 +127,22 @@
     videoMuteChanged: function() {
       var mute, text;
       mute = Tp.devices.projector.get('video_mute');
-      text = mute ? "show video" : "mute video";
 
       //NEW INTERFACE
       if (mute) {
         $('.vm-btn > label').addClass('vm-on');
+        text = "show video";
       }
       else {
         $('.vm-btn > label').removeClass('vm-on');
+        text = "mute video";
       }
 
-      return $('.blank-button .label').html(text);
+      return text;
     },
     audioMuteChanged: function() {
       var mute, text;
       mute = Tp.devices.volume.get('mute');
-      text = mute ? "unmute" : "mute";
 
       //NEW INTERFACE
       if (mute) {
@@ -173,6 +154,7 @@
           }
         });
         $('input[name="switch"]').attr('disabled',true);
+        text = "unmute";
       }
       else {
         $('#vol-mute').removeClass('vol-muted-m');
@@ -183,20 +165,15 @@
           }
         });
         $('input[name="switch"]').attr('disabled',false);
+        text = "mute";
       }
 
-      return $('.mute-button .label').html(text);
+      return text;
     },
     audioLevelChanged: function() {
       var level;
       level = Tp.devices.volume.get('volume');
-      if ($('.volume-slider').slider("option", "disabled")) {
-        $('.volume-slider').slider("option", "disabled", false);
-        if (level >= 0 && level <= 1) {
-          $('.volume-slider').slider("value", level * 100);
-          $(".volume-gauge").css("right", (100 - (level * 100)) + "%");
-        }
-      }
+
       //NEW INTERFACE
       if (level > 0 && level <= 0.2) {
         $('#vol-s-1').children().click();
@@ -213,15 +190,7 @@
       else if (level > 0 && level <= 1) {
         $('#vol-s-5').children().click();
       }
-
-
-
-      if (level === 1) {
-        return $(".volume-now-gauge").css("right", "7%");
-      } else {
-        return $(".volume-now-gauge").css("right", (100 - (level * 100)) + "%");
-      }
-
+      return level;
     },
     powerButtonClicked: function() {
       var state;
@@ -238,29 +207,12 @@
       mute = Tp.devices.volume.get('mute');
       return Tp.devices.volume.state_set('mute', !mute);
     },
-    volumeSliderChanged: function() {
-      var sliderVal, volume;
-      volume = Tp.devices.volume.get('volume');
-      sliderVal = Math.round($(".volume-slider").slider("option", "value") / 10) / 10;
-      $(".volume-gauge").css("right", (100 - $(".volume-slider").slider("option", "value")) + "%");
-      return Tp.devices.volume.state_set('volume', sliderVal);
-    },
-    volumeUpClicked: function() {
-      var volume;
-      volume = Tp.devices.volume.get('volume');
-      return Tp.devices.volume.state_set('volume', volume + 0.1);
-    },
-    volumeDownClicked: function() {
-      var volume;
-      volume = Tp.devices.volume.get('volume');
-      return Tp.devices.volume.state_set('volume', volume - 0.1);
-    },
     volumeClicked: function(eventData) {
       var volume = eventData.data.volume;
       return Tp.devices.volume.state_set('volume', volume);
     },
     autoOffClicked: function() {
-      return Tp.projectorPane.trigger("autoOffCancel");
+      return Tp.OutputPane.trigger("autoOffCancel");
     }
   });
 

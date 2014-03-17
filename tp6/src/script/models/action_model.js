@@ -23,16 +23,42 @@
     icon: function() {
       var _ref;
       return this.get('icon') || ((_ref = this.get('source')) != null ? _ref.get('icon') : void 0);
+    },
+    css: function(size) {
+      var _ref;
+      _ref = this.get('name');
+      switch (_ref.toLowerCase()) {
+        case 'hdmi':
+          return 'cf icon-hdmi cf-' + size + 'x';
+        case 'vga':
+          return 'cf icon-vga cf-' + size + 'x';
+        case 'mac':
+          return 'fa fa-apple fa-' + size + 'x';
+        case 'pc':
+          return 'fa fa-windows fa-' + size + 'x';
+        case 'dvd':
+          return 'cf icon-dvd cf-' + size + 'x';
+        case 'bluray':
+          return 'cf icon-dvd cf-' + size + 'x';
+        default:
+          return 'cf icon-cmdr cf-' + size + 'x';
+      }
     }
   });
 
   Tp.ActionController = Backbone.Collection.extend({
     model: Tp.Action,
     select: function(id) {
-      var action;
+      var action, cube_face, sel;
+      var face_map = {'mac':'c-1','pc':'c-2','hdmi':'c-3','vga':'c-4','dvd':'c-5'};
       action = this.get(id);
+      console.log('Action controller action: ');
+      console.log(action);
       if (action) {
         Tp.log("Selecting %s", action);
+        sel = action.attributes.name.toLowerCase();
+        cube_face = face_map[sel] ? face_map[sel] : 'c-6'; //hackey solution
+        $('.cube').removeClass('c-1 c-2 c-3 c-4 c-5 c-6').addClass(cube_face);
         action.select();
         this.selection = action;
         return this.trigger("change:selection");
