@@ -99,12 +99,10 @@ class PJLinkProjector < SocketProjector
         interpret_error m[1] if m[1] != "000000"
     }
 		match :power,  /%1POWR=(.+)/, proc{|m|
-	 		#DaemonKit.logger.info "Received power value #{m[1]}"
 			  self.power = (m[1] == "1") 
 	  		self.cooling = (m[1] == "2")
 	  		self.warming = (m[1] == "3") || (m[1] == "ERR3")
 		}
-		#match :mute,       /%1AVMT=(.+)/, proc{|m| self.mute = (m[1] == "31")}
 		match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
 		match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
     match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
@@ -121,7 +119,6 @@ class PJLinkProjector < SocketProjector
            send :power, "#{@_digest}%1POWR ?\r", 1
            send :source, "#{@_digest}%1INPT ?\r", 1
            send :mute, "#{@_digest}%1AVMT ?\r", 1
-           #send :lamp_usage, "*ltim=?#", 0.1
            send :err_status, "#{@_digest}%1ERST ?\r", 0.1
            send :lamp_usage, "#{@_digest}%1LAMP ?\r", 0.1
            send :info, "#{@_digest}%1NAME ?\r", 0.01

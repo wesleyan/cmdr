@@ -1,5 +1,3 @@
-/**
- * Copyright (C) 2014 Wesleyan University
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +29,6 @@
       Tp.devices.volume.bind("change:volume", this.audioLevelChanged);
       Tp.sources.bind("change", this.sourceChanged);
       Tp.room.bind("change:source", this.sourceChanged);
-      this.bind("autoOffCancel", this.autoOffCancel);
       Tp.room.offTimer = null;
       Tp.room.warningTimer = null;
     },
@@ -47,7 +44,6 @@
       $('.power-button').click(this.powerButtonClicked);
       $('.blank-button').click(this.blankButtonClicked);
       $('.mute-button').click(this.muteButtonClicked);
-      $('#auto-off .cancel-button').click(this.autoOffClicked);
       $('.volume-slider').slider();
       $('.volume-slider').on("slide", this.volumeSliderChanged);
 
@@ -68,7 +64,6 @@
       var state, text;
       state = Tp.devices.projector.get('state');
       text = ["on", "muted", "warming"].indexOf(state) !== -1 ? "off" : "on";
-      this.autoOff(state);
       $('.power-button .label').html("turn " + text);
       $('.status-image').attr('src', '../images/projector/' + state + '.png');
       $('.source-image').css('visibility', text === "off" ? "visible" : "hidden");
@@ -94,38 +89,6 @@
       return $('.screen-image-overlay').css('opacity', text === "off" ? 0 : 0.4);
     },
 
-    autoOff: function(state) {
-      var shutOff, warning;
-      if (state === "on") {
-
-        shutOff = function() {
-          Tp.devices.projector.state_set('power', false);
-        };
-
-        warning = function() {
-          console.log("Warning! Automatic shutoff about to commence!");
-          $('#auto-off').show();
-          Tp.room.offTimer = setTimeout(shutOff, 60000);
-        };
-
-        Tp.room.warningTimer = setTimeout(warning, 10740000);
-      } else if (state === "off") {
-        if (Tp.room.warningTimer) {
-          clearTimeout(Tp.room.warningTimer);
-        }
-        if (Tp.room.offTimer) {
-          clearTimeout(Tp.room.offTimer);
-        }
-        $('#auto-off').hide();
-      }
-    },
-
-    autoOffCancel: function() {
-      clearTimeout(Tp.room.warningTimer);
-      clearTimeout(Tp.room.offTimer);
-      $('#auto-off').hide();
-      return Tp.projectorPane.autoOff("on");
-    },
     sourceChanged: function() {
       var state;
       state = Tp.room.get('source');
@@ -259,9 +222,6 @@
       var volume = eventData.data.volume;
       return Tp.devices.volume.state_set('volume', volume);
     },
-    autoOffClicked: function() {
-      return Tp.projectorPane.trigger("autoOffCancel");
-    }
   });
 
 }).call(this);
