@@ -491,7 +491,7 @@ module Cmdr
 		# @private Reads in each block of data from EM::Serialport, and
 		# processes it by splitting it into discrete messages by means of
 		# message_end, then matching each message against the responses
-		# that have been defined by {RS232::responses}. If one is matched,
+		# that have been defined by {RS232Device::responses}. If one is matched,
 		# its handler is called and the result is sent back to the user or
 		# ignored. Also sets ready_to_send, which causes the next request
 		# or command to be sent.
