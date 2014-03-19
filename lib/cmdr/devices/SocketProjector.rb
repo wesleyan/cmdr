@@ -48,6 +48,7 @@ class SocketProjector < Cmdr::SocketDevice
 	state_var :filter_hours,:type => :number, :editable => false
 	state_var :percent_lamp_used, :type => :percentage, :editable => false
 	state_var :operational, :type => :boolean, :editable => false
+  state_var :projector_name, :type => :string, :editable => false
 	#state_var :turned_on,  :type => :time', :editable => false
 	#state_var :turned_off,	:type => :time', :editable => false
 	
