@@ -155,7 +155,7 @@ module Cmdr
     TIMEOUT = 4.0
     # The resource names for devices
     DEVICES = {
-      "projector"  => ["power", "video_mute", "state", "video_mute"],
+      "projector"  => ["power", "video_mute", "state", "video_mute", "timer"],
       "volume"     => ["volume", "mute"],
       "switcher"   => ["video", "audio"],
       "blurayplayer" => ["play", "pause", "forward", "back", "stop", "eject", "next", "previous", "title", "menu", "up", "down", "left", "right", "enter"],

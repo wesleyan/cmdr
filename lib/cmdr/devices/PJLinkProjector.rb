@@ -69,17 +69,15 @@ class PJLinkProjector < SocketProjector
   end
 
   def change_power(state)
-    if state and not self.power
+    if state 
+      unless self.power
         self.power = true
         start_shutdown_timers
+      end
     else
       self.power = false
       cancel_shutdown_timers
     end
-  end
-
-  def timer val
-    cancel_shutdown_timers unless val
   end
 
   def start_shutdown_timers
@@ -87,8 +85,8 @@ class PJLinkProjector < SocketProjector
       @shutoff_timer = EventMachine::Timer.new(30) do
         send_string "%1POWR 0"
       end
+      self.timer = true
     end
-    self.timer = true
   end
 
   def cancel_shutdown_timers
@@ -130,7 +128,7 @@ class PJLinkProjector < SocketProjector
     :type => :boolean,
     :display_order => 5,
     :action => proc{|val|
-      timer val
+      cancel_shutdown_timers if val
     }
 
 	responses do
