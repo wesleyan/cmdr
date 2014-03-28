@@ -48,4 +48,4 @@ version number. This way, master is always stable and ready to be deployed,
 while you can have more freedom to break things in your feature branch and in develop.
 
 ##License
-cmdr is licensed on the [Apache License](https://raw.github.com/wesleyan/cmdr/master/LICENSE)
+cmdr is licensed under the [Apache License](https://raw.github.com/wesleyan/cmdr/master/LICENSE)
