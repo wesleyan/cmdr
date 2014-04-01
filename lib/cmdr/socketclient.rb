@@ -65,7 +65,7 @@ module EventMachine
                  "summary" => "Disconnected from #{@name}",
                  "eventClass" => "/Status/Device",
                  "severity" => 5}
-        Communication.send_event event
+        Cmdr.send_event event
         reconnect(@_ip, @_port || 80)
       end
     end

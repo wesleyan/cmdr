@@ -15,5 +15,6 @@
 module Cmdr
 	# The AMQP topic on which to send events
 	EVENT_TOPIC = "cmdr:events"
-  DB_URI = "htt://localhost:5984"
+  DB_URI = "http://localhost:5984"
+  ERROR_URI = "http://ims-dev.wesleyan.edu/pulleffect/messages"
 end

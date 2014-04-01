@@ -203,10 +203,10 @@ module Cmdr
                 "time" => Time.new,
                 "severity" => 0}
       if self.operational
-        Communication.send_event event
+        Cmdr.send_event event
       else
         event["severity"] = 5
-        Communication.send_event event
+        Cmdr.send_event event
       end
       DaemonKit.logger.info "Sending event #{event}"
     end

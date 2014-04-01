@@ -14,13 +14,21 @@
 
 require 'eventmachine'
 require 'net/http'
+require 'cmdr/constants'
 
-module Communication
-  def Communication.send_event event
+module Cmdr
+  def Cmdr.send_event event
+        event['device'] ||= "N/A"
+        event['device_type'] ||= "N/A"
+        event['location'] ||= "N/A"
+        event['severity'] ||= "N/A"
+        event['title'] ||= "N/A"
+        event['description'] ||= "N/A"
+        event['time'] ||= Time.now.to_i
         EM.defer do
           begin
             DaemonKit.logger.info("Received error: #{event}")
-            url = URI.parse 'http://ims-dev.wesleyan.edu/pulleffect/messages'
+            url = URI.parse ERROR_URI
             headers = {"Content-Type" => "application/json",
                        "Accept-Encoding" => "gzip,deflate",
                        "Accept" => "application/json"}

@@ -59,41 +59,58 @@ class PJLinkProjector < SocketProjector
   def interpret_error(error)
     DaemonKit.logger.info "Projector has error code: #{error}"
     (1..6).each do |i|
+      event = {'device' => "Projector", 
+               'device_type' => 'PJLink',
+               'location' => @hostname}
       e = error[i]
       if e == "1"
-        register_error @name, "WARNING: #{ERROR[i]}", 0.5
+        #register_error @name, "WARNING: #{ERROR[i]}", 0.5
+        event['severity'] = 0.5
+        event['title'] = "#{ERROR[i]} WARNING"
+        event['description'] = "Warning notice received for: #{ERROR[i]}"
+        event['time'] = Time.now.to_i
+        Cmdr.send_event event
       elsif e == "2"
-        register_error @name, "ERROR: #{ERROR[i]}", 0.9
+        #register_error @name, "ERROR: #{ERROR[i]}", 0.9
+        event['severity'] = 0.9
+        event['title'] = "#{ERROR[i]} ERROR"
+        event['description'] = "Error notice received for: #{ERROR[i]}"
+        event['time'] = Time.now.to_i
+        Cmdr.send_event event
       end
     end
   end
 
-  def change_power(state)
-    if state 
-      unless self.power
-        self.power = true
-        start_shutdown_timers
-      end
-    else
-      self.power = false
-      cancel_shutdown_timers
-    end
-  end
+  #def change_power(state)
+  #  if state 
+  #    unless self.power and self.timer
+  #      self.power = true
+  #      @warning_timer = EM::Timer.new(30) do
+  #        self.timer = true
+  #      end
+  #    end
+  #  else
+  #    self.power = false
+  #    cancel_shutdown_timers
+  #  end
+  #end
 
-  def start_shutdown_timers
-    @warning_timer = EventMachine::Timer.new(30) do
-      @shutoff_timer = EventMachine::Timer.new(30) do
-        send_string "%1POWR 0"
-      end
-      self.timer = true
-    end
-  end
+  #def start_shutdown_timers
+  #  @warning_timer = EventMachine::Timer.new(30) do
+  #    @shutoff_timer = EventMachine::Timer.new(30) do
+  #      send_string "%1POWR 0"
+  #    end
+  #    self.timer = true
+  #  end
+  #end
 
-  def cancel_shutdown_timers
-    @warning_timer.cancel if @warning_timer
-    @shutoff_timer.cancel if @shutoff_timer
-    self.timer = false
-  end
+  #def cancel_shutdown_timers
+  #  @warning_timer.cancel if @warning_timer
+  #  @shutoff_timer.cancel if @shutoff_timer
+  #  @warning_timer = nil
+  #  @shutoff_timer = nil
+  #  self.timer = false
+  #end
 
 	managed_state_var :power, 
 		:type => :boolean,
@@ -124,12 +141,22 @@ class PJLinkProjector < SocketProjector
 			"%1AVMT #{on ? "31" : "30"}\r"
 		}
 
-  managed_state_var :timer, 
-    :type => :boolean,
-    :display_order => 5,
-    :action => proc{|val|
-      cancel_shutdown_timers if val
-    }
+  state_var :timer, :type => :boolean, :display_order => 5
+
+  #virtual_var :auto_off,
+  #  :type => :boolean,
+  #  :display_order => 6,
+  #  :depends_on => [:power, :timer],
+  #  :transformation => proc{
+  #    if power and timer
+  #      @shutoff_timer = EM::Timer.new(15) do
+  #        send_string "%1POWR 0"
+  #      end
+  #      true
+  #    else
+  #      false
+  #    end
+  #  }
 
 	responses do
 		#ack ":"
@@ -138,7 +165,8 @@ class PJLinkProjector < SocketProjector
         interpret_error m[1] if m[1] != "000000"
     }
 		match :power,  /%1POWR=(.+)/, proc{|m|
-			  change_power(m[1] == "1") 
+			  #change_power(m[1] == "1") 
+        self.power = (m[1] == "1")
 	  		self.cooling = (m[1] == "2")
 	  		self.warming = (m[1] == "3") || (m[1] == "ERR3")
 		}
