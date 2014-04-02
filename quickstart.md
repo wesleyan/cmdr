@@ -21,6 +21,14 @@ as well as running our postinstall.sh script which configures chef.
 Instructions on how to deploy the cmdr software can be found
 [here](https://github.com/wesleyan/cmdr/wiki/Deploying-a-new-cmdr-controller).
 
+###Dependencies
+Dependencies have to be manually installed.
+* CouchDB >= 1.2
+* [RVM](https://rvm.io/)
+* Ruby 1.9.3 (Install with RVM)
+* RabbitMQ-Server
+* Avahi-Daemon (optional dependency for cmdr-server integration)
+
 ###cmdr
 cmdr consists primarily of three parts. 
 1. [cmdr-daemon](https://github.com/wesleyan/cmdr): This is the main 
