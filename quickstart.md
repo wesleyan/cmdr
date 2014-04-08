@@ -64,3 +64,34 @@ The basic flow of command is as follows:
    that the state of the room has changed.
 6. The frontend interprets the respone and updates the display
    to accurately reflect the current state of the room.
+
+###Important Directories
+* `bin` contains the cmdr executables
+* `lib` contains all the library code for cmdr. Most development takes place here.
+* `lib/cmdr` contains the classes that are responsible for handling communication.
+* `lib/cmdr/devices` contains all the drivers for the various devices.
+* `tp6` contains the frontend code.
+* `tasks` contains various rules for rake.
+
+###Digging Deep: The Important Files.
+The important parts of the program are found inside the lib directory.
+This will serve as a brief summary of the most important parts
+and their role to the overall cmdr program. More detail can be
+found in the actual file documentation.
+
+* `cmdr.rb`:
+  
+  This is the "main" program. This file is responsible for starting each
+  device thread. Other than that, this file is not too important.
+
+* `cmdr_websocket.rb`
+
+* `device.rb`
+
+  This is the main device file that all other devices inherit from.
+  It specifies the Domain Specific Language (DSL) that the device
+  drivers are written in.
+
+* `SocketDevice.rb`
+
+  
