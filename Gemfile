@@ -8,7 +8,7 @@ source "http://rubygems.org"
 
 gem 'rake'
 gem 'daemon-kit'
-gem 'yard'
+gem 'yard', ">= 0.8.4"
 gem 'bluecloth'
 gem 'rspec'
 
