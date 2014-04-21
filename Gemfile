@@ -7,7 +7,7 @@
 source "http://rubygems.org"
 
 gem 'rake'
-gem 'daemon-kit'
+gem 'daemon-kit', "= 0.1.8.1"
 gem 'yard', ">= 0.8.4"
 gem 'bluecloth'
 gem 'rspec'
@@ -22,7 +22,7 @@ gem 'eventmachine_httpserver'
 gem 'chronic'
 gem 'wol'
 gem 'sinatra'
-gem 'amqp'
+gem 'amqp', "= 0.6.7"
 gem 'uuidtools'
 
 #deploy gems
