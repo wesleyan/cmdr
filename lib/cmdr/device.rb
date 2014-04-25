@@ -35,7 +35,7 @@ module Cmdr
 	# you, letting you focus on just implementing the device's features.
 	# 
 	# #Device Variables
-  #
+    #
 	# The basis for this DSL is the concept of state variables, defined
 	# by the state_var method.  State vars are--as their name
 	# suggests--variables that track the state of something about the
@@ -135,8 +135,8 @@ module Cmdr
 	# definition.
 	# 
 	# #Controlling Devices
-  #
-  # Devices are controlled externally through the use of a message
+    #
+    # Devices are controlled externally through the use of a message
 	# queue which speaks the [AMQP](http://www.amqp.org/) protocol. At
 	# the moment we use [RabbitMQ](http://www.rabbitmq.com/) as the
 	# message broker, but technically everything should work with
@@ -464,10 +464,10 @@ module Cmdr
 		# in terms of a particular state var. In addition to creating
 		# accessor methods, if supplied an :action parameter state_var
 		# will create a set_varname method using the proc supplied.
-    #
+        #
 		# @param [Symbol] name The name for the state var. Should follow
-    #   the general naming conventions: all lowercase, with multiple
-    #   words connected\_by\_underscores.
+        #   the general naming conventions: all lowercase, with multiple
+        #   words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the state_var
 		# @option options [Symbol] :type [mandatory] the type of the
 		# 	variable; this is used by the web interface to decide what
@@ -576,7 +576,7 @@ module Cmdr
 		# in the example. Virtual vars are updated whenever the variables
 		# they depend on either state vars or other virtual vars) are
 		# updated.
-    # @param [Symbol] name The name for the virtual var. Should follow
+        # @param [Symbol] name The name for the virtual var. Should follow
 		# 	the general naming convention: all lowercase, with multiple
 		# 	words connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the virtual var
@@ -630,7 +630,7 @@ module Cmdr
 		# when the command is activated by the user.  Alternatively, you
 		# can pass in a proc to :action which will create this method
 		# automatically.
-    # @param [Symbol] name The name for the device. Should follow the
+        # @param [Symbol] name The name for the device. Should follow the
 		# 	general nameing convention: all lowercase, with multiple words
 		# 	connected\_by\_underscores.
 		# @param [Hash] options Options for configuring the command

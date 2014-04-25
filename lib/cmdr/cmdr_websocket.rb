@@ -511,7 +511,7 @@ module Cmdr
               end
             end
             if v
-              event "switcher_to_#{v}" do
+              event "switcher_to_#{v}".to_sym do
                 transition all => this_state
                 parent.set_device_state parent.devices["projector"], p
               end
@@ -521,7 +521,7 @@ module Cmdr
               end
             end
             if a
-              event "switcher_to_#{a}" do
+              event "switcher_to_#{a}".to_sym do
                 transition all => this_state
               end
               after_transition any => this_state do
@@ -530,7 +530,7 @@ module Cmdr
               end
             end
             if s
-              event "switcher_to_#{s}" do
+              event "switcher_to_#{s}".to_sym do
                 transition all => this_state
                 parent.set_device_state parent.devices["projector"], p
               end

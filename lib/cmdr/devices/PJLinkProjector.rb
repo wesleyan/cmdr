@@ -116,7 +116,7 @@ class PJLinkProjector < SocketProjector
 		:type => :boolean,
 		:display_order => 1,
 		:action => proc{|on|
-      "%1POWR #{on ? "1" : "0"}\r"
+          "%1POWR #{on ? "1" : "0"}\r"
 		}
 
 	managed_state_var :input, 
@@ -141,7 +141,7 @@ class PJLinkProjector < SocketProjector
 			"%1AVMT #{on ? "31" : "30"}\r"
 		}
 
-  state_var :timer, :type => :boolean, :display_order => 5
+    state_var :timer, :type => :boolean, :display_order => 5
 
   #virtual_var :auto_off,
   #  :type => :boolean,
@@ -161,24 +161,24 @@ class PJLinkProjector < SocketProjector
 	responses do
 		#ack ":"
 		error :general_error, "ERR", "Received an error"
-    match :err_status, /%1ERST=(\d+)/, proc{|m|
-        interpret_error m[1] if m[1] != "000000"
-    }
+        match :err_status, /%1ERST=(\d+)/, proc{|m|
+            interpret_error m[1] if m[1] != "000000"
+        }
 		match :power,  /%1POWR=(.+)/, proc{|m|
 			  #change_power(m[1] == "1") 
-        self.power = (m[1] == "1")
+            self.power = (m[1] == "1")
 	  		self.cooling = (m[1] == "2")
 	  		self.warming = (m[1] == "3") || (m[1] == "ERR3")
 		}
 		match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
 		match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
-    match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
-        self.lamp_hours = m[1].to_i
-        self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
-    }
-    match :name, /%1NAME=(.*)/, proc{|m|
-        self.projector_name = m[1].chomp 
-    }
+        match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
+            self.lamp_hours = m[1].to_i
+            self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
+        }
+        match :name, /%1NAME=(.*)/, proc{|m|
+            self.projector_name = m[1].chomp 
+        }
 
 	end
 
