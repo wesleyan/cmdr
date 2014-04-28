@@ -31,6 +31,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # your network.
   # config.vm.network "public_network"
 
+  # Set custom MAC address.
+  config.vm.network "public_network", :bridge => 'en0', :mac => "5CA1AB1E0001"
+
   # If true, then any SSH connections made will enable agent forwarding.
   # Default value: false
   # config.ssh.forward_agent = true
