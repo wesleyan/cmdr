@@ -19,7 +19,6 @@ require 'couchrest'
 require 'digest'
 require 'digest/md5'
 require 'uuidtools'
-require 'iconv'
 require '../ruby/authenticate'
 
 def error e
@@ -48,7 +47,7 @@ end
 
 @salt = SecureRandom.hex[0..2]
 @hash = Digest::SHA256.digest(@salt + Digest::SHA256.digest(@password))
-@hash = Iconv.iconv('utf-8', 'iso8859-1', @hash)[0]
+@hash = @hash.encode('UTF-8', :invalid => :replace, :undef => :replace, :replace => "?")
 
 @creds = Authenticate.get_credentials("../security")
 @credentials = "#{@creds['user']}:#{@creds['password']}"
