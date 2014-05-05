@@ -93,13 +93,13 @@ def deploy servers
 		  
 			puts ssh.exec!(commands.join("; "))
 
-      env = ['PATH="/usr/local/rvm/gems/ruby-1.9.3-p429/bin:/usr/local/rvm/gems/ruby-1.9.3-p429@global/bin:/usr/local/rvm/rubies/ruby-1.9.3-p429/bin:/usr/local/rvm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"',
+      env = ['PATH="/usr/local/rvm/gems/ruby-2.1.1/bin:/usr/local/rvm/gems/ruby-2.1.1@global/bin:/usr/local/rvm/rubies/ruby-2.1.1/bin:/usr/local/rvm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"',
         
-             'GEM_HOME="/usr/local/rvm/gems/ruby-1.9.3-p429"',
-             'GEM_PATH="/usr/local/rvm/gems/ruby-1.9.3-p429:/usr/local/rvm/gems/ruby-1.9.3-p429@global"',
+             'GEM_HOME="/usr/local/rvm/gems/ruby-2.1.1"',
+             'GEM_PATH="/usr/local/rvm/gems/ruby-2.1.1:/usr/local/rvm/gems/ruby-2.1.1@global"',
              'BUNDLE_GEMFILE="/var/cmdr-daemon/Gemfile"',
              'TERM=xterm',
-             'RUBY_VERSION=ruby-1.9.3-p429'
+             'RUBY_VERSION=ruby-2.1.1'
             ]
       
 

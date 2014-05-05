@@ -62,15 +62,15 @@ class ExtronSystemPlus < SocketVideoSwitcher
 		match :channel,  /Chn(\d)/, proc{|m| self.input = m[1].to_i.to_s}
 		match :volume,   /Vol(\d+)/, proc{|m| self.volume = m[1].to_i/100.0}
 		match :status,   /V(\d+) A(\d+) T(\d) P(\d) S(\d) Z(\d) R(\d)/, proc{|m|
-      self.video = m[1].to_i if m[1].to_i > 0
-      self.audio = m[2].to_i if m[2].to_i > 0
-      self.mute = (m[6] == "1")
+        self.video = m[1].to_i if m[1].to_i > 0
+        self.audio = m[2].to_i if m[2].to_i > 0
+        self.mute = (m[6] == "1")
 			#self.clipping = (m[3] == "1")
 		}
 	end
 	
 	requests do
-    send :video, "I", 0.5
-    send :audio, "I", 0.5
+        send :video, "I", 0.5
+        send :audio, "I", 0.5
 	end
 end

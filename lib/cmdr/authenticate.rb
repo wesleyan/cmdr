@@ -16,8 +16,6 @@ require 'yaml'
 require 'openssl'
 module Authenticate
   def Authenticate.get_credentials(path="#{File.dirname(__FILE__)}/../..")
-    YAML::ENGINE::yamler = 'syck'
-
     credentials = YAML::load_file "#{path}/credentials.yml"
     key = YAML::load_file "#{path}/key.yml"
 
