@@ -12,8 +12,8 @@ d-i console-keymaps-at/keymap string us
 
 # Keyboard selection.
 # Disable automatic (interactive) keymap detection.
-#d-i console-setup/ask_detect boolean false
-#d-i console-setup/layoutcode string us
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
 
 # netcfg will choose an interface that has link if possible. This makes it
 # skip displaying a list if there is more than one interface.
@@ -22,8 +22,8 @@ d-i netcfg/choose_interface select auto
 # Any hostname and domain names assigned from dhcp take precedence over
 # values set here. However, setting the values still prevents the questions
 # from being shown, even if values come from dhcp.
-d-i netcfg/get_hostname string unassigned-hostname
-d-i netcfg/get_domain string unassigned-domain
+d-i netcfg/get_hostname string cmdr-default
+d-i netcfg/get_domain string cmdr-default
 
 ### Mirror settings
 # If you select ftp, the mirror/country string does not need to be set.
@@ -181,7 +181,7 @@ d-i passwd/user-password-crypted password $1$tkSHONEv$7eT/jELWn.RjcpouFv19J1
 #d-i passwd/user-uid string 1010
 # The installer will warn about weak passwords. If you are sure you know
 # what you're doing and want to override it, uncomment this.
-d-i user-setup/allow-password-weak boolean true
+#d-i user-setup/allow-password-weak boolean true
 
 # The user account will be added to some standard initial groups. To
 # override that, use this.
@@ -360,7 +360,7 @@ pkgsel	pkgsel/include	string
 
 d-i preseed/late_command string \
   cd target; \
-  wget http://ims-chef.wesleyan.edu/cmdr/postinst.sh; \
+  wget http://sw.wesleyan.edu/cmdr/postinst.sh; \
   chmod +x ./postinst.sh; \
   chroot ./ ./postinst.sh; \
   rm -f ./postinst.sh
