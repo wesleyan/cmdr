@@ -222,6 +222,7 @@ d-i apt-setup/backports boolean true
 
 ### Package selection
 tasksel tasksel/first multiselect openssh-server
+tasksel tasksel/first multiselect curl
 
 # Policy for applying updates. May be "none" (no automatic updates),
 # "unattended-upgrades" (install security updates automatically), or
