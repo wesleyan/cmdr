@@ -135,8 +135,8 @@ module Cmdr
   # definition.
   # 
   # #Controlling Devices
-    #
-    # Devices are controlled externally through the use of a message
+  #
+  # Devices are controlled externally through the use of a message
   # queue which speaks the [AMQP](http://www.amqp.org/) protocol. At
   # the moment we use [RabbitMQ](http://www.rabbitmq.com/) as the
   # message broker, but technically everything should work with
@@ -437,7 +437,7 @@ module Cmdr
     # name to the list of virtual variables which depend on that state
     # var's value.
     def self.var_affects; @_var_affects; end
-    
+
     # This method, when called in a class definition, defines a new
     # state variable for the device class. State vars are--as their
     # name suggests--variables that track the state of something about
@@ -464,10 +464,10 @@ module Cmdr
     # in terms of a particular state var. In addition to creating
     # accessor methods, if supplied an :action parameter state_var
     # will create a set_varname method using the proc supplied.
-        #
+    #
     # @param [Symbol] name The name for the state var. Should follow
-        #   the general naming conventions: all lowercase, with multiple
-        #   words connected\_by\_underscores.
+    #   the general naming conventions: all lowercase, with multiple
+    #   words connected\_by\_underscores.
     # @param [Hash] options Options for configuring the state_var
     # @option options [Symbol] :type [mandatory] the type of the
     #   variable; this is used by the web interface to decide what
@@ -691,7 +691,6 @@ module Cmdr
       if commands
         commands.each{|var, options| hash[:commands][var] = options}
       end
-
       return hash
     end
     
