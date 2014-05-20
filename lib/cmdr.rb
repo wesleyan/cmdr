@@ -1,11 +1,11 @@
 # Copyright (C) 2014 Wesleyan University
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,61 +41,64 @@ require 'cmdr/devices/SocketVideoSwitcher'
 require 'cmdr/devices/ExtronSystemPlus'
 require 'cmdr/devices/SocketExtron'
 
-Dir.glob("#{File.dirname(__FILE__)}/cmdr/devices/*.rb").each{|device|
-	begin
-		require device
-	rescue => e
-		DaemonKit.logger.error "Failed to load #{device}: #{$!}"
-		DaemonKit.logger.error e.backtrace
-	rescue LoadError => error
-		DaemonKit.logger.error "Failed to load #{device}: syntax error"
-		DaemonKit.logger.error e.backtrace
-	end
-}
+Dir.glob("#{File.dirname(__FILE__)}/cmdr/devices/*.rb").each do |device|
+  begin
+    require device
+  rescue => e
+    DaemonKit.logger.error "Failed to load #{device}: #{$ERROR_INFO}"
+    DaemonKit.logger.error e.backtrace
+  rescue LoadError => e
+    DaemonKit.logger.error "Failed to load #{device}: syntax error"
+    DaemonKit.logger.error e.backtrace
+  end
+end
 
 module Cmdr
-	class Cmdr
-		def initialize(device_hashes)
+  # The main cmdr module.
+  class Cmdr
+    # The main cmdr class.
+    def initialize(device_hashes)
       credentials = Authenticate.get_credentials
-      @credentials = "#{credentials["user"]}:#{credentials["password"]}"
-			@db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
+      @credentials = "#{credentials[:user]}:#{credentials[:password]}"
+      @db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
 
-			@devices = device_hashes.collect{|hash|
-				begin
-					device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
-				rescue
-					DaemonKit.logger.error "Failed to create device #{hash['value']}: #{$!}"
-				end
-			}.compact
-		end
+      @devices = device_hashes.collect { |hash|
+        begin
+          device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
+        rescue
+          err_msg = "Failed to create device #{hash['value']}: #{$ERROR_INFO}"
+          DaemonKit.logger.error err_msg
+        end
+      }.compact
+    end
 
-		def inspect
-			"<Cmdr:0x#{object_id.to_s(16)}>"
-		end
-		
-		def start
-			#start each device
-			CmdrHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
+    def inspect
+      "<Cmdr:0x#{object_id.to_s(16)}>"
+    end
+    
+    def start
+      #start each device
+      CmdrHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
       names_by_id = {}
       @devices.each{|d| names_by_id[d._id] = d.name}
       CmdrHTTP.instance_variable_set(:@device_ids, names_by_id)
-			EventMachine::run {
-				EventMachine::start_server "0.0.0.0", 1412, CmdrHTTP
-				EventMonitor.run
+      EventMachine::run {
+        EventMachine::start_server "0.0.0.0", 1412, CmdrHTTP
+        EventMonitor.run
         CmdrWebsocket.new.run rescue nil
-				@devices.each{|device|
-					Thread.new do
-						begin
-							device.run
-						rescue
-							DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
-							retry
-						end
-					end
-				}
-			}
-		end
-	end
+        @devices.each{|device|
+          Thread.new do
+            begin
+              device.run
+            rescue
+              DaemonKit.logger.error("Device #{device.name} failed: #{$!}")
+              retry
+            end
+          end
+        }
+      }
+    end
+  end
 end
 
 require "#{File.dirname(__FILE__)}/cmdr/cmdr_room"

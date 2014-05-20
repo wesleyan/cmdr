@@ -17,11 +17,11 @@
 
 #---
 #{
-#	"name": "PJLinkProjector",
-#	"depends_on": "SocketProjector",
-#	"description": "Controls any projector capable of understanding the PJLink protocol standard, ie. the Epson PowerLite Pro G5750WU",
-#	"author": "Jonathan Lyons",
-#	"email": "jclyons@wesleyan.edu",
+# "name": "PJLinkProjector",
+# "depends_on": "SocketProjector",
+# "description": "Controls any projector capable of understanding the PJLink protocol standard, ie. the Epson PowerLite Pro G5750WU",
+# "author": "Jonathan Lyons",
+# "email": "jclyons@wesleyan.edu",
 # "type": "Projector"
 #}
 #---
@@ -112,36 +112,36 @@ class PJLinkProjector < SocketProjector
   #  self.timer = false
   #end
 
-	managed_state_var :power, 
-		:type => :boolean,
-		:display_order => 1,
-		:action => proc{|on|
-      "%1POWR #{on ? "1" : "0"}\r"
-		}
+  managed_state_var :power, 
+    :type => :boolean,
+    :display_order => 1,
+    :action => proc{|on|
+          "%1POWR #{on ? "1" : "0"}\r"
+    }
 
-	managed_state_var :input, 
-		:type => :option,
-		# Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
-		:options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID'],
-		:display_order => 2,
-		:action => proc{|source|
-			"%1INPT #{INPUT_HASH[source]}\r"
-		}
+  managed_state_var :input, 
+    :type => :option,
+    # Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
+    :options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID'],
+    :display_order => 2,
+    :action => proc{|source|
+      "%1INPT #{INPUT_HASH[source]}\r"
+    }
 
-	managed_state_var :mute, 
-		:type => :boolean,
-		:action => proc{|on|
-			"%1AVMT #{on ? "31" : "30"}\r"
-		}
+  managed_state_var :mute, 
+    :type => :boolean,
+    :action => proc{|on|
+      "%1AVMT #{on ? "31" : "30"}\r"
+    }
 
-	managed_state_var :video_mute,
-		:type => :boolean,
-		:display_order => 4,
-		:action => proc{|on|
-			"%1AVMT #{on ? "31" : "30"}\r"
-		}
+  managed_state_var :video_mute,
+    :type => :boolean,
+    :display_order => 4,
+    :action => proc{|on|
+      "%1AVMT #{on ? "31" : "30"}\r"
+    }
 
-  state_var :timer, :type => :boolean, :display_order => 5
+    state_var :timer, :type => :boolean, :display_order => 5
 
   #virtual_var :auto_off,
   #  :type => :boolean,
@@ -158,37 +158,37 @@ class PJLinkProjector < SocketProjector
   #    end
   #  }
 
-	responses do
-		#ack ":"
-		error :general_error, "ERR", "Received an error"
-    match :err_status, /%1ERST=(\d+)/, proc{|m|
-        interpret_error m[1] if m[1] != "000000"
+  responses do
+    #ack ":"
+    error :general_error, "ERR", "Received an error"
+        match :err_status, /%1ERST=(\d+)/, proc{|m|
+            interpret_error m[1] if m[1] != "000000"
+        }
+    match :power,  /%1POWR=(.+)/, proc{|m|
+        #change_power(m[1] == "1") 
+            self.power = (m[1] == "1")
+        self.cooling = (m[1] == "2")
+        self.warming = (m[1] == "3") || (m[1] == "ERR3")
     }
-		match :power,  /%1POWR=(.+)/, proc{|m|
-			  #change_power(m[1] == "1") 
-        self.power = (m[1] == "1")
-	  		self.cooling = (m[1] == "2")
-	  		self.warming = (m[1] == "3") || (m[1] == "ERR3")
-		}
-		match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
-		match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
-    match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
-        self.lamp_hours = m[1].to_i
-        self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
-    }
-    match :name, /%1NAME=(.*)/, proc{|m|
-        self.projector_name = m[1].chomp 
-    }
+    match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
+    match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
+        match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
+            self.lamp_hours = m[1].to_i
+            self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
+        }
+        match :name, /%1NAME=(.*)/, proc{|m|
+            self.projector_name = m[1].chomp 
+        }
 
-	end
+  end
 
-	requests do
+  requests do
            send :power, "#{@_digest}%1POWR ?\r", 1
            send :source, "#{@_digest}%1INPT ?\r", 1
            send :mute, "#{@_digest}%1AVMT ?\r", 1
            send :err_status, "#{@_digest}%1ERST ?\r", 0.1
            send :lamp_usage, "#{@_digest}%1LAMP ?\r", 0.1
            send :info, "#{@_digest}%1NAME ?\r", 0.01
-	end
+  end
 
 end

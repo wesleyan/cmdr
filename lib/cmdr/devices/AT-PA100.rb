@@ -17,11 +17,11 @@
 
 #---
 #{
-#	"name": "ATPA100",
-#	"depends_on": "RS232Device",
-#	"description": "Controls Atlona AT-PA 100 amplifiers.",
-#	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu"
+# "name": "ATPA100",
+# "depends_on": "RS232Device",
+# "description": "Controls Atlona AT-PA 100 amplifiers.",
+# "author": "Micah Wylde",
+# "email": "mwylde@wesleyan.edu"
 #}
 #---
 

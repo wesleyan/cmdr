@@ -18,7 +18,6 @@ require 'cgi'
 require 'cgi/session'
 require 'couchrest'
 require 'digest'
-require 'iconv'
 require '../ruby/authenticate'
 
 def error
@@ -59,7 +58,7 @@ if @userData.nil?
 end
 
 @hash = Digest::SHA256.digest(@userData['salt'] + Digest::SHA256.digest(@password))
-@hash = Iconv.iconv('utf-8', 'iso8859-1', @hash)[0]
+@hash = @hash.encode('UTF-8', :invalid => :replace, :undef => :replace, :replace => "?")
 
 if @hash != @userData['password']
   puts cgi.header

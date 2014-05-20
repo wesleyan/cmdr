@@ -17,11 +17,11 @@
 
 #---
 #{
-#	"name": "EpsonProjector",
-#	"depends_on": "Projector",
-#	"description": "Controls Epson PowerLite Pro G5750WU",
-#	"author": "Micah Wylde",
-#	"email": "mwylde@wesleyan.edu",
+# "name": "EpsonProjector",
+# "depends_on": "Projector",
+# "description": "Controls Epson PowerLite Pro G5750WU",
+# "author": "Micah Wylde",
+# "email": "mwylde@wesleyan.edu",
 # "type": "Projector"
 #}
 #---
@@ -46,59 +46,59 @@ class EpsonProjector < Projector
     super data
   end
 
-	managed_state_var :power, 
-		:type => :boolean,
-		:display_order => 1,
+  managed_state_var :power, 
+    :type => :boolean,
+    :display_order => 1,
     :action => proc{|on|
       if !@_cooling_timer && !on
         @_cooling_timer = EM.add_timer(5) { puts "Cooling..."; self.cooling = true }
       end
 
       "PWR #{on ? "ON" : "OFF"}\r\r"
-		}
-	
-	managed_state_var :input, 
-		:type => :option,
-		# Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
-		:options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID'],
-		:display_order => 2,
-		:action => proc{|source|
-			"SOURCE #{INPUT_HASH[source]}\r"
-		}
+    }
+  
+  managed_state_var :input, 
+    :type => :option,
+    # Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
+    :options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID'],
+    :display_order => 2,
+    :action => proc{|source|
+      "SOURCE #{INPUT_HASH[source]}\r"
+    }
 
-	managed_state_var :mute, 
-		:type => :boolean,
-		:action => proc{|on|
-			"MUTE #{on ? "ON" : "OFF"}\r"
-		}
-	
-	managed_state_var :video_mute,
-		:type => :boolean,
-		:display_order => 4,
-		:action => proc{|on|
-			"MUTE #{on ? "ON" : "OFF"}\r"
-		}
-		
-	responses do
-		ack ":"
-		error :general_error, "ERR", "Received an error"
-		match :power,  /PWR=(.+)/, proc{|m|
-	  		#DaemonKit.logger.info "Received power value #{m[1]}"
-			self.power = (m[1] == "01")
-			self.cooling = (m[1] == "03")
-			self.warming = (m[1] == "02")	
-		}
-	#	match :mute,       /MUTE=(.+)/, proc{|m| self.mute = (m[1] == "OFF")}
-		match :video_mute, /MUTE=(.+)/, proc{|m| self.video_mute = (m[1] == "ON")}
-		match :input,      /SOURCE=(.+)/, proc{|m| self.input = m[1]}
-	end
-	
-	requests do
+  managed_state_var :mute, 
+    :type => :boolean,
+    :action => proc{|on|
+      "MUTE #{on ? "ON" : "OFF"}\r"
+    }
+  
+  managed_state_var :video_mute,
+    :type => :boolean,
+    :display_order => 4,
+    :action => proc{|on|
+      "MUTE #{on ? "ON" : "OFF"}\r"
+    }
+    
+  responses do
+    ack ":"
+    error :general_error, "ERR", "Received an error"
+    match :power,  /PWR=(.+)/, proc{|m|
+        #DaemonKit.logger.info "Received power value #{m[1]}"
+      self.power = (m[1] == "01")
+      self.cooling = (m[1] == "03")
+      self.warming = (m[1] == "02") 
+    }
+  # match :mute,       /MUTE=(.+)/, proc{|m| self.mute = (m[1] == "OFF")}
+    match :video_mute, /MUTE=(.+)/, proc{|m| self.video_mute = (m[1] == "ON")}
+    match :input,      /SOURCE=(.+)/, proc{|m| self.input = m[1]}
+  end
+  
+  requests do
            send :power, "PWR?\r", 1
            send :source, "SOURCE?\r", 1
            send :mute, "MUTE?\r", 1
            send :lamp_usage, "*ltim=?#", 0.1
-	end
+  end
 
   
 end

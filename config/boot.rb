@@ -1,7 +1,7 @@
 # Don't change this file!
 # Configure your daemon in config/environment.rb
 
-DAEMON_ROOT = "#{File.expand_path(File.dirname(__FILE__))}/.." unless defined?( DAEMON_ROOT )
+DAEMON_ROOT = "#{File.expand_path(File.dirname(__FILE__))}/.." unless defined?(DAEMON_ROOT)
 
 # Use Bundler (preferred)
 begin

@@ -17,13 +17,13 @@
 
 #---
 #{
-#	"name": "ExtronMPS409",
-#	"depends_on": "VideoSwitcher",
-#	"description": "Controls the MPS409 Extron switcher",
-#	"author": "Brian Gapinski",
-#	"email": "bgapinski@wesleyan.edu",
-#	"abstract": true,
-#	"type": "Video Switcher"
+# "name": "ExtronMPS409",
+# "depends_on": "VideoSwitcher",
+# "description": "Controls the MPS409 Extron switcher",
+# "author": "Brian Gapinski",
+# "email": "bgapinski@wesleyan.edu",
+# "abstract": true,
+# "type": "Video Switcher"
 #}
 #---
 
