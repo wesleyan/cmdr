@@ -45,7 +45,7 @@
       building = Tp.room.get('building');
       name = Tp.room.get('name');
       $('#location > p').html(building.slice(0,4) + " " + name);
-      return $('#room-label').html(building + " " + name);
+      return $('#location > p').html(building.slice(0,4) + " " + name);
     };
 
     RoomLabel.prototype.bind = function() {
