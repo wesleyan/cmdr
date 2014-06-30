@@ -24,41 +24,64 @@
       var _ref;
       return this.get('icon') || ((_ref = this.get('source')) != null ? _ref.get('icon') : void 0);
     },
+    source: function() {
+      var _ref;
+      _ref = this.get('source').get('name');
+      if (_ref) _ref = _ref.substring(0,6).toLowerCase();
+      return _ref;
+    },
     css: function(size) {
       var _ref;
-      _ref = this.get('name');
+      _ref = this.sourceType();
       switch (_ref.toLowerCase()) {
         case 'hdmi':
-          return 'cf icon-hdmi cf-' + size + 'x';
+          return 'icon-hdmi icon-' + size + 'x';
         case 'vga':
-          return 'cf icon-vga cf-' + size + 'x';
+          return 'icon-vga icon-' + size + 'x';
         case 'mac':
-          return 'fa fa-apple fa-' + size + 'x';
+          return 'icon-apple icon-' + size + 'x';
         case 'pc':
-          return 'fa fa-windows fa-' + size + 'x';
+          return 'icon-windows icon-' + size + 'x';
         case 'dvd':
-          return 'cf icon-dvd cf-' + size + 'x';
+          return 'icon-vynil icon-' + size + 'x';
         case 'bluray':
-          return 'cf icon-dvd cf-' + size + 'x';
+          return 'icon-vynil icon-' + size + 'x';
         default:
-          return 'cf icon-cmdr cf-' + size + 'x';
+          return 'icon-cmdr icon-' + size + 'x';
       }
+    },
+    sourceType: function() {
+      var _ref, re_hdmi, re_vga, re_mac, re_pc, re_bluray, re_dvd, re_vcr;
+      _ref = this.get('source').get('name');
+      re_hdmi = /hdmi/i;
+      re_vga = /vga/i;
+      re_mac = /mac/i;
+      re_pc = /pc/i;
+      re_bluray = /bluray/i;
+      re_dvd = /dvd/i;
+      re_vcr = /vcr/i;
+      if (re_hdmi.exec(_ref)) return 'hdmi';
+      if (re_vga.exec(_ref)) return 'vga';
+      if (re_mac.exec(_ref)) return 'mac';
+      if (re_pc.exec(_ref)) return 'pc';
+      if (re_bluray.exec(_ref)) return 'bluray';
+      if (re_dvd.exec(_ref)) return 'dvd';
+      if (re_vcr.exec(_ref)) return 'vcr';
+      return 'cmdr';
     }
+    
   });
 
   Tp.ActionController = Backbone.Collection.extend({
     model: Tp.Action,
     select: function(id) {
-      var action, cube_face, sel;
-      var face_map = {'mac':'c-1','pc':'c-2','hdmi':'c-3','vga':'c-4','dvd':'c-5'};
+      var action, sel;
       action = this.get(id);
       console.log('Action controller action: ');
       console.log(action);
       if (action) {
         Tp.log("Selecting %s", action);
         sel = action.attributes.name.toLowerCase();
-        cube_face = face_map[sel] ? face_map[sel] : 'c-6'; //hackey solution
-        $('.cube').removeClass('c-1 c-2 c-3 c-4 c-5 c-6').addClass(cube_face);
         action.select();
         this.selection = action;
         return this.trigger("change:selection");

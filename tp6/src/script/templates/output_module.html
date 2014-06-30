@@ -14,32 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<div class='nav-item' data-tab='1'>
-  <i class='${output_icon}'></i>
-  <span>${name}</span>
-</div>
-
-<div class='out-info'>
-  <div class="transforms">
-    <div class="cube c-6">
-      <div class="face f-1"><i class="fa-7x fa fa-apple"></i></div>
-      <div class="face f-2"><i class="fa-7x fa fa-windows"></i></div>
-      <div class="face f-3"><i class="fa-7x cf icon-hdmi cf-7x"></i></div>
-      <div class="face f-4"><i class="fa-7x cf icon-vga cf-7x"></i></div>
-      <div class="face f-5"><i class="fa-7x cf icon-dvd cf-7x"></i></div>
-      <div class="face f-6"><i class="fa-7x cf icon-cmdr cf-7x"></i></div>
+<div class="output-module container-fluid">
+  <div class="row out-ctrl">
+    <div class="col-xs-8 sources-list">
+      <div class="spinner"></div>
+    </div>
+    <div class="col-xs-3 out-name">
+      <div class="pwr-btn"> <i class="icon-off icon-6x"></i> </div>
+      <div class="blank-btn"> <span>${blank_button_label}</span> </div>
     </div>
   </div>
 </div>
-<div class='out-ctrl'>
-  <div class='pwr-btn'>
-    <label>
-      <i class='fa fa-power-off fa-3x'></i>
-    </label>
-  </div>
-  <div class='vm-btn'>
-    <label>
-      <span class='vm-txt'>VIDEO MUTE</span>
-    </label>
-  </div>
-</div>
+

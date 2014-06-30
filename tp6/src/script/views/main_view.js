@@ -18,11 +18,12 @@
   $(document).ready(function() {
 //    Tp.projectorPane = new Tp.ProjectorPaneView;
 //    Tp.actionListView = new Tp.ActionListView;
-//    Tp.contextView = new Tp.ContextView
     
     Tp.outputPane = new Tp.OutputPaneView;
-
     return Tp.inputListView = new Tp.InputListView;
+    //Tp.inputListView = new Tp.InputListView;
+
+    //return Tp.contextView = new Tp.ContextView;
   });
 
 }).call(this);

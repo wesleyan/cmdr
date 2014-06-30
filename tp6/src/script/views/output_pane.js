@@ -1,8 +1,7 @@
 /**
  * Copyright (C) 2014 Wesleyan University
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License"); * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * 
  *   http://www.apache.org/licenses/LICENSE-2.0
@@ -33,52 +32,68 @@
       Tp.room.bind("change:source", this.sourceChanged);
       this.bind("autoOffCancel", this.autoOffCancel);
       Tp.room.offTimer = null;
+      //this.sourcesList = new Tp.InputListView();
       return Tp.room.warningTimer = null;
     },
     render: function() {
       ($.tmpl("output-pane-template", {
-        output_icon: "fa fa-video-camera",
-        name: "projector"
-      })).appendTo("#o-1");
+        output_icon: "icon-facetime-video icon-2x",
+        name: "Projector",
+        power_button_label: "Off",
+        blank_button_label: "Video Mute"
+      })).appendTo("#outputs");
+      $('.out-list > nav').append('<li class="nav-active"><span>Projector</span><i class="icon-arrow-right3 icon-1x"></i></li>');
       console.log("Setting up handlers");
-
+      
       //NEW INTERFACE
-      $('.pwr-btn > label').click(this.powerButtonClicked);
-      $('.vm-btn > label').click(this.blankButtonClicked);
-      $('#vol-mute').click(this.muteButtonClicked);
-      $('#vol-s-1').children().click({volume: 0.2}, this.volumeClicked);
-      $('#vol-s-2').children().click({volume: 0.4}, this.volumeClicked);
-      $('#vol-s-3').children().click({volume: 0.6}, this.volumeClicked);
-      $('#vol-s-4').children().click({volume: 0.8}, this.volumeClicked);
-      $('#vol-s-5').children().click({volume: 1.0}, this.volumeClicked);
-    
+      //this.sourcesList.render();
+      $('.pwr-btn').click(this.powerButtonClicked);
+      $(document).on('click', '.vol-lvl > div', this.volumeClicked);
+      $(document).on('click', '.vol-mute', this.audioMuteClicked);
+      $(document).on('click', '.blank-btn', this.blankButtonClicked);
 
-      return $('#vol-knob');
+      this.projectorChanged();
+      this.sourceChanged();
+
+      return;
     },
     projectorChanged: function() {
-      var state, text;
+      var state, text, btnClass;
       state = Tp.devices.projector.get('state');
       this.autoOff(state);
       
-      //NEW INTERFACE
-      console.log('projector state: ' + state);
+      toggleSpinner(false);
       if (state === 'on') {
-        $('.vm-btn > label').removeClass('vm-on');
-        $('.pwr-btn > label').removeClass('warming').addClass('pwr-on');
+        text = 'On';
+        $('.pwr-btn').removeClass('pwr-warming pwr-cooling').addClass('pwr-on').children('i').removeClass('blink');
+        $('.proj-info').children('.alert-txt').html('On');
       }
       else if (state === 'muted') {
-        $('.vm-btn > label').addClass('vm-on');
+        text = 'On';
+        $('.proj-info').children('.alert-txt').html('Mute');
       }
       else if (state === 'warming') {
-        $('.vm-btn > label').removeClass('vm-on');
-        $('.pwr-btn > label').removeClass('pwr-on').addClass('warming');
+        text = 'Warming';
+        $('.pwr-btn').removeClass('pwr-on pwr-cooling').addClass('pwr-warming').children('i').addClass('blink');
+        $('.proj-info').children('.alert-txt').html('Warming');
       }
-      else {
-        $('.vm-btn > label').removeClass('vm-on');
-        $('.pwr-btn > label').removeClass('pwr-on warming');
+      else if (state === 'cooling') {
+        text = 'Cooling';
+        btnClass = 'info';
+        $('.pwr-btn').removeClass('pwr-on pwr-warming').addClass('pwr-cooling').children('i').addClass('blink');
+        $('.proj-info').children('.alert-txt').html('Cooling');
       }
-
-      return $('.screen-image-overlay').css('opacity', text === "off" ? 0 : 0.4);
+      else if (state === 'off') {
+        text = 'Off';
+        btnClass = 'danger';
+        $('.pwr-btn').removeClass('pwr-on pwr-warming pwr-cooling').children('i').removeClass('blink');
+        $('.proj-info').children('.alert-txt').html('Off');
+      }
+      
+      return $('.screen-image-overlay').css('opacity', text === "Off" ? 0 : 0.4);
+    },
+    changeClass: function(el, pre, newClass) {
+      $(el).removeClass(pre+'info '+pre+'warning '+pre+'success '+pre+'danger '+pre+'default ').addClass(pre+newClass);
     },
     autoOff: function(state) {
       var shutOff, warning;
@@ -109,123 +124,92 @@
     },
     sourceChanged: function() {
       var state;
+      toggleSpinner(false);
       state = Tp.room.get('source');
-      console.log("../images/sources/" + state.get('icon'));
-      $('.source-image').attr('src', "../images/sources/" + state.get('icon'));
-      return $('.source-image').load(function() {
-        var H, W, h, sH, sW, w, y, _ref;
-        W = this.naturalWidth;
-        H = this.naturalHeight;
-        console.log("asdf %d, %d", W, H);
-        sW = 80;
-        sH = 80;
-        _ref = W > H ? [sW, sW * (H / W)] : [sH * (H / W), sH], w = _ref[0], h = _ref[1];
-        y = (sH - h) / 2 + 80;
-        return $(this).height(h).width(w).css('left', "50%").css("margin-left", -w / 2).css('top', y);
-      });
+      console.log(state);
+      if (state) $('#'+state.id).trigger('click');
+      return ;
     },
     videoMuteChanged: function() {
       var mute, text;
+      toggleSpinner(false);
       mute = Tp.devices.projector.get('video_mute');
 
-      //NEW INTERFACE
       if (mute) {
-        $('.vm-btn > label').addClass('vm-on');
-        text = "show video";
+        $('.blank-btn').addClass('blank-mute');
+        text = "Unmute Video";
       }
       else {
-        $('.vm-btn > label').removeClass('vm-on');
-        text = "mute video";
+        $('.blank-btn').removeClass('blank-mute');
+        text = "Mute Video";
       }
-
-      return text;
+      return $('.blank-btn > span').html(text);
     },
     audioMuteChanged: function() {
       var mute, text;
+      toggleSpinner(false);
       mute = Tp.devices.volume.get('mute');
-
-      //NEW INTERFACE
       if (mute) {
-        $('#vol-mute').addClass('vol-muted-m');
-        $('#vol-switches > label').each(function() {
-          $(this).children('div').children('div').addClass('vol-muted');
-          if ($(this).children('div').children('div').hasClass('vol-checked')) {
-            $(this).children('div').children('div').addClass('vol-checked-muted');
-          }
-        });
-        $('input[name="switch"]').attr('disabled',true);
-        text = "unmute";
+        $('.vol').not('.vol-mute').addClass('vol-muted');
+        $('.vol-mute').addClass('red');
       }
       else {
-        $('#vol-mute').removeClass('vol-muted-m');
-        $('#vol-switches > label').each(function() {
-          $(this).children('div').children('div').removeClass('vol-muted');
-          if ($(this).children('div').children('div').hasClass('vol-checked')) {
-            $(this).children('div').children('div').removeClass('vol-checked-muted');
-          }
-        });
-        $('input[name="switch"]').attr('disabled',false);
-        text = "mute";
+        $('.vol').removeClass('vol-muted');
+        $('.vol-mute').removeClass('red');
       }
 
       return text;
     },
     audioLevelChanged: function() {
       var level;
+      toggleSpinner(false);
       level = Tp.devices.volume.get('volume');
+      console.log("audio level changed " + level) ;
 
-      //NEW INTERFACE
-      if (level > 0 && level <= 0.2) {
-        $('#vol-s-1').children().click();
-      }
-      else if (level > 0 && level <= 0.4) {
-        $('#vol-s-2').children().click();
-      }
-      else if (level > 0 && level <= 0.6) {
-        $('#vol-s-3').children().click();
-      }
-      else if (level > 0 && level <= 0.8) {
-        $('#vol-s-4').children().click();
-      }
-      else if (level > 0 && level <= 1) {
-        $('#vol-s-5').children().click();
-      }
+      level < 0.1 ? $('#vol-1').removeClass('vol-on') : $('#vol-1').addClass('vol-on');
+      level < 0.2 ? $('#vol-2').removeClass('vol-on') : $('#vol-2').addClass('vol-on');
+      level < 0.3 ? $('#vol-3').removeClass('vol-on') : $('#vol-3').addClass('vol-on');
+      level < 0.4 ? $('#vol-4').removeClass('vol-on') : $('#vol-4').addClass('vol-on');
+      level < 0.5 ? $('#vol-5').removeClass('vol-on') : $('#vol-5').addClass('vol-on');
+      level < 0.6 ? $('#vol-6').removeClass('vol-on') : $('#vol-6').addClass('vol-on');
+      level < 0.7 ? $('#vol-7').removeClass('vol-on') : $('#vol-7').addClass('vol-on');
+      level < 0.8 ? $('#vol-8').removeClass('vol-on') : $('#vol-8').addClass('vol-on');
+      level < 0.9 ? $('#vol-9').removeClass('vol-on') : $('#vol-9').addClass('vol-on');
+
       return level;
     },
     powerButtonClicked: function() {
       var state;
-      var label = $('.pwr-btn > label');
-      if (label.hasClass('pwr-on')) {
-        label.removeClass('pwr-on warming');
-      }
-      else if (label.hasClass('warming')) { 
-      }
-      else { 
-        label.addClass('warming');
-      }
+      toggleSpinner(true);
       state = Tp.devices.projector.get('state');
       return Tp.devices.projector.state_set('power', state === "off");
     },
     blankButtonClicked: function() {
       var mute;
+      toggleSpinner(true);
       mute = Tp.devices.projector.get('video_mute');
       return Tp.devices.projector.state_set('video_mute', !mute);
     },
-    muteButtonClicked: function() {
+    audioMuteClicked: function() {
       var mute;
+      toggleSpinner(true);
       mute = Tp.devices.volume.get('mute');
       return Tp.devices.volume.state_set('mute', !mute);
     },
     volumeClicked: function(eventData) {
-      var volume = eventData.data.volume;
-      return Tp.devices.volume.state_set('volume', volume);
+      var volume = eventData.target.id; //we search the id for the first digit
+      var d = volume[volume.search(/\d/)];  //and set the voluem to that divided by 10
+      var vol = d ? d/10 : 0 ; 
+      toggleSpinner(true);
+      console.log("volume " + volume[d] + " " + volume);
+      return Tp.devices.volume.state_set('volume', vol);
     },
     autoOffClicked: function() {
       return Tp.OutputPane.trigger("autoOffCancel");
     },
     checkState: function() {
       console.log('checking state');
-    }
+    },
   });
 
 }).call(this);

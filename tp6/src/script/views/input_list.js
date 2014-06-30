@@ -29,13 +29,14 @@
     render: function() {
       var actionItemClicked, _ref
         _this = this;
-        $('#src-group').html($.tmpl("input-list-template", (_ref = Tp.actions) != null ? _ref.map(function(action) {
-        return {
-          id: action.get('id'),
-          name: action.get('name').toLowerCase(),
-          css: action.css(2)
-        };
+      $('.sources-list').html($.tmpl("input-list-template", (_ref = Tp.actions) != null ? _ref.map(function(action) {
+          return {
+            id: action.get('id'),
+            name: action.source(),
+            css: action.css(4)
+          };
       }) : void 0));
+
       actionItemClicked = function(event) {
         console.log("Trying to select " + event.currentTarget.id);
         return Tp.actions.select(event.currentTarget.id);
@@ -50,8 +51,8 @@
       _sel = $('#' + (_ref != null ? _ref.id : void 0));
       console.log(_sel);
       console.log('selection changed '+Tp.actions.selection.id);
-      $('.input-list-item').removeClass('selected');
-      _sel.addClass('selected').children('input').prop('checked', true);
+      $('.input-list-item').removeClass('src-selected');
+      _sel.addClass('src-selected');
 
       return _sel;
     }
