@@ -4,7 +4,6 @@
 
     <script src='script/vendor/json2.js'></script>
     <script src="script/vendor/jquery-1.11.1.min.js"></script>
-    <!--script src='script/vendor/jquery-1.7.1.js'></script-->
     <!--script src='script/vendor/jquery-ui.js'></script-->
     <script src='script/vendor/jquery.tmpl.js'></script>
     <!--script src='script/vendor/jquery-ui.slider.js'></script-->
@@ -55,7 +54,21 @@
     <!--script src="script/vendor/modernizr-2.6.2.min.js"></script-->
   </head>
   <body>
-              <div class="spinner"></div>
+    <div id='lost-connection'></div>
+      <div class='title'>Server Connection Lost </div>
+      <div class='text'>The connection to the server has been lost. Try operating the equipment manually, or call 4959 for help</div>
+      <div class='reconnection-attempt'>
+        <span>Will attempt to reconnect in</span>
+        <span class='reconnection-counter'>2 seconds</span>
+      </div>
+      <div class='reconnecting' style='display: none;'>Reconnecting...</div>
+    </div>
+    <div id='auto-off'>
+      <div class='title'>Projector Shutting Down!</div>
+      <div class='text'>To continue using the projector, press the button below.</div>
+      <div class='cancel-button button'><div class='label'>Cancel</div></div>
+    </div>
+    <div class="spinner"></div>
     <div class="container-fluid">
       <div class="row">
         <div class="col-xs-3" id="info">
