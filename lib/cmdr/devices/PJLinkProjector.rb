@@ -28,7 +28,7 @@
 require 'digest/md5'
 
 class PJLinkProjector < SocketProjector  
-  INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22}
+  INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22, "LAN" => 52, "FREEZE" => 46}
   ERROR = ["Fan", "Lamp", "Temperature", "Cover open", "Filter", "Other"]
 
   configure do
@@ -122,8 +122,8 @@ class PJLinkProjector < SocketProjector
 
   managed_state_var :input, 
     :type => :option,
-    # Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
-    :options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID'],
+    # Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, SVID, LAN, and freeze image in that order
+    :options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID', 'LAN', 'FREEZE'],
     :display_order => 2,
     :action => proc{|source|
       "%1INPT #{INPUT_HASH[source]}\r"
@@ -140,6 +140,12 @@ class PJLinkProjector < SocketProjector
     :display_order => 4,
     :action => proc{|on|
       "%1AVMT #{on ? "31" : "30"}\r"
+    }
+
+  managed_state_var :image_freeze,
+    :type => :boolean
+    :action => proc{|on|
+      "%1INPT #{on ? "46" : "47"}\r"
     }
 
     state_var :timer, :type => :boolean, :display_order => 5
@@ -176,13 +182,14 @@ class PJLinkProjector < SocketProjector
     }
     match :video_mute, /%1AVMT=(.+)/, proc{|m| self.video_mute = (m[1] == "31")}
     match :input,      /%1INPT=(.+)/, proc{|m| self.input = m[1]}
-        match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
-            self.lamp_hours = m[1].to_i
-            self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
-        }
-        match :name, /%1NAME=(.*)/, proc{|m|
-            self.projector_name = m[1].chomp 
-        }
+    match :image_freeze, /%1INPT=(.+)/, proc{|m| self.image_freeze = (m[1] == "46")}
+    match :lamp_hours, /%1LAMP=(\d+) (\d)/, proc {|m|
+        self.lamp_hours = m[1].to_i
+        self.percent_lamp_used =((m[1].to_f / 2000) * 100).floor
+    }
+    match :name, /%1NAME=(.*)/, proc{|m|
+        self.projector_name = m[1].chomp 
+    }
 
   end
 
@@ -190,6 +197,7 @@ class PJLinkProjector < SocketProjector
            send :power, "#{@_digest}%1POWR ?\r", 1
            send :source, "#{@_digest}%1INPT ?\r", 1
            send :mute, "#{@_digest}%1AVMT ?\r", 1
+           send :image_freeze, "#{@_digest}%1INPT ?\r", 1 
            send :err_status, "#{@_digest}%1ERST ?\r", 0.1
            send :lamp_usage, "#{@_digest}%1LAMP ?\r", 0.1
            send :info, "#{@_digest}%1NAME ?\r", 0.01

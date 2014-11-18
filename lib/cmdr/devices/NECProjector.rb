@@ -122,11 +122,13 @@ class NECProjector < Projector
     end
   end
   
+  # TCP port number is 7142
   RGB1   = 1
   RGB2   = 2
   VIDEO  = 6
   SVIDEO = 11
-  INPUT_HASH = {"RGB1" => 1, "RGB2" => 2, "VIDEO" => 6, "SVIDEO" => 11}
+  LAN    = 32
+  INPUT_HASH = {"RGB1" => 1, "RGB2" => 2, "VIDEO" => 6, "SVIDEO" => 11, "LAN" => 32}
   
   MODEL_MAP = {[10, 4, 9]=>"NP300", [3, 0, 6]=>"VT80", [12, 0, 8]=>"NP1150/NP2150/NP3150", [11, 1, 0]=>"NP62", [10, 1, 9]=>"NP500", [2, 2, 3]=>"LT240K/LT260K", [12, 2, 9]=>"VT800", [4, 0, 3]=>"GT5000", [4, 1, 1]=>"GT2150", [2, 1, 3]=>"LT220", [2, 0, 6]=>"LT380", [1, 2, 3]=>"MT1075", [10, 3, 9]=>"NP400", [8, 0, 7]=>"NP4000/NP4001", [6, 0, 5]=>"WT610/WT615", [3, 0, 4]=>"VT770", [11, 0, 0]=>"NP41/61", [10, 0, 9]=>"NP600", [5, 0, 3]=>"HT1000", [2, 0, 5]=>"LT245/LT265", [1, 0, 6]=>"NP1000/NP2000", [12, 1, 9]=>"NP901W", [4, 1, 3]=>"GT6000", [4, 0, 1]=>"GT1150", [1, 0, 1]=>"MT1060/MT1065", [10, 0, 8]=>"VT700", [2, 1, 6]=>"LT280", [12, 1, 8]=>"NP3151W", [10, 2, 9]=>"NP500", [6, 0, 3]=>"WT600", [5, 0, 4]=>"HT1100", [3, 0, 7]=>"VT90", [2, 0, 3]=>"LT240/LT260", [12, 0, 9]=>"NP905", [1, 1, 3]=>"MT860"}
   
@@ -145,6 +147,7 @@ class NECProjector < Projector
     :set_brightness => [3, 0x10, proc {|brightness| [0, 0xFF, 0, brightness, 0].pack("ccccc")}, nil],
     :set_volume     => [3, 0x10, proc {|volume| [5, 0, 0, (volume * 63).round, 0].pack("ccccc")}, nil],
     :set_mute       => [2, proc {|on| on ? 0x12 : 0x13}, nil, nil],
+    :image_freeze   => [1, 0x98, proc {|on| on ? 1 : 2}, nil],
     :running_sense  => [0, 0x81, nil, proc {|frame|
       self.power       = frame["data"][0] & 2**1 != 0
       @cooling_maybe   = frame["data"][0] & 2**5 != 0
@@ -173,12 +176,18 @@ class NECProjector < Projector
         when [2, 1] then self.input = "RGB2"
         when [1, 2] then self.input = "VIDEO"
         when [1, 3] then self.input = "SVIDEO"
+        when [2, 7] then self.input = "LAN"
       end
       self.video_mute = data[28] == 1
       self.mute = data[29] == 1
+      self.image_freeze = data[31] == 1
       self.model = MODEL_MAP[[data[0], data[69], data[70]]]
       self.has_signal = data[84] != 1
       self.picture_displaying = data[84] == 0
+      # data[84] == 4 means LAN is displaying ??
+      # This must have something to do with how displaying from LAN works- I thought it was 
+      # just another input, but I guess not. Will have to actually test before I know if I
+      # need to change anything
     }],
     :projector_info_request => [0, 0xBF, [2].pack("c"), proc {|frame|
       data = frame['data']
@@ -223,6 +232,7 @@ class NECProjector < Projector
         when [2, 1] then self.input = "RGB2"
         when [1, 2] then self.input = "VIDEO"
         when [1, 3] then self.input = "SVIDEO"
+        when [2, 7] then self.input = "LAN"
       end
     }],
     :error_status_request => [0, 0x88, nil, proc{|frame|
@@ -261,6 +271,7 @@ class NECProjector < Projector
   state_var :picture_displaying, :type => :boolean,  :editable => false
   state_var :volume,             :type => :percentage
   state_var :mute,               :type => :boolean
+  state_var :image_freeze,       :type => :boolean
   
   requests do |r|
     r.send :running_sense,          request_for_name(:running_sense),          1.0

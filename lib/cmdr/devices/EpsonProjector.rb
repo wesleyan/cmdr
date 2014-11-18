@@ -27,7 +27,7 @@
 #---
 
 class EpsonProjector < Projector  
-  INPUT_HASH = {"HDMI" => 30, "YPBR" => 14, "RGB1" =>  11, "VIDEO" => 41, "SVIDEO" => 42}
+  INPUT_HASH = {"HDMI" => 30, "YPBR" => 14, "RGB1" =>  11, "VIDEO" => 41, "SVIDEO" => 42, "LAN" => 53}
 
   configure do
     #DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
@@ -59,8 +59,8 @@ class EpsonProjector < Projector
   
   managed_state_var :input, 
     :type => :option,
-    # Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, and SVID in that order
-    :options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID'],
+    # Numbers correspond to HDMI, YPBR, RGB, RGB2, VID, SVID, and LAN in that order
+    :options => [ 'HDMI', 'YPBR', 'RGB1', 'VID', 'SVID', 'LAN'],
     :display_order => 2,
     :action => proc{|source|
       "SOURCE #{INPUT_HASH[source]}\r"
@@ -78,6 +78,12 @@ class EpsonProjector < Projector
     :action => proc{|on|
       "MUTE #{on ? "ON" : "OFF"}\r"
     }
+
+  managed_state_var :image_freeze,
+    :type => :boolean,
+    :action => proc{|on|
+      "FREEZE #{on ? "ON" : "OFF"}\r"
+    }
     
   responses do
     ack ":"
@@ -90,6 +96,7 @@ class EpsonProjector < Projector
     }
   # match :mute,       /MUTE=(.+)/, proc{|m| self.mute = (m[1] == "OFF")}
     match :video_mute, /MUTE=(.+)/, proc{|m| self.video_mute = (m[1] == "ON")}
+    match :image_freeze, /FREEZE=(.+)/, proc{|m| self.image_freeze = (m[1] == "ON")}
     match :input,      /SOURCE=(.+)/, proc{|m| self.input = m[1]}
   end
   
@@ -97,6 +104,7 @@ class EpsonProjector < Projector
            send :power, "PWR?\r", 1
            send :source, "SOURCE?\r", 1
            send :mute, "MUTE?\r", 1
+           send :image_freeze, "FREEZE?\r", 1
            send :lamp_usage, "*ltim=?#", 0.1
   end
 
