@@ -31,12 +31,6 @@ require 'socket'
 
 class IREmitter < Cmdr::Device
   
-  configure do
-    remote1 :type => :string
-    remote2 :type => :string
-    remote3 :type => :string
-    remote4 :type => :string
-  end
 
   command :pulse_command, :action => proc {|remote, button|
     remote_name = @remotes[remote.to_i] rescue nil
@@ -66,6 +60,12 @@ class IREmitter < Cmdr::Device
   }
 
   def initialize(name, options)
+  configure do
+    remote1 :type => :string
+    remote2 :type => :string
+    remote3 :type => :string
+    remote4 :type => :string
+  end
     Thread.abort_on_exception = true
     options = options.symbolize_keys
     DaemonKit.logger.info "Initializing IR Emitter #{options[:name]} with remote #{options[:remote]}"

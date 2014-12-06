@@ -149,17 +149,6 @@ module Cmdr
     # the device
     attr_accessor :serialport
 
-    configure do
-      port :type => :port
-      baud :type => :integer, :default => 9600
-      data_bits 8
-      stop_bits 1
-      parity 0
-      message_end "\r\n"
-      message_timeout 0.2
-      message_delay 0
-      wait_until_ack false
-    end
     
     # Creates a new RS232Device instance
     # @param [String, Symbol] name The name of the device, which is
@@ -171,6 +160,17 @@ module Cmdr
     #   updates should be saved
     # @param [String] dqueue The AMQP queue that the device watches for messages
     def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+      configure do
+        port :type => :port
+        baud :type => :integer, :default => 9600
+        data_bits 8
+        stop_bits 1
+        parity 0
+        message_end "\r\n"
+        message_timeout 0.2
+        message_delay 0
+        wait_until_ack false
+      end
       Thread.abort_on_exception = true
       
       options = options.symbolize_keys

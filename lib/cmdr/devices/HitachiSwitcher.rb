@@ -33,9 +33,6 @@
 
 require "socket"
 class HitachiSwitcher < Cmdr::Device
-  configure do
-    #DaemonKit.logger.info "@Initializing HitachiSwitcher at URI #{uri} with name #{name}"
-  end
 
   state_var :video, :type => :option, :editable => :true, :options => ("1".."6").to_a, :action => proc{|input|
         if self.video != input #If input is not the input the switcher is already on

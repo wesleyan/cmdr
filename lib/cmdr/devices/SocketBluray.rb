@@ -28,9 +28,9 @@
 
 class SocketBluray < Cmdr::SocketDevice
 
-  configure do
+#  configure do
     #DaemonKit.logger.info "@Initializing SocketBluray at URI #{options[:uri]} with name #{name}"
-  end
+#  end
 
   command :play, 
       :action => proc{

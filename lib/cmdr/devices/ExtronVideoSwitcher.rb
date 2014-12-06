@@ -26,11 +26,13 @@
 #---
 
 class ExtronVideoSwitcher < VideoSwitcher
+  def initialize(name, options)
   configure do
     baud        9600
     message_end "\r\n"
   end
-  
+  super(name,options)
+  end  
   managed_state_var :input, 
     :type => :option, 
     :display_order => 1, 

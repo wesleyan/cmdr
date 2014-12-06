@@ -331,7 +331,6 @@ module Cmdr
         end
       } if self.instance_variable_get(:@state_vars)
 
-      subclass.instance_variable_set(:@_configuration, @_configuration)
       subclass.instance_variable_set(:@_var_affects, @_var_affects)
       
       self.instance_variable_get(:@command_vars).each{|name, options|
@@ -340,22 +339,26 @@ module Cmdr
         end
       } if self.instance_variable_get(:@command_vars)
     end
-    
+    # so the issue is that the class requires information about the configuration i.e. defaults
+    # but the couch needs to update instance level parts of the configuration...
+    #
+    # we can leave an empty un-updated copy on the class?
+
     # @return [Hash{Symbol => Object}] A map from config var name to value
-    def self.configuration
-      @_configuration
-    end
+#   def self.configuration 
+#    @_configuration
+#   end
     
     # @return [Hash{Symbol => Object}] A map from config var name to value
     def configuration
-      self.class.instance_variable_get(:@_configuration)
+      @_configuration
     end
     
     # @return [Hash{Symbol => Hash}] A map from config var name to a hash containing
     #   information about the config var, as passed in to config when the var was
     #   created.
     def config_vars
-      self.class.instance_variable_get(:@config_vars)
+      @config_vars
     end
     
     # @private
@@ -419,7 +422,7 @@ module Cmdr
     #     parity 0
     #     message_end "\r\n"
     #   end
-    def self.configure &block
+    def configure &block
       ch = ConfigurationHandler.new
       ch.instance_eval(&block)
       @_configuration ||= {}
@@ -670,7 +673,7 @@ module Cmdr
     #   CouchDB representation of the device. Includes all information
     #   neccessary to recreate the device on the next restart.
     def to_couch
-      DaemonKit.logger.debug "Configuration: #{configuration}"
+      #DaemonKit.logger.debug "Configuration: #{configuration}"
       hash = {:state_vars => {}, :config => configuration, :commands => {}, :name => @name}
       
       #if configuration
@@ -701,9 +704,7 @@ module Cmdr
     def self.from_couch(hash)
       config = {}
       hash['attributes']['config'].each{|var, value|
-        unless self.configuration[var.to_sym] && (@config_vars[var.to_sym] && !@config_vars[var.to_sym][:default])
           config[var] = value
-        end
       } if hash['attributes']['config']
       device = self.new(hash['attributes']['name'], config)
       device._id = hash['_id']

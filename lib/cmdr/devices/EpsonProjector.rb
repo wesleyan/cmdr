@@ -29,6 +29,7 @@
 class EpsonProjector < Projector  
   INPUT_HASH = {"HDMI" => 30, "YPBR" => 14, "RGB1" =>  11, "VIDEO" => 41, "SVIDEO" => 42, "LAN" => 53}
 
+def initialize(name,opts)
   configure do
     #DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
     port :type => :port
@@ -39,7 +40,8 @@ class EpsonProjector < Projector
     message_end "\r:"
     message_timeout 2.0
   end
-
+	super(name,opts)
+end
   def read data
     EM.cancel_timer @_cooling_timer if @_cooling_timer
     @_cooling_timer = nil

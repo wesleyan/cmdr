@@ -26,9 +26,12 @@
 #---
 
 class SocketExtron < SocketVideoSwitcher
+  def initialize(name,opts)
   configure do
     #DaemonKit.logger.info "@Initializing SocketExtron at URI #{options[:uri]} with name #{name}"
     message_end "\r\n"
+  end
+	  super(name,opts)
   end
   #managed_state_var :input, 
   # :type => :option, 

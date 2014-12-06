@@ -31,9 +31,9 @@ class PJLinkProjector < SocketProjector
   INPUT_HASH = {"HDMI" => 32, "YPBR" => 13, "RGB1" => 11, "VIDEO" => 23, "SVIDEO" => 22, "LAN" => 52, "FREEZE" => 46}
   ERROR = ["Fan", "Lamp", "Temperature", "Cover open", "Filter", "Other"]
 
-  configure do
+#  configure do
     #DaemonKit.logger.info "@Initializing PJLinkProjector at URI #{options[:uri]} with name #{@name}"
-  end
+#  end
 
   def initialize(name, options)
     options = options.symbolize_keys
@@ -143,7 +143,7 @@ class PJLinkProjector < SocketProjector
     }
 
   managed_state_var :image_freeze,
-    :type => :boolean
+    :type => :boolean,
     :action => proc{|on|
       "%1INPT #{on ? "46" : "47"}\r"
     }

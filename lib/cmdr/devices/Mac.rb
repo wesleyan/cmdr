@@ -31,10 +31,6 @@ require 'net/ssh'
 
 class Mac < Computer
 
-  configure do
-    username :type => :string
-    password :type => :password
-  end
   
   state_var :logged_in,     :type => :boolean,  :editable => false
   state_var :current_user,  :type => :string,   :editable => false
@@ -56,6 +52,10 @@ class Mac < Computer
   state_var :mac_addr,    :type => :string, :editable => false
   
   def initialize(name, options)
+  configure do
+    username :type => :string
+    password :type => :password
+  end
     DaemonKit.logger.info "Initializing Mac on #{self.ip_address}"
     options = options.symbolize_keys
 

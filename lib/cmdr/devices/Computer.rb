@@ -50,10 +50,6 @@ end
 
 
 class Computer < Cmdr::Device
-  configure do
-    ip_address :type => :string
-    mac_address :type => :string
-  end
   #attempt to turn on the computer via WoL
   command :start, :action => proc{
     w = Wol::WakeOnLan.new(:address => configuration[:ip_address], :mac => self.mac_address)
@@ -64,16 +60,22 @@ class Computer < Cmdr::Device
   state_var :reachable, :type => :boolean, :editable => false, :display_order => 1
   
   def initialize(name, options)
+  configure do
+    ip_address :type => :string
+    mac_address :type => :string
+  end
     @ip_address = options[:ip_address]
     super(name, options)
     
     EM.defer {
       Thread.abort_on_exception = true
       while true
-        self.reachable = Ping.pingecho(configuration[:ip_address])
+        @reachable = Ping.pingecho(configuration[:ip_address])
         sleep 5
       end
     }
+    DaemonKit.logger.info("Waiting for messages on cmdr:dqueue:#{@name}")
+
   end 
 end
 

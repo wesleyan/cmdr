@@ -50,7 +50,7 @@ class Projector < Cmdr::RS232Device
   state_var :operational, :type => :boolean
   #state_var :turned_on,  :type => :time', :editable => false
   #state_var :turned_off, :type => :time', :editable => false
-  state_var :image_freeze :type => :boolean
+  state_var :image_freeze,:type => :boolean
   
   virtual_var :lamp_remaining, :type => :string, :depends_on => [:lamp_hours, :percent_lamp_used], :transformation => proc {
     "#{((lamp_hours/percent_lamp_used - lamp_hours)/(60*60.0)).round(1)} hours"

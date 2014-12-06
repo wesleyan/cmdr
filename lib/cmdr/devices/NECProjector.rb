@@ -250,19 +250,6 @@ class NECProjector < Projector
     }]
   }
   
-  configure do
-    baud 9600
-    message_end lambda{|msg|
-      return false if msg.size < 6
-      bytes = msg.bytes.to_a
-      return false if bytes[0] == 0
-      return false unless NECProjectorFormat.checksum_field[1].call(bytes) == bytes[-1]
-      data_size = NECProjector.unpack_unsigned msg, 28, 12
-      # we make sure that we have the right number of bytes given the given data_size
-      return false unless msg.size == 6 + data_size
-      return true
-    }
-  end
   
   state_var :projector_name,     :type => :string,   :editable => false
   state_var :projector_id,       :type => :string,   :editable => false
@@ -309,6 +296,19 @@ class NECProjector < Projector
   end
   
   def initialize(name, options)
+  configure do
+    baud 9600
+    message_end lambda{|msg|
+      return false if msg.size < 6
+      bytes = msg.bytes.to_a
+      return false if bytes[0] == 0
+      return false unless NECProjectorFormat.checksum_field[1].call(bytes) == bytes[-1]
+      data_size = NECProjector.unpack_unsigned msg, 28, 12
+      # we make sure that we have the right number of bytes given the given data_size
+      return false unless msg.size == 6 + data_size
+      return true
+    }
+  end
     options = options.symbolize_keys
     DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
 

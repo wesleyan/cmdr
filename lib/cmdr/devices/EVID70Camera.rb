@@ -28,10 +28,6 @@
 
 class EVID70Camera < Cmdr::RS232Device
   
-  configure do
-    address :type => :string
-    message_timeout 0.2
-  end
   
   state_var :power,         :type => :boolean
   state_var :zoom,        :type => :percentage
@@ -88,6 +84,10 @@ class EVID70Camera < Cmdr::RS232Device
   }
   
   def initialize(name, options)
+  configure do
+    address :type => :string
+    message_timeout 0.2
+  end
     options = options.symbolize_keys
     DaemonKit.logger.info "Initializing camera on port #{options[:port]} with name #{options[:name]}"
     Thread.abort_on_exception = true

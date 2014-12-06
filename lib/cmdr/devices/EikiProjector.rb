@@ -28,6 +28,7 @@
 class EikiProjector < Projector  
   INPUT_HASH = {"RGB1" => 5, "RGB2" => 6, "VIDEO" => 7}
 
+def initialize(name,opts)
   configure do
     #DaemonKit.logger.info "@Initializing projector on port #{options[:uri]} with name #{name}"
     port :type => :port
@@ -36,7 +37,8 @@ class EikiProjector < Projector
     stop_bits 1
     parity 0
   end
-
+	super(name,opts)
+end
   managed_state_var :power, 
     :type => :boolean,
     :display_order => 1,

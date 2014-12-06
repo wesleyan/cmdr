@@ -26,12 +26,14 @@
 #---
 
 class ATPA100 < Cmdr::RS232Device
+  def initialize(name,opts)
   configure do
     baud 9600
     message_end "\r\n"
     message_delay 0.1
   end
-
+	  super(name,opts)
+  end
   managed_state_var :mute,
   :type => :boolean,
   :display_order => 3,

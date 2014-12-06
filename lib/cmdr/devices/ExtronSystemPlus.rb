@@ -25,9 +25,9 @@
 #---
 
 class ExtronSystemPlus < SocketVideoSwitcher
-  configure do
+#  configure do
     #DaemonKit.logger.info "@initializing SocketExtron at URI #{options[:uri]} with name #{name}"
-  end
+#  end
   
   managed_state_var :video,
     :type => :option,

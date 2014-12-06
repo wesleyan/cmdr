@@ -26,11 +26,13 @@
 #---
 
 class BenQSP890Projector < Projector  
+  def initialize(name,opts)
   configure do
     message_end(/\n\r|\r\n/)
     message_delay 0.2
   end
-
+	  super(name,opts)
+  end
   def read data
     EM.cancel_timer @_cooling_timer if @_cooling_timer
     @_cooling_timer = nil

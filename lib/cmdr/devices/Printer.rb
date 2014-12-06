@@ -29,10 +29,6 @@
 
 class Printer < Computer
 
-  configure do
-    ip_address :type => :string
-  end
-  
   #current info
   state_var :pages_remaining,     :type => :integer,  :editable => false
   state_var :toner_low,           :type => :boolean,  :editable => false
@@ -47,8 +43,11 @@ class Printer < Computer
   state_var :serial_number,       :type => :string,   :editable => false
   state_var :memory,              :type => :integer,  :eidtable => false
   
-  def initialize(options)
-    super(options)
+  def initialize(name, options)
+ configure do
+	     ip_address :type => :string
+		   end
+    super(name, options)
   end
   
 end

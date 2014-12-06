@@ -151,13 +151,6 @@ module Cmdr
     # The socket client over which data is sent and received from a TCP/IP device 
     attr_accessor :socketclient
     
-    configure do
-      # uri in the form (Example) pjlink://129.133.125.197:4352
-      uri :type => :uri
-      message_end "\r"
-      message_timeout 0.2
-      message_delay 0
-    end
     
     # Creates a new SocketDevice instance
     # @param [String, Symbol] name The name of the device, which is
@@ -169,6 +162,13 @@ module Cmdr
     #   updates should be saved
     # @param [String] dqueue The AMQP queue that the device watches for messages
     def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+    configure do
+      # uri in the form (Example) pjlink://129.133.125.197:4352
+      uri :type => :uri
+      message_end "\r"
+      message_timeout 0.2
+      message_delay 0
+    end
       Thread.abort_on_exception = true
         
       options = options.symbolize_keys
