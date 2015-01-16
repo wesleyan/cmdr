@@ -85,7 +85,7 @@ module Cmdr
       EventMachine::run {
         EventMachine::start_server "0.0.0.0", 1412, CmdrHTTP
         EventMonitor.run
-        CmdrWebsocket.new.run rescue nil
+        CmdrWebsocket.new.run
         @devices.each{|device|
           Thread.new do
             begin

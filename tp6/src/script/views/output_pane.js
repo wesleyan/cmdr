@@ -17,7 +17,7 @@
   Tp.OutputPaneView = Backbone.View.extend({
     initialize: function() {
       var _this = this;
-      $.get('../tp6/script/templates/output_module.html', function(template) {
+      $.get('/script/templates/output_module.html', function(template) {
         $.template("output-pane-template", template);
         return _this.render();
       });
