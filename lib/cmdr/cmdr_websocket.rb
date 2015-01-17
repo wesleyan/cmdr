@@ -121,8 +121,7 @@ module Cmdr
   #    {
   #      "id": "AEF80ED8-35C6-4EBC-B80C-218C306CA393",
   #      "type": "connection",
-  #      "building": "Albritton",
-  #      "room": "004",
+  #      "room": "Allbritton 004",
   #      "sources": [
   #        {
   #         "name": "Laptop",
@@ -149,7 +148,7 @@ module Cmdr
   #      "new": "off"
   #    }
   class CmdrWebsocket
-    attr_reader :devices
+    attr_reader :rooms
     
     # How long to wait for responses from the daemon
     TIMEOUT = 4.0
@@ -166,44 +165,36 @@ module Cmdr
     # The resources that can be accessed
     RESOURCES = DEVICES.merge({"source" => ["source"]})
     
+ 
+    # THIS function has now been generalized to deal with multiple rooms, so every other function has to learn to work with the new room info structure
     def initialize
       @credentials = Authenticate.get_credentials
       @db = CouchRest.database("http://#{@credentials["user"]}:#{@credentials["password"]}@localhost:5984/rooms")
-
-      @room = @db.get("_design/room").
-        view("by_mac", {:key => MAC.addr})['rows'][0]['value']
-
-      devices = @db.get('_design/room').
-        view('devices_for_room', {:key => @room['_id']})['rows'].
-        map{|x| x['value']}
-
-      @building = @db.get(@room['belongs_to'])['attributes']['name']
-
-      @sources = @db.get('_design/cmdr_web').
-        view('sources', {:key => @room['_id']})['rows'].
-        map{|x| x['value']}
-
-      @actions = @db.get('_design/cmdr_web').
-        view('actions', {:key => @room['_id']})['rows'].
-        map{|x| x['value']}
-          
-      @room_name = @room['attributes']['name']
-
-      @devices = {}
-      
-      DEVICES.each do |r, _|
-        @devices[r] = @room['attributes'][r]
-      end
-      
-      @devices_by_id = {}
-      @device_record_by_resource = {}
-      @devices.each do |k, v|
-        d = devices.find {|d| d['attributes']['name'] == v}
-        if d
-          @devices_by_id[d['_id']] ||= []
-          @devices_by_id[d['_id']] << k
-        end
-        @device_record_by_resource[k] = d
+      @rooms = {}
+      @db.get("_design/room").
+        view("all_rooms")['rows'].map{|x| x['value']}.each do |room|
+          id = room['_id']
+          @rooms[id] = {}
+          @rooms[id]['room'] = room
+          devices = @db.get('_design/room').view('devices_for_room', {:key => id})['rows'].map{|x| x['value']}
+          @rooms[id]['sources'] = @db.get('_design/cmdr_web').view('sources', {:key => id})['rows'].map{|x| x['value']}
+          @rooms[id]['actions'] = @db.get('_design/cmdr_web').view('actions', {:key => id})['rows'].map{|x| x['value']}
+          @rooms[id]['room_name'] = room['attributes']['name']
+          devs = {}
+          DEVICES.each do |r,_|
+            devs[r] = room['attributes'][r]
+          end
+          @rooms[id]['devices'] = devs
+          @rooms[id]['devices_by_id'] = {}
+          @rooms[id]['device_record_by_resource'] = {}
+          devs.each do |k,v|
+            d = devices.find {|d| d['attributes']['name'] == v}
+            if d
+              @rooms[id]['devices_by_id'][d['_id']] ||= []
+              @rooms[id]['devices_by_id'][d['_id']] << k
+            end
+            @rooms[id]['device_record_by_resource'][k] = d
+          end
       end
     end
 
@@ -258,64 +249,68 @@ module Cmdr
     end
 
     def setup
-      # get the initial source
-      proj = @device_record_by_resource['projector']
-      switch = @device_record_by_resource['switcher']
+      @rooms.each do |room|
+	# get the initial source
+	proj = room['device_record_by_resource']['projector']
+	switch = room['device_record_by_resource']['switcher']
 
-      p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
-      v_input = switch['attributes']['state_vars']['video']['state'] rescue nil
-      a_input = switch['attributes']['state_vars']['audio']['state'] rescue nil
-      s_input = switch['attributes']['state_vars']['input']['state'] rescue nil
+	p_input = proj['attributes']['state_vars']['input']['state'] rescue nil
+	v_input = switch['attributes']['state_vars']['video']['state'] rescue nil
+	a_input = switch['attributes']['state_vars']['audio']['state'] rescue nil
+	s_input = switch['attributes']['state_vars']['input']['state'] rescue nil
 
-      p_src = (@sources.find {|s| s['input']['projector'] == p_input})['name'] rescue nil
-      v_src = (@sources.find {|s| s['input']['video'] == v_input})['name'] rescue nil
-      a_src = (@sources.find {|s| s['input']['audio'] == a_input})['name'] rescue nil
-      s_src = (@sources.find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
+	p_src = (room['sources'].find {|s| s['input']['projector'] == p_input})['name'] rescue nil
+	v_src = (room['sources'].find {|s| s['input']['video'] == v_input})['name'] rescue nil
+	a_src = (room['sources'].find {|s| s['input']['audio'] == a_input})['name'] rescue nil
+	s_src = (room['sources'].find {|s| s['input']['switcher'] == s_input})['name'] rescue nil
 
-      if initial_source = (v_src || p_src || a_src || s_src || @sources[0]['name'])
-        DaemonKit.logger.debug("Initial source: #{initial_source}")
-        # For some reason, when we define events in make_state_machine
-        # the events also get fired. This is highly undesireable. This
-        # is just a hack that ignores the commands to switch until the
-        # thing is defined.
-        @dont_switch = true
-        @source_fsm = make_state_machine(self, @sources, initial_source.to_sym).new
-        @dont_switch = false
-        # TODO: Reconsider this line. Commenting it out fixes an issue
-        # where the projector flashes when the daemon starts, but
-        # maybe isn't ideal? I'm not really sure.
-        # @source_fsm.send("select_#{initial_source}")
+	if initial_source = (v_src || p_src || a_src || s_src || (room['sources'][0] && room['sources'][0]['name']))
+	  DaemonKit.logger.debug("Initial source: #{initial_source}")
+	  # For some reason, when we define events in make_state_machine
+	  # the events also get fired. This is highly undesireable. This
+	  # is just a hack that ignores the commands to switch until the
+	  # thing is defined.
+	  room['dont_switch'] = true
+	  room['source_fsm'] = make_state_machine(self, room['sources'], initial_source.to_sym).new
+	  room['dont_switch'] = false
+	  # TODO: Reconsider this line. Commenting it out fixes an issue
+	  # where the projector flashes when the daemon starts, but
+	  # maybe isn't ideal? I'm not really sure.
+	  # @source_fsm.send("select_#{initial_source}")
+	end
       end
     end
     
     def handle_event json
       msg = JSON.parse(json)
       DaemonKit.logger.debug(msg.inspect)
+      room = @rooms[msg['room_id']
       if msg['state_update'] && msg['var'] && !msg['now'].nil? && msg['device']
-        resource = (@devices_by_id[msg['device']] || {}).find {|r|
+        resource = (room['devices_by_id'][msg['device']] || {}).find {|r|
           RESOURCES[r].include? msg['var']
         }
         unless resource.nil?
           DaemonKit.logger.debug("Setting FSM: #{resource}, #{msg['var']}")
-          send_update resource, msg['var'], msg['was'], msg['now']
+          send_update room, resource, msg['var'], msg['was'], msg['now']
           case [resource, msg['var']]
           when ["projector", "input"]
-            @source_fsm.send("projector_to_#{msg['now']}") rescue nil
+            room['source_fsm'].send("projector_to_#{msg['now']}") rescue nil
           when ["video", "input"]
-            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
+            room['source_fms'].send("switcher_to_#{msg['now']}") rescue nil
           when ["audio", "input"]
-            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
+            room['source_fms'].send("switcher_to_#{msg['now']}") rescue nil
           when ["switcher", "input"]
-            @source_fms.send("switcher_to_#{msg['now']}") rescue nil
+            room['source_fms'].send("switcher_to_#{msg['now']}") rescue nil
           end
         end
       end
     end
 
-    def send_update resource, var, old, new
+    def send_update room, resource, var, old, new
       DaemonKit.logger.debug([resource, var, old, new].inspect)
       update_msg = {
         'id' => UUIDTools::UUID.random_create.to_s,
+        'room_id' => room['_id'],
         'type' => 'state_changed',
         'resource' => resource,
         'var' => var,
@@ -333,19 +328,29 @@ module Cmdr
       init_message = {
         'id' => UUIDTools::UUID.random_create.to_s,
         'type' => 'connection',
-        'building' => @building,
-        'room' => @room_name,
-        'sources' => @sources.map{|source|
+      }
+
+      ws.send init_message.to_json
+    end
+    # INSTEAD of sending the init message with everything,
+    # the frontend needs to send a message with just the room_id in it
+    # and an init type so we can send it the room details
+    def send_init msg, df
+      room = @rooms[msg['room_id']]
+      init_message = {
+        'id' => UUIDTools::UUID.random_create.to_s,
+        'type' => :init,
+        'room' => room['room_name'],
+        'sources' => room['sources'].map{|source|
           {
             :id => source['_id'],
             :name => source['name'],
             :icon => source['icon'] || (source['name'] + '.png')
           }
         },
-        'actions' => @actions
+        'actions' => room['actions']
       }
-
-      ws.send init_message.to_json
+      df.succeed({:result => init_message})
     end
 
     def onmessage ws, json
@@ -363,6 +368,7 @@ module Cmdr
         when "state_get" then state_action msg, deferrable, :get
         when "state_set" then state_action msg, deferrable, :set
         when "command" then command msg, deferrable
+        when "init" then send_init msg, deferrable
         else df.deferrable.succeed({:error => "Invalid message type"})
         end
         
@@ -386,6 +392,7 @@ module Cmdr
         device = req['resource']
         device_req = {
           :id => UUIDTools::UUID.random_create.to_s,
+          :room_id => req['room_id'],
           :queue => @queue_name,
           :type => :command,
           :method => req['method'],
@@ -440,8 +447,8 @@ module Cmdr
       defer_device_operation device_req, device, deferrable
     end
 
-    def set_device_state device, state, input = :input, df = EM::DefaultDeferrable.new
-      unless @dont_switch
+    def set_device_state dont_switch, device, state, input = :input, df = EM::DefaultDeferrable.new
+      unless dont_switch
         DaemonKit.logger.debug "Setting #{device} input to #{state}"
         daemon_set input, state, device, df
       end
@@ -455,11 +462,13 @@ module Cmdr
     ##################### Client code ####################
 
     def handle_device_get req, df
-      daemon_get req['var'], @devices[req['resource']], df
+      room = @rooms[req['room_id']]
+      daemon_get req['var'], room['devices'][req['resource']], df
     end
 
     def handle_device_set req, df
-      daemon_set req['var'], req['value'], @devices[req['resource']], df
+      room = @rooms[req['room_id']]
+      daemon_set req['var'], req['value'], room['devices'][req['resource']], df
     end
     
     def handle_source_get req, df
@@ -472,17 +481,18 @@ module Cmdr
 
     def handle_source_set req, df
       DaemonKit.logger.debug "setting source: #{req.inspect}"
-      @source_fsm.send "select_#{req['value']}" rescue nil
+      @rooms[req['room_id']]['source_fsm'].send "select_#{req['value']}" rescue nil
       df.succeed({:ack => true})
     end
 
-    def make_state_machine parent, sources, initial
+    def make_state_machine parent, room, initial
+      sources = room['sources']
       klass = Class.new
       klass.class_eval do
         state_machine :source, :initial => initial do
           after_transition any => any do |fsm, transition|
             DaemonKit.logger.debug "transitions from #{transition.from} to #{transition.to}"
-            parent.send_update :source, :source, transition.from, transition.to 
+            parent.send_update room, :source, :source, transition.from, transition.to 
           end
           sources.each do |source|
             this_state = source['name'].to_sym
@@ -507,17 +517,17 @@ module Cmdr
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "Transitioned to #{this_state}, and #{p.inspect}"
-                parent.set_device_state parent.devices["projector"], p
+                parent.set_device_state room['dont_switch'], room['devices']["projector"], p
               end
             end
             if v
               event "switcher_to_#{v}".to_sym do
                 transition all => this_state
-                parent.set_device_state parent.devices["projector"], p
+                parent.set_device_state room['dont_switch'], room['devices']["projector"], p
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "VIDEO: Transitioned to #{this_state}, and #{v.inspect}"
-                parent.set_device_state parent.devices["switcher"], v, :video
+                parent.set_device_state room['dont_switch'], room['devices']["switcher"], v, :video
               end
             end
             if a
@@ -526,16 +536,16 @@ module Cmdr
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "AUDIO: Transitioned to #{this_state}, and #{a.inspect}"
-                parent.set_device_state parent.devices["switcher"], a, :audio 
+                parent.set_device_state room['dont_switch'], room['devices']["switcher"], a, :audio 
               end
             end
             if s
               event "switcher_to_#{s}".to_sym do
                 transition all => this_state
-                parent.set_device_state parent.devices["projector"], p
+                parent.set_device_state room['dont_switch'], room['devices']["projector"], p
               end
               after_transition any => this_state do
-                parent.set_device_state parent.devices["switcher"], s
+                parent.set_device_state room['dont_switch'], room['devices']["switcher"], s
               end
             end
           end
