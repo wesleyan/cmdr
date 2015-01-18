@@ -15,6 +15,22 @@
  */
 
 (function() {
+  // So we can parse out the room id.
+  function parse(val) {
+    var result = "Not found",
+        tmp = [];
+    location.search
+    //.replace ( "?", "" ) 
+    // this is better, there might be a question mark inside
+    .substr(1)
+        .split("&")
+        .forEach(function (item) {
+        tmp = item.split("=");
+        if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
+    });
+    return result;
+  }
+  
   var Server;
 
   Server = (function() {
@@ -64,16 +80,15 @@
         return _this.websock.connect();
       });
     }
-
     Server.prototype.connected = function(msg) {
-      var room_hash;
+      return this.send_message({ 'type': 'init' });
+    }
+    Server.prototype.init = function(msg) {
+      var room_name;
       Tp.sources.refresh([]);
       Tp.actions.refresh([]);
-      room_hash = {
-        building: msg.building,
-        name: msg.room
-      };
-      Tp.room.set(room_hash);
+      room_name = msg.room;
+      Tp.room.set({ 'name': room_name });
       Tp.sources.add(_.map(msg.sources, function(x) {
         return {
           id: x.id,
@@ -103,6 +118,7 @@
 
     Server.prototype.send_message = function(msg) {
       msg['id'] = this.createUUID();
+      msg['room'] = parse('room_id');
       this.websock.send(JSON.stringify(msg));
       return msg['id'];
     };
@@ -112,6 +128,8 @@
       msg = JSON.parse(json);
       console.log(msg);
       switch (msg.type) {
+        case "init":
+          return this.init(msg);
         case "connection":
           return this.connected(msg);
         case "state_changed":

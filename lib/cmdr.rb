@@ -26,7 +26,6 @@ require 'cmdr/RS232Device'
 require 'cmdr/devices/Projector'
 require 'cmdr/devices/VideoSwitcher'
 require 'cmdr/devices/Computer'
-require 'cmdr/MAC.rb'
 require 'cmdr/process'
 require 'cmdr/video-recorder'
 require 'cmdr/video-encoder'
@@ -85,7 +84,7 @@ module Cmdr
       EventMachine::run {
         EventMachine::start_server "0.0.0.0", 1412, CmdrHTTP
         EventMonitor.run
-        CmdrWebsocket.new.run rescue nil
+        CmdrWebsocket.new.run
         @devices.each{|device|
           Thread.new do
             begin
@@ -102,4 +101,3 @@ module Cmdr
 end
 
 require "#{File.dirname(__FILE__)}/cmdr/cmdr_room"
-require "#{File.dirname(__FILE__)}/cmdr/cmdr_lab"

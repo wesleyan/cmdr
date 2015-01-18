@@ -18,7 +18,7 @@
   Tp.InputListView = Backbone.View.extend({
     initialize: function() {
       var _this = this;
-      return $.get('../tp6/script/templates/input_list.html', function(template) {
+      return $.get('/script/templates/input_list.html', function(template) {
         $.template("input-list-template", template);
         Tp.server.bind("loaded", _this.render);
         Tp.actions.bind("add", _this.render);
