@@ -88,7 +88,7 @@
       Tp.sources.refresh([]);
       Tp.actions.refresh([]);
       room_name = msg.room;
-      Tp.room.set(room_name);
+      Tp.room.set({ 'name': room_name });
       Tp.sources.add(_.map(msg.sources, function(x) {
         return {
           id: x.id,
@@ -118,7 +118,7 @@
 
     Server.prototype.send_message = function(msg) {
       msg['id'] = this.createUUID();
-      msg['room_id'] = parse('room_id');
+      msg['room'] = parse('room_id');
       this.websock.send(JSON.stringify(msg));
       return msg['id'];
     };

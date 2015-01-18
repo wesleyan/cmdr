@@ -249,8 +249,9 @@ module Cmdr
     end
 
     def setup
-      @rooms.each do |room|
+      @rooms.keys.each do |room_id|
 	# get the initial source
+        room = @rooms[room_id]
 	proj = room['device_record_by_resource']['projector']
 	switch = room['device_record_by_resource']['switcher']
 
@@ -271,7 +272,7 @@ module Cmdr
 	  # is just a hack that ignores the commands to switch until the
 	  # thing is defined.
 	  room['dont_switch'] = true
-	  room['source_fsm'] = make_state_machine(self, room['sources'], initial_source.to_sym).new
+	  room['source_fsm'] = make_state_machine(self, room, initial_source.to_sym).new
 	  room['dont_switch'] = false
 	  # TODO: Reconsider this line. Commenting it out fixes an issue
 	  # where the projector flashes when the daemon starts, but
@@ -284,7 +285,7 @@ module Cmdr
     def handle_event json
       msg = JSON.parse(json)
       DaemonKit.logger.debug(msg.inspect)
-      room = @rooms[msg['room_id']
+      room = @rooms[msg['room']]
       if msg['state_update'] && msg['var'] && !msg['now'].nil? && msg['device']
         resource = (room['devices_by_id'][msg['device']] || {}).find {|r|
           RESOURCES[r].include? msg['var']
@@ -310,7 +311,7 @@ module Cmdr
       DaemonKit.logger.debug([resource, var, old, new].inspect)
       update_msg = {
         'id' => UUIDTools::UUID.random_create.to_s,
-        'room_id' => room['_id'],
+        'room' => room['_id'],
         'type' => 'state_changed',
         'resource' => resource,
         'var' => var,
@@ -333,10 +334,10 @@ module Cmdr
       ws.send init_message.to_json
     end
     # INSTEAD of sending the init message with everything,
-    # the frontend needs to send a message with just the room_id in it
+    # the frontend needs to send a message with just the rooms in it
     # and an init type so we can send it the room details
     def send_init msg, df
-      room = @rooms[msg['room_id']]
+      room = @rooms[msg['room']]
       init_message = {
         'id' => UUIDTools::UUID.random_create.to_s,
         'type' => :init,
@@ -350,7 +351,7 @@ module Cmdr
         },
         'actions' => room['actions']
       }
-      df.succeed({:result => init_message})
+      df.succeed(init_message)
     end
 
     def onmessage ws, json
@@ -392,7 +393,7 @@ module Cmdr
         device = req['resource']
         device_req = {
           :id => UUIDTools::UUID.random_create.to_s,
-          :room_id => req['room_id'],
+          :room => req['room'],
           :queue => @queue_name,
           :type => :command,
           :method => req['method'],
@@ -462,18 +463,19 @@ module Cmdr
     ##################### Client code ####################
 
     def handle_device_get req, df
-      room = @rooms[req['room_id']]
+      room = @rooms[req['room']]
       daemon_get req['var'], room['devices'][req['resource']], df
     end
 
     def handle_device_set req, df
-      room = @rooms[req['room_id']]
+      room = @rooms[req['room']]
       daemon_set req['var'], req['value'], room['devices'][req['resource']], df
     end
     
     def handle_source_get req, df
-      if @source_fsm
-        df.succeed({:result => @source_fsm.source})
+      room = @rooms[req['room']]
+      if room['source_fsm']
+        df.succeed({:result => room['source_fsm'].source})
       else
         df.succeed({:error => "No sources defined"})
       end
@@ -481,7 +483,7 @@ module Cmdr
 
     def handle_source_set req, df
       DaemonKit.logger.debug "setting source: #{req.inspect}"
-      @rooms[req['room_id']]['source_fsm'].send "select_#{req['value']}" rescue nil
+      @rooms[req['room']]['source_fsm'].send "select_#{req['value']}" rescue nil
       df.succeed({:ack => true})
     end
 

@@ -26,7 +26,6 @@ require 'cmdr/RS232Device'
 require 'cmdr/devices/Projector'
 require 'cmdr/devices/VideoSwitcher'
 require 'cmdr/devices/Computer'
-require 'cmdr/MAC.rb'
 require 'cmdr/process'
 require 'cmdr/video-recorder'
 require 'cmdr/video-encoder'
@@ -102,4 +101,3 @@ module Cmdr
 end
 
 require "#{File.dirname(__FILE__)}/cmdr/cmdr_room"
-require "#{File.dirname(__FILE__)}/cmdr/cmdr_lab"
