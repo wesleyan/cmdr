@@ -41,15 +41,13 @@
     function RoomLabel() {}
 
     RoomLabel.prototype.updateRoomLabel = function() {
-      var building, name;
-      building = Tp.room.get('building');
+      var name;
       name = Tp.room.get('name');
-      $('#location').html(building.slice(0,4) + " " + name);
-      return $('#room-label').html(building + " " + name);
+      $('#location').html(name);
+      return $('#room-label').html(name);
     };
 
     RoomLabel.prototype.bind = function() {
-      Tp.room.bind('change:building', this.updateRoomLabel);
       return Tp.room.bind('change:name', this.updateRoomLabel);
     };
 
