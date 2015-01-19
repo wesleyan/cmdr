@@ -161,18 +161,18 @@ module Cmdr
     # @param [String] db_uri The URI of the CouchDB database where
     #   updates should be saved
     # @param [String] dqueue The AMQP queue that the device watches for messages
-    def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+    def initialize(name, options, db_uri = "http://localhost:5984/rooms")
     configure do
       # uri in the form (Example) pjlink://129.133.125.197:4352
       uri :type => :uri
       message_end "\r"
       message_timeout 0.2
-      message_delay 0
+      message_delay 1
     end
       Thread.abort_on_exception = true
         
       options = options.symbolize_keys
-      super(name, options, db_uri, dqueue)
+      super(name, options, db_uri)
       throw "Must supply URI parameter" unless configuration[:uri]
       DaemonKit.logger.info "Creating socket device #{name} on #{configuration[:uri]}"
       
@@ -185,12 +185,10 @@ module Cmdr
     # Sends a string to the socketclient device
     # @param [String] string The string to send
     def send_string(string)
-      EM.defer do
         begin
           @_conn.send_data string if @_conn
         rescue
         end
-      end
     end
 
     def operational= operational
@@ -251,16 +249,16 @@ module Cmdr
           ready_to_send = true
           p_uri = URI.parse configuration[:uri]
           @_conn = EventMachine::SocketClient.connect(configuration[:uri])
-          EM::add_periodic_timer configuration[:message_timeout] do
+          EM::add_periodic_timer(1) do #configuration[:message_timeout] do
             self.ready_to_send = @_ready_to_send
           end
           @_conn.stream {|data| read data}
           super
         rescue
-          DaemonKit.logger.error "Failed to connect: #{$!}"
+          #DaemonKit.logger.error "Failed to connect: #{$!}"
           operational=false
           EventMachine::Timer.new(1) do
-            DaemonKit.logger.debug "SocketDevice: Attempting to reconnect to #{@name}"
+            #DaemonKit.logger.debug "SocketDevice: Attempting to reconnect to #{@name}"
             run
           end
         end
@@ -522,8 +520,8 @@ module Cmdr
       unless self.operational
         operational=true
       end
-      @_timer = EventMachine.add_timer(10) do
-        DaemonKit.logger.error("Lost communication with #{@name}")
+      @_timer = EventMachine.add_timer(60) do
+        DaemonKit.logger.error("Lost communication with #{@name} on #{configuration[:uri]}")
         operational=false
         EventMachine.cancel_timer @_timer
         @_conn.close_connection
@@ -623,7 +621,7 @@ module Cmdr
       end
       if @_ready_to_send && !@_waiting
         @_waiting = true
-        EM::add_timer(configuration[:message_delay]) do
+        EM::add_timer(1) do#configuration[:message_delay]) do
           if @_send_queue.size == 0
             request = choose_request
             do_message request if request

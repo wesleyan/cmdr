@@ -251,8 +251,9 @@ module Cmdr
     # the CouchDB database where updates should be saved @param
     # [String] dqueue The AMQP queue that the device watches for
     # messages
-    def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+    def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms")
       hash_s = hash.symbolize_keys
+      belongs_to = hash.delete(:belongs_to)
       @name = name
       hash.each{|var, value|
         configuration[var.to_sym] = value
@@ -262,8 +263,8 @@ module Cmdr
       p_uri = URI.parse db_uri
       auth_uri = "#{p_uri.scheme}://#{@credentials["user"]}:#{@credentials["password"]}@#{p_uri.host}:#{p_uri.port}#{p_uri.path}"
       @db = CouchRest.database(auth_uri)
-      @dqueue = dqueue ? dqueue : "cmdr:dqueue:#{@name}"
-      @hostname = @db.view('room/by_mac')["rows"][0]["value"]["attributes"]["hostname"]
+      @dqueue = "cmdr:dqueue:#{belongs_to}:#{@name}"
+      @hostname = @db.view('room/all_rooms', {'_id'=>belongs_to})["rows"][0]["value"]["attributes"]["hostname"]
     end
 
     # Run is a blocking call that starts the device. While run is
@@ -293,7 +294,7 @@ module Cmdr
         }
         
         amq = MQ.new
-        DaemonKit.logger.info("Waiting for messages on cmdr:dqueue:#{@name}")
+        DaemonKit.logger.info("Waiting for messages on #{@dqueue}")
         amq.queue(@dqueue).subscribe{ |msg|
           begin
             req = JSON.parse(msg)
@@ -301,7 +302,7 @@ module Cmdr
             case req["type"]
             when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
             when "state_set"
-              DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]}")
+              DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]} on #{@dqueue}")
               handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
             when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
             else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
@@ -706,6 +707,7 @@ module Cmdr
       hash['attributes']['config'].each{|var, value|
           config[var] = value
       } if hash['attributes']['config']
+      config[:belongs_to]=hash['belongs_to']
       device = self.new(hash['attributes']['name'], config)
       device._id = hash['_id']
       device._rev = hash['_rev']

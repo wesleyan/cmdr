@@ -175,6 +175,7 @@ module Cmdr
         view("all_rooms")['rows'].map{|x| x['value']}.each do |room|
           id = room['_id']
           @rooms[id] = {}
+          @rooms[id]['_id'] = id
           @rooms[id]['room'] = room
           devices = @db.get('_design/room').view('devices_for_room', {:key => id})['rows'].map{|x| x['value']}
           @rooms[id]['sources'] = @db.get('_design/cmdr_web').view('sources', {:key => id})['rows'].map{|x| x['value']}
@@ -338,20 +339,24 @@ module Cmdr
     # and an init type so we can send it the room details
     def send_init msg, df
       room = @rooms[msg['room']]
-      init_message = {
-        'id' => UUIDTools::UUID.random_create.to_s,
-        'type' => :init,
-        'room' => room['room_name'],
-        'sources' => room['sources'].map{|source|
-          {
-            :id => source['_id'],
-            :name => source['name'],
-            :icon => source['icon'] || (source['name'] + '.png')
-          }
-        },
-        'actions' => room['actions']
-      }
-      df.succeed(init_message)
+      if room
+	init_message = {
+	  'id' => UUIDTools::UUID.random_create.to_s,
+	  'type' => :init,
+	  'room' => room['room_name'],
+	  'sources' => room['sources'].map{|source|
+	    {
+	      :id => source['_id'],
+	      :name => source['name'],
+	      :icon => source['icon'] || (source['name'] + '.png')
+	    }
+	  },
+	  'actions' => room['actions']
+	}
+	df.succeed(init_message)
+      else
+        df.succeed({:error => "Invalid Room ID"})
+      end
     end
 
     def onmessage ws, json
@@ -411,10 +416,11 @@ module Cmdr
       end
     end
 
-    def daemon_get var, device, df
+    def daemon_get room, var, device, df
       device_req = {
         :id => UUIDTools::UUID.random_create.to_s,
         :queue => @queue_name,
+        :room => room,
         :type => :state_get,
         :var => var
       }
@@ -429,11 +435,12 @@ module Cmdr
       defer_device_operation device_req, device, df
     end
 
-    def daemon_set var, value, device, df = EM::DefaultDeferrable.new
+    def daemon_set room, var, value, device, df = EM::DefaultDeferrable.new
       device_req = {
         :id => UUIDTools::UUID.random_create.to_s,
         :queue => @queue_name,
         :type => :state_set,
+        :room => room,
         :var => var,
         :value => value
       }
@@ -448,28 +455,28 @@ module Cmdr
       defer_device_operation device_req, device, deferrable
     end
 
-    def set_device_state dont_switch, device, state, input = :input, df = EM::DefaultDeferrable.new
+    def set_device_state room, dont_switch, device, state, input = :input, df = EM::DefaultDeferrable.new
       unless dont_switch
         DaemonKit.logger.debug "Setting #{device} input to #{state}"
-        daemon_set input, state, device, df
+        daemon_set room, input, state, device, df
       end
     end
     
     def defer_device_operation device_req, device, df        
       @deferred_responses[device_req[:id]] = df
-      @mq.queue("cmdr:dqueue:#{device}").publish(device_req.to_json)
+      @mq.queue("cmdr:dqueue:#{device_req[:room]}:#{device}").publish(device_req.to_json)
     end
 
     ##################### Client code ####################
 
     def handle_device_get req, df
       room = @rooms[req['room']]
-      daemon_get req['var'], room['devices'][req['resource']], df
+      daemon_get room['_id'], req['var'], room['devices'][req['resource']], df
     end
 
     def handle_device_set req, df
       room = @rooms[req['room']]
-      daemon_set req['var'], req['value'], room['devices'][req['resource']], df
+      daemon_set room['_id'], req['var'], req['value'], room['devices'][req['resource']], df
     end
     
     def handle_source_get req, df
@@ -519,17 +526,17 @@ module Cmdr
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "Transitioned to #{this_state}, and #{p.inspect}"
-                parent.set_device_state room['dont_switch'], room['devices']["projector"], p
+                parent.set_device_state room['_id'], room['dont_switch'], room['devices']["projector"], p
               end
             end
             if v
               event "switcher_to_#{v}".to_sym do
                 transition all => this_state
-                parent.set_device_state room['dont_switch'], room['devices']["projector"], p
+                parent.set_device_state room['_id'], room['dont_switch'], room['devices']["projector"], p
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "VIDEO: Transitioned to #{this_state}, and #{v.inspect}"
-                parent.set_device_state room['dont_switch'], room['devices']["switcher"], v, :video
+                parent.set_device_state room['_id'], room['dont_switch'], room['devices']["switcher"], v, :video
               end
             end
             if a
@@ -538,16 +545,16 @@ module Cmdr
               end
               after_transition any => this_state do
                 DaemonKit.logger.debug "AUDIO: Transitioned to #{this_state}, and #{a.inspect}"
-                parent.set_device_state room['dont_switch'], room['devices']["switcher"], a, :audio 
+                parent.set_device_state room['_id'], room['dont_switch'], room['devices']["switcher"], a, :audio 
               end
             end
             if s
               event "switcher_to_#{s}".to_sym do
                 transition all => this_state
-                parent.set_device_state room['dont_switch'], room['devices']["projector"], p
+                parent.set_device_state room['_id'], room['dont_switch'], room['devices']["projector"], p
               end
               after_transition any => this_state do
-                parent.set_device_state room['dont_switch'], room['devices']["switcher"], s
+                parent.set_device_state room['_id'], room['dont_switch'], room['devices']["switcher"], s
               end
             end
           end

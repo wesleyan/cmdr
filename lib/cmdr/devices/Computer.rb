@@ -74,8 +74,6 @@ class Computer < Cmdr::Device
         sleep 5
       end
     }
-    DaemonKit.logger.info("Waiting for messages on cmdr:dqueue:#{@name}")
-
   end 
 end
 

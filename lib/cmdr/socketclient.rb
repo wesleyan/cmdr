@@ -58,7 +58,7 @@ module EventMachine
 
     def unbind
       @disconnect.call if @disconnect
-      EventMachine::Timer.new(1) do
+      EventMachine::Timer.new(10) do
         DaemonKit.logger.info "Attempting to reconnect to #{@_ip}"
         event = {"device" => @hostname,
                  "component" => @name,
