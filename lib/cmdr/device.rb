@@ -261,6 +261,7 @@ module Cmdr
       #TODO: The database uri should not be hard-coded
       @credentials = Authenticate.get_credentials
       p_uri = URI.parse db_uri
+      @main_server = p_uri.host
       auth_uri = "#{p_uri.scheme}://#{@credentials["user"]}:#{@credentials["password"]}@#{p_uri.host}:#{p_uri.port}#{p_uri.path}"
       @db = CouchRest.database(auth_uri)
       @dqueue = "cmdr:dqueue:#{belongs_to}:#{@name}"
@@ -272,7 +273,7 @@ module Cmdr
     # whatever communication channels the device uses and react
     # appropriately to events.
     def run
-      AMQP.start(:host => '127.0.0.1'){
+      AMQP.start(:host => @main_server){
         self.amqp_setup
         @amq_responder = MQ.new
         handle_feedback = proc {|feedback, req, resp, job|
@@ -702,13 +703,17 @@ module Cmdr
     #   the information neccessary to recreate a device
     # @return [Device] A new Device instance created with all of the information
     #   in the hash passed in (which should have been created by {Device#to_couch}).
-    def self.from_couch(hash)
+    def self.from_couch(hash, main_server = nil)
       config = {}
       hash['attributes']['config'].each{|var, value|
           config[var] = value
       } if hash['attributes']['config']
       config[:belongs_to]=hash['belongs_to']
-      device = self.new(hash['attributes']['name'], config)
+      if main_server
+        device = self.new(hash['attributes']['name'], config, db_uri="http://#{main_server}:5984/rooms")
+      else
+        device = self.new(hash['attributes']['name'], config)
+      end
       device._id = hash['_id']
       device._rev = hash['_rev']
       device.belongs_to = hash['belongs_to']

@@ -29,7 +29,7 @@ end
 puts "Starting CmdrHTTP on 0.0.0.0:1412"
 
 begin
-  Cmdr::CmdrRoom.new.start
+  Cmdr::CmdrRoom.new.start $1
 rescue => e
   DaemonKit.logger.exception e
 end

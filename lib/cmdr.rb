@@ -16,12 +16,12 @@ libdir = File.dirname(__FILE__)
 $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 
 require 'rubygems'
+require 'macaddr'
 require 'couchrest'
 require 'time'
 require 'cmdr/constants'
 require 'cmdr/device'
 require 'cmdr/event_monitor'
-require 'cmdr/cmdr_http'
 require 'cmdr/RS232Device'
 require 'cmdr/devices/Projector'
 require 'cmdr/devices/VideoSwitcher'
@@ -56,14 +56,15 @@ module Cmdr
   # The main cmdr module.
   class Cmdr
     # The main cmdr class.
-    def initialize(device_hashes)
+    def initialize(device_hashes, main_server = nil)
       credentials = Authenticate.get_credentials
+      @main_server = 'localhost'
+      @main_server = main_server if main_server
       @credentials = "#{credentials[:user]}:#{credentials[:password]}"
-      @db = CouchRest.database("http://#{@credentials}@localhost:5984/rooms")
-
+      @db = CouchRest.database("http://#{@credentials}@#{main_server}:5984/rooms")
       @devices = device_hashes.collect { |hash|
         begin
-          device = Object.const_get(hash['value']['class']).from_couch(hash['value'])
+          device = Object.const_get(hash['value']['class']).from_couch(hash['value'], main_server)
         rescue
           err_msg = "Failed to create device #{hash['value']}: #{$ERROR_INFO}"
           DaemonKit.logger.error err_msg
@@ -75,16 +76,13 @@ module Cmdr
       "<Cmdr:0x#{object_id.to_s(16)}>"
     end
     
-    def start
+    def start(main_server=nil)
       #start each device
-      CmdrHTTP.instance_variable_set(:@devices, @devices.collect{|d| d.name})
       names_by_id = {}
       @devices.each{|d| names_by_id[d._id] = d.name}
-      CmdrHTTP.instance_variable_set(:@device_ids, names_by_id)
       EventMachine::run {
-        EventMachine::start_server "0.0.0.0", 1412, CmdrHTTP
-        EventMonitor.run
-        CmdrWebsocket.new.run
+        EventMonitor.run unless main_server
+        CmdrWebsocket.new.run unless main_server
         @devices.each{|device|
           Thread.new do
             begin
