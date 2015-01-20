@@ -59,12 +59,12 @@ module Cmdr
     def initialize(device_hashes, main_server = nil)
       credentials = Authenticate.get_credentials
       @main_server = 'localhost'
-      @main_server = main_server if main_server
+      @main_server = main_server if main_server != nil
       @credentials = "#{credentials[:user]}:#{credentials[:password]}"
       @db = CouchRest.database("http://#{@credentials}@#{main_server}:5984/rooms")
       @devices = device_hashes.collect { |hash|
         begin
-          device = Object.const_get(hash['value']['class']).from_couch(hash['value'], main_server)
+          device = Object.const_get(hash['value']['class']).from_couch(hash['value'], @main_server)
         rescue => e
           err_msg = "Failed to create device #{hash['value']}: #{e.backtrace}"
           DaemonKit.logger.error err_msg

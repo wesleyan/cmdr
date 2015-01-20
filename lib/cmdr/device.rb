@@ -704,18 +704,14 @@ module Cmdr
     #   the information neccessary to recreate a device
     # @return [Device] A new Device instance created with all of the information
     #   in the hash passed in (which should have been created by {Device#to_couch}).
-    def self.from_couch(hash, main_server = nil)
+    def self.from_couch(hash, main_server = "localhost")
       config = {}
       hash['attributes']['config'].each{|var, value|
           config[var] = value
       } if hash['attributes']['config']
       config[:belongs_to]=hash['belongs_to']
       config[:db_uri]="http://#{main_server}:5984/rooms"
-      if main_server
-        device = self.new(hash['attributes']['name'], config)
-      else
-        device = self.new(hash['attributes']['name'], config)
-      end
+      device = self.new(hash['attributes']['name'], config)
       device._id = hash['_id']
       device._rev = hash['_rev']
       device.belongs_to = hash['belongs_to']
