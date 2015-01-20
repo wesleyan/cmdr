@@ -21,7 +21,7 @@ module Cmdr
       if main_server
         credentials = Authenticate.get_credentials
         db = CouchRest.database!("http://#{credentials['user']}:#{credentials['password']}@#{main_server}:5984/rooms")
-        device_hashes = db.get("_design/room").view("devices_for_relay", {'key' => Mac.addr})['rows']
+        device_hashes = db.get("_design/room").view("devices_for_relay", {:key => Mac.addr})['rows']
       else
         @controller = Room.get_all_rooms()
         device_hashes = Room.devices()

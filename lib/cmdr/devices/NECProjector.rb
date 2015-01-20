@@ -311,8 +311,10 @@ class NECProjector < Projector
   end
     options = options.symbolize_keys
     DaemonKit.logger.info "@Initializing projector on port #{options[:port]} with name #{name}"
-
-    super(name, :port => options[:port], :baud => 9600, :data_bits => 8, :stop_bits => 1)
+    options[:baud] = 9600
+    options[:data_bits] = 8
+    options[:stop_bits] = 1
+    super(name, options)
     
     @max_volume = 63
     @max_volume = 0

@@ -65,8 +65,8 @@ module Cmdr
       @devices = device_hashes.collect { |hash|
         begin
           device = Object.const_get(hash['value']['class']).from_couch(hash['value'], main_server)
-        rescue
-          err_msg = "Failed to create device #{hash['value']}: #{$ERROR_INFO}"
+        rescue => e
+          err_msg = "Failed to create device #{hash['value']}: #{e.backtrace}"
           DaemonKit.logger.error err_msg
         end
       }.compact

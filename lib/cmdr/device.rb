@@ -254,6 +254,7 @@ module Cmdr
     def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms")
       hash_s = hash.symbolize_keys
       belongs_to = hash.delete(:belongs_to)
+      db_uri = hash.delete(:db_uri) if hash[:db_uri]
       @name = name
       hash.each{|var, value|
         configuration[var.to_sym] = value
@@ -273,9 +274,9 @@ module Cmdr
     # whatever communication channels the device uses and react
     # appropriately to events.
     def run
-      AMQP.start(:host => @main_server){
+      AMQP.start(:host => @main_server, :user => @credentials['user'], :pass => @credentials['password']){ |conn|
         self.amqp_setup
-        @amq_responder = MQ.new
+        @amq_responder = MQ.new conn
         handle_feedback = proc {|feedback, req, resp, job|
           if feedback.is_a? EM::Deferrable
             feedback.callback do |fb|
@@ -294,7 +295,7 @@ module Cmdr
           end
         }
         
-        amq = MQ.new
+        amq = MQ.new conn
         DaemonKit.logger.info("Waiting for messages on #{@dqueue}")
         amq.queue(@dqueue).subscribe{ |msg|
           begin
@@ -709,8 +710,9 @@ module Cmdr
           config[var] = value
       } if hash['attributes']['config']
       config[:belongs_to]=hash['belongs_to']
+      config[:db_uri]="http://#{main_server}:5984/rooms"
       if main_server
-        device = self.new(hash['attributes']['name'], config, db_uri="http://#{main_server}:5984/rooms")
+        device = self.new(hash['attributes']['name'], config)
       else
         device = self.new(hash['attributes']['name'], config)
       end
@@ -795,7 +797,8 @@ module Cmdr
       retried = false
       begin
         hash = self.to_couch
-        doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
+        doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true }
+        doc['relay'] = Mac.addr if @main_server
         if @_id && @_rev
           doc["_id"] = @_id
           doc["_rev"] = @_rev
