@@ -794,7 +794,7 @@ module Cmdr
       begin
         hash = self.to_couch
         doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true }
-        doc['relay'] = Mac.addr if @main_server
+        doc['relay'] = Mac.addr if @main_server != 'localhost' and @main_server != nil and @main_server != "127.0.0.1"
         if @_id && @_rev
           doc["_id"] = @_id
           doc["_rev"] = @_rev
