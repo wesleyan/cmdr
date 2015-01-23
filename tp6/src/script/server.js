@@ -38,7 +38,10 @@
       var _this = this;
       this.websock = new Tp.Websock();
       this.websock.bind("message", function(msg) {
-        return _this.handle_msg(msg);
+        if (!msg.room || msg.room == parse('room_id')) {
+          return _this.handle_msg(msg);
+        }
+        return null;
       });
       this.websock.bind("disconnected", function() {
         return $('#lost-connection').show();
