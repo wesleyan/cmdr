@@ -38,10 +38,7 @@
       var _this = this;
       this.websock = new Tp.Websock();
       this.websock.bind("message", function(msg) {
-        if (!msg.room || msg.room == parse('room_id')) {
-          return _this.handle_msg(msg);
-        }
-        return null;
+        return _this.handle_msg(msg);
       });
       this.websock.bind("disconnected", function() {
         return $('#lost-connection').show();
@@ -136,10 +133,12 @@
         case "connection":
           return this.connected(msg);
         case "state_changed":
-          if (msg['resource'] === 'source') {
-            return this.source_changed(msg);
-          } else {
-            return this.device_changed(msg);
+          if (msg['room'] === parse('room_id')) {
+	    if (msg['resource'] === 'source') {
+	      return this.source_changed(msg);
+	    } else {
+	      return this.device_changed(msg);
+	    }
           }
           break;
         case "ack":
