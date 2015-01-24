@@ -29,7 +29,7 @@
 require 'chronic'
 require 'net/ssh'
 
-class Mac < Computer
+class Macintosh < Computer
 
   
   state_var :logged_in,     :type => :boolean,  :editable => false

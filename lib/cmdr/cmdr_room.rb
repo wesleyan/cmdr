@@ -17,10 +17,16 @@ require 'cmdr/authenticate'
 
 module Cmdr
   class CmdrRoom < Cmdr
-    def initialize
-      @controller = Room.get_all_rooms()
-      device_hashes = Room.devices()
-      super(device_hashes)
+    def initialize(main_server = nil)
+      if main_server
+        credentials = Authenticate.get_credentials
+        db = CouchRest.database!("http://#{credentials['user']}:#{credentials['password']}@#{main_server}:5984/rooms")
+        device_hashes = db.get("_design/room").view("devices_for_relay", {:key => Mac.addr})['rows']
+      else
+        @controller = Room.get_all_rooms()
+        device_hashes = Room.devices()
+      end
+      super(device_hashes, main_server)
     end
   end
   
@@ -35,7 +41,7 @@ module Cmdr
     
     def self.devices(db_uri = @database)
       db = CouchRest.database!(db_uri) 
-      db.get("_design/room").view("devices_for_room")['rows']
+      db.get("_design/room").view("devices_for_all_rooms")['rows']
     end
   end
 end

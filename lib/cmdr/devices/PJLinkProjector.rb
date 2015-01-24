@@ -38,7 +38,6 @@ class PJLinkProjector < SocketProjector
   def initialize(name, options)
     options = options.symbolize_keys
     @_password = options[:password]
-    @_shutoff_timer = nil
     super(name, options)
   end
 
@@ -149,24 +148,6 @@ class PJLinkProjector < SocketProjector
     }
 
     state_var :timer, :type => :boolean, :display_order => 5
-
-  virtual_var :auto_off,
-    :type => :boolean,
-    :display_order => 6,
-    :depends_on => [:power],
-    :transformation => proc{
-      if power
-        @t1 = Time.now
-        @_shutoff_timer = EM::PeriodicTimer.new(15) do
-          t2 = Time.now
-          if t2 - @t1 > 10800
-            send_string "%1POWR 0\r"
-          end
-        end
-      else
-        @_shutoff_timer.cancel
-      end
-    }
 
   responses do
     #ack ":"

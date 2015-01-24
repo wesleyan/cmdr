@@ -159,7 +159,7 @@ module Cmdr
     # @param [String] db_uri The URI of the CouchDB database where
     #   updates should be saved
     # @param [String] dqueue The AMQP queue that the device watches for messages
-    def initialize(name, options, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+    def initialize(name, options, db_uri = "http://localhost:5984/rooms")
       configure do
         port :type => :port
         baud :type => :integer, :default => 9600
@@ -174,7 +174,7 @@ module Cmdr
       Thread.abort_on_exception = true
       
       options = options.symbolize_keys
-      super(name, options, db_uri, dqueue)
+      super(name, options, db_uri)
       throw "Must supply serial port parameter" unless configuration[:port]
       DaemonKit.logger.info "Creating RS232 Device #{name} on #{configuration[:port]} at #{configuration[:baud]}"
 

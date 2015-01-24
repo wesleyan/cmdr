@@ -133,10 +133,12 @@
         case "connection":
           return this.connected(msg);
         case "state_changed":
-          if (msg['resource'] === 'source') {
-            return this.source_changed(msg);
-          } else {
-            return this.device_changed(msg);
+          if (msg['room'] === parse('room_id')) {
+	    if (msg['resource'] === 'source') {
+	      return this.source_changed(msg);
+	    } else {
+	      return this.device_changed(msg);
+	    }
           }
           break;
         case "ack":

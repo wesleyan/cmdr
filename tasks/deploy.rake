@@ -32,15 +32,6 @@ task :deploy do
   deploy SERVERS
 end
 
-desc "build touchscreen interface"
-task :build_tp do
-  `rm -rf #{WORKING}/tp6/pub`
-  `cd #{WORKING}/tp6/src && slinky build -o #{WORKING}/tp6/pub && cat #{WORKING}/tp6/pub/tp6.html > #{WORKING}/tp6/pub/tp6 && cat #{WORKING}/tp6/pub/tp6_remote.html > #{WORKING}/tp6/pub/tp6_remote`
-  `sed -i '' -e 's/\\/scripts.js/..\\/scripts.js/; s/\\/styles.css/..\\/styles.css/' #{WORKING}/tp6/pub/tp6`
-  `sed -i '' -e 's/\\/scripts.js/..\\/scripts.js/; s/\\/styles.css/..\\/styles.css/' #{WORKING}/tp6/pub/tp6_remote`
-  # Slinky::Builder.build(WORKING + "/tp6/src", WORKING + "/tp6/pub")
-end
-
 desc "deploy touchscreen interface"
 task :deploy_tp, [] => [:build_tp] do
   CONTROLLERS.each{|c|

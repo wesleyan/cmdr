@@ -251,8 +251,10 @@ module Cmdr
     # the CouchDB database where updates should be saved @param
     # [String] dqueue The AMQP queue that the device watches for
     # messages
-    def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms", dqueue = nil)
+    def initialize(name, hash = {}, db_uri = "http://localhost:5984/rooms")
       hash_s = hash.symbolize_keys
+      belongs_to = hash.delete(:belongs_to)
+      db_uri = hash.delete(:db_uri) if hash[:db_uri]
       @name = name
       hash.each{|var, value|
         configuration[var.to_sym] = value
@@ -260,10 +262,11 @@ module Cmdr
       #TODO: The database uri should not be hard-coded
       @credentials = Authenticate.get_credentials
       p_uri = URI.parse db_uri
+      @main_server = p_uri.host
       auth_uri = "#{p_uri.scheme}://#{@credentials["user"]}:#{@credentials["password"]}@#{p_uri.host}:#{p_uri.port}#{p_uri.path}"
       @db = CouchRest.database(auth_uri)
-      @dqueue = dqueue ? dqueue : "cmdr:dqueue:#{@name}"
-      @hostname = @db.view('room/by_mac')["rows"][0]["value"]["attributes"]["hostname"]
+      @dqueue = "cmdr:dqueue:#{belongs_to}:#{@name}"
+      @hostname = @db.view('room/all_rooms', {'_id'=>belongs_to})["rows"][0]["value"]["attributes"]["hostname"]
     end
 
     # Run is a blocking call that starts the device. While run is
@@ -271,9 +274,9 @@ module Cmdr
     # whatever communication channels the device uses and react
     # appropriately to events.
     def run
-      AMQP.start(:host => '127.0.0.1'){
+      AMQP.start(:host => @main_server, :user => @credentials['user'], :pass => @credentials['password']){ |conn|
         self.amqp_setup
-        @amq_responder = MQ.new
+        @amq_responder = MQ.new conn
         handle_feedback = proc {|feedback, req, resp, job|
           if feedback.is_a? EM::Deferrable
             feedback.callback do |fb|
@@ -292,8 +295,8 @@ module Cmdr
           end
         }
         
-        amq = MQ.new
-        DaemonKit.logger.info("Waiting for messages on cmdr:dqueue:#{@name}")
+        amq = MQ.new conn
+        DaemonKit.logger.info("Waiting for messages on #{@dqueue}")
         amq.queue(@dqueue).subscribe{ |msg|
           begin
             req = JSON.parse(msg)
@@ -301,7 +304,7 @@ module Cmdr
             case req["type"]
             when "command" then handle_feedback.call(self.send(req["method"], *req["args"]), req, resp)
             when "state_set"
-              DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]}")
+              DaemonKit.logger.debug("Doing state_set #{req["var"]} = #{req["value"]} on #{@dqueue}")
               handle_feedback.call(self.send("set_#{req["var"]}", req["value"]), req, resp)
             when "state_get" then handle_feedback.call(self.send(req["var"]), req, resp)
             else DaemonKit.logger.error "Didn't match: #{req["type"]}" 
@@ -701,11 +704,13 @@ module Cmdr
     #   the information neccessary to recreate a device
     # @return [Device] A new Device instance created with all of the information
     #   in the hash passed in (which should have been created by {Device#to_couch}).
-    def self.from_couch(hash)
+    def self.from_couch(hash, main_server = "localhost")
       config = {}
       hash['attributes']['config'].each{|var, value|
           config[var] = value
       } if hash['attributes']['config']
+      config[:belongs_to]=hash['belongs_to']
+      config[:db_uri]="http://#{main_server}:5984/rooms"
       device = self.new(hash['attributes']['name'], config)
       device._id = hash['_id']
       device._rev = hash['_rev']
@@ -788,7 +793,8 @@ module Cmdr
       retried = false
       begin
         hash = self.to_couch
-        doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true}
+        doc = {'attributes' => hash, 'class' => self.class, 'belongs_to' => @belongs_to, 'controller' => @controller, 'device' => true }
+        doc['relay'] = Mac.addr if @main_server != 'localhost' and @main_server != nil and @main_server != "127.0.0.1"
         if @_id && @_rev
           doc["_id"] = @_id
           doc["_rev"] = @_rev
